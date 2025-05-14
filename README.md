@@ -1,3 +1,12 @@
+<!-- SEMENTARA AJA INI -->
+<!-- KALO ADA YANG GA SESUAI EDIT AJA -->
+
+<style>
+    table, tr, td {
+        border: none;
+    }
+</style>
+
 <table>
     <tr>
         <td style="vertical-align:middle; width:60px; padding-right:10px;">
