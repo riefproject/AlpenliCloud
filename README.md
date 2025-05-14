@@ -1,12 +1,12 @@
 <!-- SEMENTARA AJA INI -->
 <!-- KALO ADA YANG GA SESUAI EDIT AJA -->
 
-<table style="border:none;">
-    <tr style="border:none;">
-        <td style="border:none; vertical-align:bottom; width:60px; padding-right:10px;">
+<table border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td style="vertical-align:bottom; width:60px; padding-right:10px; border:none;">
             <img src="assets/logo.ico" style="height:50px; width:50px;">
         </td>
-        <td style="vertical-align:middle;">
+        <td style="vertical-align:middle; border:none;">
             <h1 style="margin:0;">AlpenliCloud</h1>
         </td>
     </tr>
@@ -45,9 +45,9 @@ Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan A
 
 1.  Pastikan lingkungan pengembangan mendukung bahasa pemrograman yang digunakan (misalnya, C, C++, atau lainnya).
 2.  Clone repository ini:
-    `bash
-git clone https://github.com/riefproject/AlpenliCloud.git
-`
+    ```bash
+    git clone https://github.com/riefproject/AlpenliCloud.git
+    ```
 3.  Compile and run: - Menggunakan shell script:
     ````bash
     . build.sh
