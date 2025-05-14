@@ -1,15 +1,9 @@
 <!-- SEMENTARA AJA INI -->
 <!-- KALO ADA YANG GA SESUAI EDIT AJA -->
 
-<style>
-    table, tr, td {
-        border: none;
-    }
-</style>
-
-<table>
-    <tr>
-        <td style="vertical-align:middle; width:60px; padding-right:10px;">
+<table style="border:none;">
+    <tr style="border:none;">
+        <td style="border:none; vertical-align:bottom; width:60px; padding-right:10px;">
             <img src="assets/logo.ico" style="height:50px; width:50px;">
         </td>
         <td style="vertical-align:middle;">
