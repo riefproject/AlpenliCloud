@@ -23,7 +23,8 @@ build() {
     done
 
     echo "🔧 Linking..."
-    gcc $object_files -o bin/Alpendrive.exe $LDFLAGS $RSTFLAGS
+    windres assets/resource.rc -O coff -o assets/resource.res
+    gcc $object_files assets/resource.res -o bin/AlpenliCloud.exe $LDFLAGS $RSTFLAGS
 
     if [ $? -ne 0 ]; then
         echo "❌ Linking failed!"
@@ -31,9 +32,9 @@ build() {
     fi
 
     clear
-    echo "🚀 Running Alpendrive..."
+    echo "🚀 Running AlpenliCloud..."
     sleep 1
-    ./bin/Alpendrive.exe || echo "❌ Alpendrive failed to start! Check for errors."
+    ./bin/AlpenliCloud.exe || echo "❌ AlpenliCloud failed to start! Check for errors."
 }
 
 compile() {

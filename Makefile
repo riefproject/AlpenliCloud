@@ -1,3 +1,6 @@
+# [ERROR]
+# Dalam Perbaikan
+
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude -Ilib/raylib-v5.5/include
 LDFLAGS = lib/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
@@ -8,24 +11,25 @@ BIN_DIR = bin
 
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
-TARGET = $(BIN_DIR)/Alpendrive.exe
+TARGET = $(BIN_DIR)/AlpenliCloud.exe
 
 .PHONY: all clean rebuild
 
 all: $(TARGET)
-	@echo "🚀 Running Alpendrive..."
-	@$(TARGET) || echo "❌ Alpendrive failed to start! Check for errors."
+	@echo "🚀 Running AlpenliCloud..."
+	@$(TARGET) || echo "❌ AlpenliCloud failed to start! Check for errors."
 
 $(TARGET): $(OBJS) | $(BIN_DIR)
 	@echo "🔧 Linking..."
-	@$(CC) $(OBJS) -o $@ $(LDFLAGS) $(RSTFLAGS)
+	windres assets/resource.rc -O coff -o assets/resource.res
+	@$(CC) $(OBJS) assets/resource.res -o $@ $(LDFLAGS) $(RSTFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@echo "🔨 Compiling $<..."
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(BIN_DIR) $(BUILD_DIR):
-	@mkdir -p $@
+	@if not exist $@ mkdir $@
 
 clean:
 	@echo "🧹 Cleaning build directories..."
