@@ -49,17 +49,16 @@ Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan A
     git clone https://github.com/riefproject/AlpenliCloud.git
     ```
 3.  Compile and run: - Menggunakan shell script:
-    ````bash
+    ```bash
     . build.sh
         # Anda dapat menambahkan parameter clean atau rebuild jika dibutuhkan
         # contoh: . build.sh rebuild
         # atau tanpa parameter sekalipun
-        ```
-        - Menggunakan Makefile
-        ```bash
-        make
-        ```
-    ````
+    ```
+    -   Menggunakan Makefile
+    ```bash
+    make # optional parameter <clean | rebuild>
+    ```
 
 ## Contoh Penggunaan
 
