@@ -3,24 +3,26 @@
 
 #include "nbtree.h"
 #include "item.h"
-
-typedef struct FileManager{
-  // Tree root;
-  // Tree rootTrash;
-  // Stack undo, redo;
-  // Queue selectedItem;
+#include "stack.h"
+#include "queue.h"
+typedef struct FileManager {
+  Tree root;
+  Tree rootTrash;
+  Stack actionStack;
+  Queue selectedItem;
 } FileManager;
 
 
 // OPERASI FILE
 void initFileManager(FileManager *fileManager);
 
+
+
 void createFile(FileManager *fileManager);
 void deleteFile(FileManager *fileManager);
 void updateFile(FileManager *fileManager);
 void recoverFile(FileManager *fileManager);
 void searchFile(FileManager *fileManager);
-
 
 void undo(FileManager *fileManager);
 void redo(FileManager *fileManager);

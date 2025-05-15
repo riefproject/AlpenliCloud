@@ -1,13 +1,14 @@
-#ifndef NTREE_H
-#define NTREE_H
+#ifndef NBTREE_H
+#define NBTREE_H
 #include "item.h"
 
-typedef Item infotype;
-typedef struct Node* address;
+typedef Item treeInfotype;
+typedef struct Node* Tree;
 typedef struct Node{
-  infotype item;
-  address next_brother, first_son, parent;
+  treeInfotype item;
+  Tree next_brother, first_son, parent;
 }Node;
 
+void create_tree(Tree* tree);
 
-#endif // !NTREE_H
+#endif // !NBTREE_H
