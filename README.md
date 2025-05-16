@@ -1,5 +1,32 @@
-<!-- SEMENTARA AJA INI -->
-<!-- KALO ADA YANG GA SESUAI EDIT AJA -->
+<!-- ============================================
+     AlpenliCloud - File Manager CLI
+     Struktur Data & Algoritma - Tugas Akhir
+     ============================================ -->
+
+<!-- TEAM DAN TANGGUNG JAWAB -->
+<!-- 
+  Team 1 - Arif
+    - Memperbaiki kesalahan dari tim 2 dan 3
+    - Implementasi:
+      void pasteFile(FileManager *fileManager);
+      void copyFile(FileManager *fileManager);
+      void cutFile(FileManager *fileManager);
+
+  Team 2 - Farras
+    - Implementasi:
+      void createFile(FileManager *fileManager);
+      void recoverFile(FileManager *fileManager);
+      void deleteFile(FileManager *fileManager);
+
+  Team 3 - Maul
+    - Implementasi:
+      void updateFile(FileManager *fileManager);
+      void searchFile(FileManager *fileManager);
+      void redo(FileManager *fileManager);
+      void undo(FileManager *fileManager);
+-->
+
+<!-- CATATAN: Silakan edit bila ada yang tidak sesuai -->
 
 <table border="0" cellspacing="0" cellpadding="0">
     <tr>
