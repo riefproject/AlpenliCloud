@@ -13,7 +13,7 @@ build() {
     LDFLAGS="lib/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
 
     object_files=""
-    for src_file in src/*.c; do
+    for src_file in src/main.c; do
         if [ -f "$src_file" ]; then
             filename=$(basename "$src_file")
             object_file="build/output/src/${filename%.c}.o"

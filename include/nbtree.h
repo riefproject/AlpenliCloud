@@ -13,7 +13,7 @@ void create_tree(Tree* tree);
 
 Node* create_node(treeInfotype data);
 
-void insert_node(Node node);
+void insert_node(Tree parent, treeInfotype data);
 
 
 #endif // !NBTREE_H

@@ -6,15 +6,19 @@
 #include "stack.h"
 #include "queue.h"
 typedef struct FileManager {
-  char *currentPath;
   Tree root;
   Tree rootTrash;
-  Stack actionStack;
+  Stack undo;
+  Stack redo;
   Queue selectedItem;
+  Queue currentPath;
 } FileManager;
 
-// OPERASI FILE
-void initFileManager(FileManager *fileManager);
+// Create empty filemanager 
+void createFileManager(FileManager *fileManager);
+
+// Define filemanager with default value
+void initFileManager(FileManager *fileManager, char *path);
 
 void createFile(FileManager *fileManager);
 void deleteFile(FileManager *fileManager);

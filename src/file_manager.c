@@ -7,37 +7,59 @@
 #include "queue.h"
 #include "nbtree.h"
 #include "utils.h"
+#include "item.h"
 
-void initFileManager(FileManager *fileManager){
+/* IS: 
+  Tree root = ?;
+  Tree rootTrash = ?;
+  Stack actionStack = ?;
+  Queue selectedItem = ?;
+  Queue currentPath = ?;
+
+  FS: 
+  Tree root = NULL;
+  Tree rootTrash = NULL;
+  Stack actionStack = NULL;
+  Queue selectedItem = NULL;
+  Queue currentPath = NULL;
+*/
+void createFileManager(FileManager *fileManager){
   create_stack(&(fileManager->actionStack));
   create_queue(&(fileManager->selectedItem));
   create_tree(&(fileManager->root));
   create_tree(&(fileManager->rootTrash));
 }
 
-int loadFile(FileManager *fileManager) {
+/* 
+  IS: 
+  Tree root = NULL;
+  Tree rootTrash = NULL;
+  Stack actionStack = NULL;
+  Queue selectedItem = NULL;
+  Queue currentPath = NULL;
+
+  FS: 
+  Tree root = loadFile(*filemanager, "./root/dir/");
+  Tree rootTrash = loadFile(*filemanager, "./root/trash/");
+  Stack actionStack = NULL;
+  Queue selectedItem = NULL;
+  Queue currentPath = enqueue("./root/");
+*/
+void initFileManager(FileManager *fileManager) {
+  printf("Hello World!");
+  
+}
+
+int loadFile(FileManager *fileManager, char *path) {
   DIR *dp;
   struct dirent *ep;
 
-  dp = opendir(".");
+  dp = opendir(path);
 
   if (dp != NULL) {
     while ((ep = readdir(dp)) != NULL) {
-      // Lewati direktori . dan ..
-      if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
-        continue;
-
-      treeInfotype data = {
-        .name = strdup(ep->d_name),
-        .size = 0,
-        .type = ITEM_FILE,
-        .created_at = NULL,
-        .updated_at = NULL,
-        .deleted_at = NULL
-      };
-
-      Node *newNode = create_node(data);
-      insert_node(fileManager->root, newNode);
+      Item * data = createItem(ep->d_name, 0, ITEM_FILE, NULL, NULL, NULL);
+      insert_node(fileManager->root, data);
     }
     closedir(dp);
     return 0;

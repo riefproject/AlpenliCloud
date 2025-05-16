@@ -4,16 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 typedef enum OperationType {
-    CREATE,
-    DELETE,
-    UPDATE,
-    RECOVER,
-    SEARCH,
-    UNDO,
-    REDO,
-    COPY,
-    PASTE,
-    CUT
+    TYPE_CREATE,
+    TYPE_DELETE,
+    TYPE_UPDATE,
+    TYPE_RECOVER,
+    TYPE_SEARCH,
+    TYPE_COPY,
+    TYPE_PASTE,
+    TYPE_CUT,
+    TYPE_PATH
 } OperationType;
 
 typedef struct Operation {

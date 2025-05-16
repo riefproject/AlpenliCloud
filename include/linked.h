@@ -10,7 +10,7 @@
 #define Nil NULL
 #define Info(P) (P)->info
 #define Next(P) (P)->next
-#define First(L) (L).First
+#define Head(L) (L).head
 
 typedef Operation infotype;
 typedef struct tElmtList *address;
@@ -20,7 +20,7 @@ typedef struct tElmtList {
 } ElmtList;
 
 /* Definisi list : */
-/* List kosong ===> First(L) = Nil */
+/* List kosong ===> Head(L) = Nil */
 /* Setiap elemen dengan address P dapat diacu info(P) dan Next(P);  */
 /* Elemen terakhir list ===> Jika addressnya Last maka Next(Last) = Nil */
 typedef struct {

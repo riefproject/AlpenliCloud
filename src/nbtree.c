@@ -17,7 +17,8 @@ Node* create_node(treeInfotype data) {
     return newNode;
 }
   
-void insert_node(Tree parent, Node *child) {
+void insert_node(Tree parent, treeInfotype data) {
+    Node* child = create_node(data);
     if (parent == NULL || child == NULL) return;
   
     child->parent = parent;

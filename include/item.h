@@ -15,6 +15,7 @@ typedef struct Item{
 }Item;
 
 // OPERASI
+Item createItem(char *name, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t, deleted_at);
 
 // Getter
 

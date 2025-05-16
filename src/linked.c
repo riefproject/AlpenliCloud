@@ -7,7 +7,7 @@
 boolean ListEmpty (List L)
 /* Mengirim true jika List Kosong */
 {
-	 return (First(L) == Nil);
+	 return (Head(L) == Nil);
 }
 
 /**** Konstruktor/Kreator List Kosong ****/
@@ -15,7 +15,7 @@ void CreateList (List * L)
 /* IS : L sembarang */
 /* FS : Terbentuk List Kosong */
 {
-	 First(*L) = Nil;
+	 Head(*L) = Nil;
 }
 
 /**** Manajemen Memory ****/
@@ -59,7 +59,7 @@ address Search (List L, infotype X)
 	 address P;
 	 boolean found =  false;
 	 /* algoritma */
-	 P = First(L);
+	 P = Head(L);
 	 while ((P != Nil) && (!found))
 	 {
 		if (Info(P) == X)
@@ -79,7 +79,7 @@ boolean FSearch (List L, address P)
 	 boolean found=false;
 	 address PSearch;
 	 /* Algortima */
-	 PSearch = First(L);
+	 PSearch = Head(L);
 	 while ((PSearch != Nil) && (!found))
 	 {
 		if (PSearch == P)
@@ -105,7 +105,7 @@ address SearchPrec (List L, infotype X)
 	boolean found=false;
 	 /* Algoritma */
 	Prec = Nil;
-	P = First(L);
+	P = Head(L);
 	while ((P != Nil) && (!found))
 	{
 		 if (Info(P) == X) {	
@@ -134,7 +134,7 @@ void InsVFirst (List * L, infotype X)
 	
 	P = Alokasi(X);
 	
-	InsertFirst(L, P);
+	InsertHead(L, P);
 	//Buatkan algoritma sesuai spesifikasi modul ini
 }
 
@@ -165,13 +165,13 @@ void DelVFirst (List * L, infotype * X)
 	address P;
 	
 	 /* Algoritma */
-	P = (*L).First;
+	P = (*L).head;
 	
 	if(P != NULL) {
 	
 		*X = P->info;
 		
-		DelFirst(L, &P);
+		DelHead(L, &P);
 		
 	}
 	
@@ -186,13 +186,13 @@ void DelVLast (List * L, infotype * X)
 	 /* Kamus Lokal */
 	address PDel;
 	/* Algoritma */
-	PDel = (*L).First;
+	PDel = (*L).head;
 	 
 	while(PDel != NULL) {
 		if(PDel->next == NULL) {
 			*X = PDel->info;
 			
-			DelFirst(L, &PDel);
+			DelHead(L, &PDel);
 			
 			break;
 		}
@@ -219,9 +219,9 @@ void InsertFirst (List * L, address P)
 {
 	//Buatkan algoritma sesuai spesifikasi modul ini
 	if(P != NULL) {
-		P->next = (*L).First;
+		P->next = (*L).head;
 		
-		(*L).First = P;
+		(*L).head = P;
 	}
 }
 
@@ -232,7 +232,7 @@ void InsertAfter (List * L, address P, address Prec)
 {
 	//Buatkan algoritma sesuai spesifikasi modul ini
 	if(ListEmpty(*L)) {
-		(*L).First = P;
+		(*L).head = P;
 		
 		return;	
 	}
@@ -249,7 +249,7 @@ void InsertLast (List * L, address P)
 	address Last;
 	 /* Algoritma */
 	 
-	 Last = (*L).First;
+	 Last = (*L).head;
 	 
 	 if(P != NULL) {
 	 	while (Last != NULL) {
@@ -275,13 +275,13 @@ void DelFirst (List * L, address * P)
 	//Buatkan algoritma sesuai spesifikasi modul ini
 	if(ListEmpty(*L)) return;
 	
-	(*P) = (*L).First;
+	(*P) = (*L).head;
 	
-	(*L).First = (*L).First->next;
+	(*L).head = (*L).head->next;
 	
 	DeAlokasi((*P));
 	
-	(*P) = (*L).First;
+	(*P) = (*L).head;
 	
 }
 
@@ -301,9 +301,9 @@ void DelP (List * L, infotype X)
 	Prec = SearchPrec(*L, X);
 	
 	if(Prec == NULL) {
-		(*L).First = NULL;
+		(*L).head = NULL;
 		
-		DeAlokasi((*L).First);
+		DeAlokasi((*L).head);
 	
 		return;
 	}
@@ -328,16 +328,16 @@ void DelLast (List *L, address *P)
     address Prec;
 
     /* Algoritma */
-    if ((*L).First->next == NULL) { 
-        Prec = (*L).First;
+    if ((*L).head->next == NULL) { 
+        Prec = (*L).head;
         
         *P = NULL;
         
-        (*L).First = NULL;
+        (*L).head = NULL;
         
     	DeAlokasi(Prec);
     } else {
-        Prec = (*L).First;
+        Prec = (*L).head;
         while (Prec->next->next != NULL) { 
             Prec = Prec->next;
         }
@@ -359,7 +359,7 @@ void DelAfter (List * L, address * Pdel, address Prec)
 	 if(ListEmpty(*L)) return;
 	 
 	 if(Prec == NULL) {
-	 	DelFirst(L, Pdel);
+	 	DelHead(L, Pdel);
 	 	
 	 	return;
 	 }
@@ -383,11 +383,10 @@ void PrintInfo (List L)
 	
 	if(ListEmpty(L)) {
 		printf("%s", "List Kosong");
-		
 		return;
 	}
 	
-	P = L.First;
+	P = L.head;
 	
 	while (P != NULL) {
 		if(P->next == NULL) {
@@ -412,9 +411,9 @@ void DelAll (List * L)
 	
 	if(ListEmpty(*L)) return;
 	
-	while((*L).First != NULL) {
-		PDel = (*L).First;
-		(*L).First = (*L).First->next;
+	while((*L).head != NULL) {
+		PDel = (*L).head;
+		(*L).head = (*L).head->next;
 		DeAlokasi(PDel); 	
 	}
 	 //Buatkan algoritma sesuai spesifikasi modul ini

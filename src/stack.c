@@ -15,7 +15,7 @@ bool is_stack_empty(Stack stack) {
 void push(Stack* stack, infotype data){
   List temp_list;
   temp_list.head = *stack;
-  insert_first(&temp_list, data);
+  insert_Head(&temp_list, data);
   *stack = temp_list.head;
 }
 
@@ -23,14 +23,14 @@ void push(Stack* stack, infotype data){
 void pop(Stack* stack, infotype* data){
   List temp_list;
   temp_list.head = *stack;
-  delete_first(&temp_list, data);
+  delete_Head(&temp_list, data);
   *stack = temp_list.head;
 }
 
 void pop_print(Stack* stack, infotype* data){
     List temp_list;
     temp_list.head = *stack;
-    delete_first(&temp_list, data);
+    delete_Head(&temp_list, data);
     *stack = temp_list.head;
     printf("%d ", *data);
 }
