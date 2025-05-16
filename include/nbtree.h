@@ -11,4 +11,9 @@ typedef struct Node{
 
 void create_tree(Tree* tree);
 
+Node* create_node(treeInfotype data);
+
+void insert_node(Node node);
+
+
 #endif // !NBTREE_H

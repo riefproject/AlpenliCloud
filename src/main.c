@@ -1,17 +1,23 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// #include "file_manager.h"
-int main() {
-    // printf("Hello World!\n");
-    // char* cmd = "mkdir";
+#include <sys/types.h>
+#include <dirent.h>
 
-    if(system("mkdir aku_disini") == 0){
-        printf("folder berhasil dibuat\n");
-    }else{
-        printf("Jancok");
-    };
-    // system(cmd);
-
+int main ()
+{
+  DIR *dp;
+  struct dirent *ep;     
+  dp = opendir ("./");
+  if (dp != NULL)
+  {
+    while ((ep = readdir (dp)) != NULL)
+      puts (ep->d_name);
+          
+    (void) closedir (dp);
     return 0;
+  }
+  else
+  {
+    perror ("Couldn't open the directory");
+    return -1;
+  }
 }

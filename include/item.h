@@ -3,8 +3,8 @@
 #include <time.h>
 
 typedef enum ItemType{
-  FOLDER,
-  FILE
+  ITEM_FOLDER,
+  ITEM_FILE,
 } ItemType;
 
 typedef struct Item{
