@@ -6,6 +6,7 @@
 int main ()
 {
   DIR *dp;
+
   struct dirent *ep;     
   dp = opendir("./");
 
@@ -24,3 +25,20 @@ int main ()
     return -1;
   }
 }
+
+// Team 1 arif
+// Memperbaiki kesalahan tim 2 dan 3
+// void pasteFile(FileManager *fileManager);
+// void copyFile(FileManager *fileManager);
+// void cutFile(FileManager *fileManager);
+
+// Team 2 farras
+// void createFile(FileManager *fileManager);
+// void recoverFile(FileManager *fileManager);
+// void deleteFile(FileManager *fileManager);
+
+// Team 2 maul
+// void updateFile(FileManager *fileManager);
+// void searchFile(FileManager *fileManager);
+// void redo(FileManager *fileManager);
+// void undo(FileManager *fileManager);

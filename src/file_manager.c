@@ -23,7 +23,7 @@
   Queue selectedItem = NULL;
   Queue currentPath = NULL;
 */
-void createFileManager(FileManager *fileManager){
+void createFileManager(FileManager *fileManager) {
   create_stack(&(fileManager->actionStack));
   create_queue(&(fileManager->selectedItem));
   create_tree(&(fileManager->root));
@@ -153,8 +153,8 @@ void undo(FileManager *fileManager) {}
 void redo(FileManager *fileManager) {}
 
 void copyFile(FileManager *fileManager) {}
-void pasteFile(FileManager *fileManager) {}
 void cutFile(FileManager *fileManager) {}
+void pasteFile(FileManager *fileManager) {}
 
 void printDirectory(FileManager *fileManager) {}
 void printTrash(FileManager *fileManager) {}
