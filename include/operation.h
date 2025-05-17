@@ -21,4 +21,6 @@ typedef struct Operation {
     OperationType type;
 } Operation;
 
+Operation createOperation(char* from, char* to, OperationType type);
+
 #endif // !OPERATION_H

@@ -32,4 +32,16 @@ void insert_node(Tree parent, treeInfotype data) {
       sibling->next_brother = child;
     }
 }
-  
+
+Tree searchTree(Tree root, treeInfotype item){
+  // Kalau tree kosoong, return null
+  if(root == NULL) return NULL;
+  // kalau root sama dengan item yang dicari, return root
+  if(strcmp(root->item.name, item.name) == 0 && strcmp(root->item.path, item.path) == 0) return root;
+  // cari di first_son
+  Tree found = searchTree(root->first_son, item);
+  // kalau ketemu, return found
+  if(found != NULL) return found;
+  // cari di next_brother
+  return searchTree(root->next_brother, item);
+}

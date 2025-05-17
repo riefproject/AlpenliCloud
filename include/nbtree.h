@@ -15,5 +15,7 @@ Node* create_node(treeInfotype data);
 
 void insert_node(Tree parent, treeInfotype data);
 
+Tree searchTree(Tree root, treeInfotype data);
+
 
 #endif // !NBTREE_H

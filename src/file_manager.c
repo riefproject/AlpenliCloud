@@ -73,6 +73,7 @@ void createFile(FileManager *fileManager) {
   int choice;
   char *fileName = NULL;
   char filepath[512];
+  time_t createTime;
 
   while (true) {
     system("cls"); 
@@ -104,11 +105,15 @@ void createFile(FileManager *fileManager) {
     }
     fclose(newFile);
 
+    // dapatkan waktu saat file dibuat
+    createTime = time(NULL);
+
+
     Node *newNode = create_node((treeInfotype){
       .name = strdup(fileName),
       .size = 0,
-      .type = ITEM_FILE,
-      .created_at = NULL,
+      .type = isDirectory(filepath) ? ITEM_FOLDER : ITEM_FILE,
+      .created_at = createTime,
       .updated_at = NULL,
       .deleted_at = NULL,
     });
@@ -144,9 +149,38 @@ void createFile(FileManager *fileManager) {
 
 
 void deleteFile(FileManager *fileManager) {}
-void updateFile(FileManager *fileManager) {}
+
+// Rename/Update file name
+void renameFile(FileManager *fileManager,char* filePath, char *newName) {
+  Item item;
+
+  // Cari item
+  item = searchFile(fileManager, filePath);
+  if(item == NULL) {
+    printf("File tidak ditemukan\n");
+    return;
+  }
+
+  // rename file
+  char newPath[512];
+  snprintf(newPath, sizeof(newPath), "%s/%s", fileManager->currentPath, newName);
+  rename(filePath, newPath);
+  
+  // update item
+  item.name = strdup(newName);
+  item.path = strdup(newPath);
+  
+  printf("File berhasil diubah namanya menjadi %s\n", newName);
+}
+
 void recoverFile(FileManager *fileManager) {}
-void searchFile(FileManager *fileManager) {}
+
+Item searchFile(FileManager *fileManager, char* path) {
+  Item item, itemToSearch;
+  itemToSearch = createItem(getNameFromPath(path), path,0, ITEM_FILE, NULL, NULL, NULL);
+  item = searchTree(fileManager->root, item)->item;
+  return item;
+}
 
 
 void undo(FileManager *fileManager) {}
@@ -158,3 +192,19 @@ void pasteFile(FileManager *fileManager) {}
 
 void printDirectory(FileManager *fileManager) {}
 void printTrash(FileManager *fileManager) {}
+
+
+char* getNameFromPath(char* path){
+  char *name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
+  if (name != NULL) {
+    return name + 1; // skip karakter slash (/) terakhir
+  }
+  return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
+
+};
+
+bool isDirectory(char* path) {
+  struct stat path_stat;
+  stat(path, &path_stat);
+  return S_ISDIR(path_stat.st_mode);
+}

@@ -36,4 +36,10 @@ void cutFile(FileManager *fileManager);
 void printDirectory(FileManager *fileManager);
 void printTrash(FileManager *fileManager);
 
+// Mengembalikan nama file dari path lengkap
+char* getNameFromPath(char* path);
+
+// Cek apakah path adalah folder
+bool isDirectory(char* path);
+
 #endif // !FILE_MANAGER_H
