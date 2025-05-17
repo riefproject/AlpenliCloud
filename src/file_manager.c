@@ -116,7 +116,7 @@ void createFile(FileManager* fileManager) {
     Node *newNode = create_node((treeInfotype){
       .name = strdup(fileName),
       .size = 0,
-      .type = isDirectory(filepath) ? ITEM_FOLDER : ITEM_FILE,
+      .type = ITEM_FILE,
       .created_at = createTime,
       .updated_at = NULL,
       .deleted_at = NULL,
