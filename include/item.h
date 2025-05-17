@@ -4,12 +4,12 @@
 #include <stdio.h>
 #include <time.h>
 
-typedef enum ItemType{
+typedef enum ItemType {
   ITEM_FOLDER,
   ITEM_FILE,
 } ItemType;
 
-typedef struct Item{
+typedef struct Item {
   char* name;
   char* path;
   size_t size;
