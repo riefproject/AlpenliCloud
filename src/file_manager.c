@@ -9,73 +9,77 @@
 #include "utils.h"
 #include "item.h"
 
-/* IS: 
+/* IS:
   Tree root = ?;
   Tree rootTrash = ?;
   Stack actionStack = ?;
   Queue selectedItem = ?;
   Queue currentPath = ?;
 
-  FS: 
+  FS:
   Tree root = NULL;
   Tree rootTrash = NULL;
   Stack actionStack = NULL;
   Queue selectedItem = NULL;
   Queue currentPath = NULL;
 */
-void createFileManager(FileManager *fileManager) {
-  create_stack(&(fileManager->actionStack));
-  create_queue(&(fileManager->selectedItem));
+void createFileManager(FileManager* fileManager) {
   create_tree(&(fileManager->root));
   create_tree(&(fileManager->rootTrash));
+  create_stack(&(fileManager->undo));
+  create_stack(&(fileManager->redo));
+  create_queue(&(fileManager->copied));
+  create_queue(&(fileManager->cut));
+  create_queue(&(fileManager->temp));
 }
 
-/* 
-  IS: 
+/*
+  IS:
   Tree root = NULL;
   Tree rootTrash = NULL;
   Stack actionStack = NULL;
   Queue selectedItem = NULL;
   Queue currentPath = NULL;
 
-  FS: 
+  FS:
   Tree root = loadFile(*filemanager, "./root/dir/");
   Tree rootTrash = loadFile(*filemanager, "./root/trash/");
   Stack actionStack = NULL;
   Queue selectedItem = NULL;
   Queue currentPath = enqueue("./root/");
 */
-void initFileManager(FileManager *fileManager) {
+void initFileManager(FileManager* fileManager) {
   printf("Hello World!");
-  
+
 }
 
-int loadFile(FileManager *fileManager, char *path) {
-  DIR *dp;
-  struct dirent *ep;
+int loadFile(FileManager* fileManager, char* path) {
+  DIR* dp;
+  struct dirent* ep;
 
   dp = opendir(path);
 
   if (dp != NULL) {
     while ((ep = readdir(dp)) != NULL) {
-      Item * data = createItem(ep->d_name, 0, ITEM_FILE, NULL, NULL, NULL);
+      Item data = createItem(ep->d_name, 0, ITEM_FILE, NULL, NULL, NULL);
       insert_node(fileManager->root, data);
     }
     closedir(dp);
     return 0;
-  } else {
+  }
+  else {
     perror("Couldn't open the directory");
     return -1;
   }
 }
 
-void createFile(FileManager *fileManager) {
+void createFile(FileManager* fileManager) {
   int choice;
-  char *fileName = NULL;
+  char* fileName = NULL;
   char filepath[512];
 
   while (true) {
-    system("cls"); 
+    system("cls");
     printf("New Item\n");
     printf("Pilih type:\n");
     printf("1. File\n");
@@ -95,8 +99,8 @@ void createFile(FileManager *fileManager) {
   snprintf(filepath, sizeof(filepath), "%s/%s", fileManager->currentPath, fileName);
 
   if (choice == 1) {
- 
-    FILE *newFile = fopen(filepath, "w");
+
+    FILE* newFile = fopen(filepath, "w");
     if (newFile == NULL) {
       perror("Gagal membuat file");
       free(fileName);
@@ -104,36 +108,37 @@ void createFile(FileManager *fileManager) {
     }
     fclose(newFile);
 
-    Node *newNode = create_node((treeInfotype){
+    treeInfotype* newNode = create_node((treeInfotype) {
       .name = strdup(fileName),
-      .size = 0,
-      .type = ITEM_FILE,
-      .created_at = NULL,
-      .updated_at = NULL,
-      .deleted_at = NULL,
+        .size = 0,
+        .type = ITEM_FILE,
+        .created_at = NULL,
+        .updated_at = NULL,
+        .deleted_at = NULL,
     });
-    insert_node(fileManager->root, newNode);
+    insert_node(fileManager->root, *newNode);
 
     printf("File berhasil dibuat. Tekan enter untuk lanjut...\n");
     getchar();
-  } else if (choice == 2) {
-    int status = mkdir(filepath, 0755);
-  
+  }
+  else if (choice == 2) {
+    int status = mkdir(filepath);
+
     if (status != 0) {
       perror("Gagal membuat folder");
       free(fileName);
       return;
     }
 
-    Node *newNode = create_node((treeInfotype){
+    treeInfotype* newNode = create_node((treeInfotype) {
       .name = strdup(fileName),
-      .size = 0,
-      .type = ITEM_FOLDER,
-      .created_at = NULL,
-      .updated_at = NULL,
-      .deleted_at = NULL,
+        .size = 0,
+        .type = ITEM_FOLDER,
+        .created_at = NULL,
+        .updated_at = NULL,
+        .deleted_at = NULL,
     });
-    insert_node(fileManager->root, newNode);
+    insert_node(fileManager->root, *newNode);
 
     printf("Folder berhasil dibuat. Tekan enter untuk lanjut...\n");
     getchar();
@@ -143,18 +148,82 @@ void createFile(FileManager *fileManager) {
 }
 
 
-void deleteFile(FileManager *fileManager) {}
-void updateFile(FileManager *fileManager) {}
-void recoverFile(FileManager *fileManager) {}
-void searchFile(FileManager *fileManager) {}
+void deleteFile(FileManager* fileManager) {}
+void updateFile(FileManager* fileManager) {}
+void recoverFile(FileManager* fileManager) {}
+void searchFile(FileManager* fileManager) {}
 
 
-void undo(FileManager *fileManager) {}
-void redo(FileManager *fileManager) {}
+void undo(FileManager* fileManager) {}
+void redo(FileManager* fileManager) {}
 
-void copyFile(FileManager *fileManager) {}
-void cutFile(FileManager *fileManager) {}
-void pasteFile(FileManager *fileManager) {}
 
-void printDirectory(FileManager *fileManager) {}
-void printTrash(FileManager *fileManager) {}
+/*
+  typedef struct FileManager {
+    Tree root;
+    Tree rootTrash;
+    Stack undo;
+    Stack redo;
+    Queue selectedItem;
+    Queue currentPath;
+} FileManager;
+
+
+*/
+void copyFile(FileManager* fileManager) {
+  // 1. Cari item di tree
+  // 2. Masukkan file terpillih satu per satu ke dalam queue
+  // 3. a: Jika tidak ada, tampilkan pesan error
+  //    b: Lanjut ke langkah 4
+  // 4. Simpan di buffer
+  // 5. tampilkan pesan error
+  // 6. tampilkan pesan sukses
+
+}
+
+void cutFile(FileManager* fileManager) {
+
+
+}
+void pasteFile(FileManager* fileManager) {
+  // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
+  // 2. Cari item di tree
+  // 3. a: Jika tidak ada, tampilkan pesan error
+  //    b: Lanjut ke langkah 4
+  // 4. Simpan di buffer
+  // 5. Cari path di tree. 
+  // 6. a: Jika tidak ada, buatkan foldernya
+  //    b: Jika ada, lanjutkan
+  // 7. Simpan item ke path yang sudah ada
+  // 8. Simpan item ke tree
+  // 9. Hapus item dari queue
+  // 10. Simpan semua operasi di stack undo
+  // 11. Jika ada error, tampilkan pesan error
+  // 12. Jika berhasil, tampilkan pesan sukses
+}
+
+/*
+  ├───blabla
+  │   └───blabla
+  │       │   blabla
+  │       │   blabla
+  │       │   blabla
+  │       │
+  │       ├───blabla
+  │       │       blabla
+  │       │       blabla
+  │       │       blabla
+  │       │
+  │       └───blabla
+  │               blabla
+  │               blabla
+  │               blabla
+  │
+  ├───blabla
+  └───blabla
+*/
+
+void printDirectory(FileManager* fileManager) {
+
+}
+void printTrash(FileManager* fileManager) {}

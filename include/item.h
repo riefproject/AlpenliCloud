@@ -2,25 +2,25 @@
 #define ITEM_H
 #include <time.h>
 
-typedef enum ItemType{
+typedef enum ItemType {
   ITEM_FOLDER,
   ITEM_FILE,
 } ItemType;
 
-typedef struct Item{
+typedef struct Item {
   char* name;
   size_t size;
   ItemType type;
   time_t created_at, updated_at, deleted_at;
 }Item;
 
-typedef struct ItemTrash{
+typedef struct ItemTrash {
   Item item;
-  char *orgin;
+  char* orgin;
 };
 
 // OPERASI
-Item createItem(char *name, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t, deleted_at);
+Item createItem(char* name, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
 
 // Getter
 
