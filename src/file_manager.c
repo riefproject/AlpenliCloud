@@ -205,6 +205,7 @@ void redo(FileManager* fileManager) {}
 
 */
 void copyFile(FileManager* fileManager) {
+  // 1. deteksi file dipilih
   // 1. Cari item di tree
   // 2. Masukkan file terpillih satu per satu ke dalam queue
   // 3. a: Jika tidak ada, tampilkan pesan error
@@ -213,6 +214,16 @@ void copyFile(FileManager* fileManager) {
   // 5. tampilkan pesan error
   // 6. tampilkan pesan sukses
 
+  char* path;
+  scanf("%s", path);
+  Item item = searchFile(fileManager, path);
+  if (&item == NULL) {
+    printf("File tidak ditemukan\n");
+    return;
+  }
+  // Simpan item ke dalam queue copied
+  enqueue(&(fileManager->copied), item);
+  printf("File berhasil disalin ke clipboard\n");
 }
 
 void cutFile(FileManager* fileManager) {
@@ -234,8 +245,24 @@ void pasteFile(FileManager* fileManager) {
   // 10. Simpan semua operasi di stack undo
   // 11. Jika ada error, tampilkan pesan error
   // 12. Jika berhasil, tampilkan pesan sukses
-}
+  char* path = fileManager->currentPath.front;
+  Item item;
+  item = dequeue((fileManager->copied.front));
+  while (&item != NULL) {
+    {
 
+      // Cari item di tree
+      Item foundItem = searchFile(fileManager, path);
+      if (&foundItem == NULL) {
+        printf("File tidak ditemukan\n");
+        return;
+      }
+      // Simpan item ke dalam queue cut
+      enqueue(&(fileManager->cut), item);
+      item = dequeue((fileManager->copied.front));
+    }
+  }
+}
 /*
   ├───blabla
   │   └───blabla
