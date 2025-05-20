@@ -20,14 +20,6 @@ bool is_queue_empty(Queue queue){
   return false;
 }
 
-bool is_queue_full(Queue queue){
-  LinkedList temp_list;
-  temp_list.head = queue.front;
-  if(get_length(temp_list) == MAX_QUEUE){
-    return true;
-  }
-  return false;
-}
 
 void enqueue(Queue* queue, infotype data){
   LinkedList temp_list;
@@ -49,7 +41,7 @@ void enqueue(Queue* queue, infotype data){
 
 }
 
-void dequeue(Queue* queue, infotype* data){
+Item dequeue(Queue* queue, infotype* data){
   LinkedList temp_list;
   if(is_queue_empty(*queue)){
     printf("Queue is empty\n");

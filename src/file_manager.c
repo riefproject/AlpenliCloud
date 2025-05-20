@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "file_manager.h"
 #include "stack.h"
@@ -216,13 +217,14 @@ void copyFile(FileManager* fileManager) {
 
   char* path;
   scanf("%s", path);
-  Item item = searchFile(fileManager, path);
-  if (&item == NULL) {
+  Item *item = malloc(sizeof(Item));
+  *item = searchFile(fileManager, path); 
+  if (item == NULL) {
     printf("File tidak ditemukan\n");
     return;
   }
   // Simpan item ke dalam queue copied
-  enqueue(&(fileManager->copied), item);
+  enqueue(&(fileManager->copied), (void*)item);
   printf("File berhasil disalin ke clipboard\n");
 }
 

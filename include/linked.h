@@ -9,7 +9,7 @@
 
 #include <stdbool.h>
 
-#define infotype char
+#define infotype void*
 
 // Define the structure for a node in the linked list
 typedef struct Node {
