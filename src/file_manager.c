@@ -279,39 +279,6 @@ char* getNameFromPath(char* path) {
 
 };
 
-void copyFile(FileManager* fileManager) {
-  // 1. Cari item di tree
-  // 2. Masukkan file terpillih satu per satu ke dalam queue
-  // 3. a: Jika tidak ada, tampilkan pesan error
-  //    b: Lanjut ke langkah 4
-  // 4. Simpan di buffer
-  // 5. tampilkan pesan error
-  // 6. tampilkan pesan sukses
-
-
-}
-
-void cutFile(FileManager* fileManager) {
-
-
-}
-void pasteFile(FileManager* fileManager) {
-  // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
-  // 2. Cari item di tree
-  // 3. a: Jika tidak ada, tampilkan pesan error
-  //    b: Lanjut ke langkah 4
-  // 4. Simpan di buffer
-  // 5. Cari path di tree. 
-  // 6. a: Jika tidak ada, buatkan foldernya
-  //    b: Jika ada, lanjutkan
-  // 7. Simpan item ke path yang sudah ada
-  // 8. Simpan item ke tree
-  // 9. Hapus item dari queue
-  // 10. Simpan semua operasi di stack undo
-  // 11. Jika ada error, tampilkan pesan error
-  // 12. Jika berhasil, tampilkan pesan sukses
-}
-
 void selectFile(FileManager* fileManager, Item item) {
   Item* itemToSelect = alloc(Item);
   *itemToSelect = item;
