@@ -11,7 +11,7 @@ typedef struct FileManager {
   Tree rootTrash;       // root trash (deleted files)   
   Stack undo;           // stack for undo operations
   Stack redo;           // stack for redo operations
-  Queue currentPath;    // queue for current path       
+  Stack currentPath;    // queue for current path       
   Queue copied;         // queue for copied items 
   Queue cut;            // queue for cut items
   Queue temp;           // temporary queue for operations
@@ -25,7 +25,7 @@ void initFileManager(FileManager* fileManager, char* path);
 
 void createFile(FileManager* fileManager);
 void deleteFile(FileManager* fileManager);
-void updateFile(FileManager* fileManager);
+void renameFile(FileManager* fileManager, char* filePath, char* newName);
 void recoverFile(FileManager* fileManager);
 void searchFile(FileManager* fileManager);
 
