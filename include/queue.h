@@ -22,9 +22,9 @@ bool is_queue_empty(Queue queue);
 // Function to check if the queue is full
 bool is_queue_full(Queue queue);
 // Function to enqueue an element into the queue
-void enqueue(Queue* queue, infotype data);
+void enqueue(Queue* queue, Item data);
 // Function to dequeue an element from the queue
-void dequeue(Queue* queue, infotype* data);
+Item dequeue(Queue* queue);
 // Function to get the front element of the queue
 void destroy_queue(Queue* queue);
 // Function to print the queue

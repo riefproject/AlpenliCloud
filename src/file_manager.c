@@ -61,7 +61,7 @@ int loadFile(FileManager* fileManager, char* path) {
 
   if (dp != NULL) {
     while ((ep = readdir(dp)) != NULL) {
-      Item data = createItem(ep->d_name, 0, ITEM_FILE, NULL, NULL, NULL);
+      Item data = createItem(ep->d_name, path, 0, ITEM_FILE, NULL, NULL, NULL);
       insert_node(fileManager->root, data);
     }
     closedir(dp);
@@ -113,15 +113,15 @@ void createFile(FileManager* fileManager) {
     createTime = time(NULL);
 
 
-    Node *newNode = create_node((treeInfotype){
+    treeInfotype newNode = {
       .name = strdup(fileName),
       .size = 0,
       .type = ITEM_FILE,
       .created_at = createTime,
       .updated_at = NULL,
       .deleted_at = NULL,
-    });
-    insert_node(fileManager->root, *newNode);
+    };
+    insert_node(fileManager->root, newNode);
 
     printf("File berhasil dibuat. Tekan enter untuk lanjut...\n");
     getchar();
@@ -153,45 +153,157 @@ void createFile(FileManager* fileManager) {
 }
 
 
-void deleteFile(FileManager *fileManager) {}
+void deleteFile(FileManager* fileManager) {}
 
 // Rename/Update file name
-void renameFile(FileManager *fileManager,char* filePath, char *newName) {
+void renameFile(FileManager* fileManager, char* filePath, char* newName) {
   Item item;
 
   // Cari item
   item = searchFile(fileManager, filePath);
-  if(item == NULL) {
-    printf("File tidak ditemukan\n");
-    return;
-  }
+  // if (item == NULL) { // reviewed by Arief: bang struct itu ga bisa null, cheking null hanya untuk pointer cmiiw
+  //   printf("File tidak ditemukan\n");
+  //   return;
+  // }
 
   // rename file
   char newPath[512];
   snprintf(newPath, sizeof(newPath), "%s/%s", fileManager->currentPath, newName);
   rename(filePath, newPath);
-  
+
   // update item
   item.name = strdup(newName);
   item.path = strdup(newPath);
-  
+
   printf("File berhasil diubah namanya menjadi %s\n", newName);
 }
 
-void recoverFile(FileManager *fileManager) {}
+void recoverFile(FileManager* fileManager) {}
 
-Item searchFile(FileManager *fileManager, char* path) {
+Item searchFile(FileManager* fileManager, char* path) {
   Item item, itemToSearch;
-  itemToSearch = createItem(getNameFromPath(path), path,0, ITEM_FILE, NULL, NULL, NULL);
+  itemToSearch = createItem(getNameFromPath(path), path, 0, ITEM_FILE, NULL, NULL, NULL);
   item = searchTree(fileManager->root, item)->item;
   return item;
 }
 
 
-void undo(FileManager *fileManager) {}
-void redo(FileManager *fileManager) {}
+void undo(FileManager* fileManager) {}
+void redo(FileManager* fileManager) {}
 
 
+/*
+  typedef struct FileManager {
+    Tree root;
+    Tree rootTrash;
+    Stack undo;
+    Stack redo;
+    Queue selectedItem;
+    Queue currentPath;
+} FileManager;
+
+
+*/
+void copyFile(FileManager* fileManager) {
+  // 1. deteksi file dipilih
+  // 1. Cari item di tree
+  // 2. Masukkan file terpillih satu per satu ke dalam queue
+  // 3. a: Jika tidak ada, tampilkan pesan error
+  //    b: Lanjut ke langkah 4
+  // 4. Simpan di buffer
+  // 5. tampilkan pesan error
+  // 6. tampilkan pesan sukses
+
+  char* path;
+  scanf("%s", path);
+  Item item = searchFile(fileManager, path);
+  if (&item == NULL) {
+    printf("File tidak ditemukan\n");
+    return;
+  }
+  // Simpan item ke dalam queue copied
+  enqueue(&(fileManager->copied), item);
+  printf("File berhasil disalin ke clipboard\n");
+}
+
+void cutFile(FileManager* fileManager) {
+
+
+}
+void pasteFile(FileManager* fileManager) {
+  // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
+  // 2. Cari item di tree
+  // 3. a: Jika tidak ada, tampilkan pesan error
+  //    b: Lanjut ke langkah 4
+  // 4. Simpan di buffer
+  // 5. Cari path di tree. 
+  // 6. a: Jika tidak ada, buatkan foldernya
+  //    b: Jika ada, lanjutkan
+  // 7. Simpan item ke path yang sudah ada
+  // 8. Simpan item ke tree
+  // 9. Hapus item dari queue
+  // 10. Simpan semua operasi di stack undo
+  // 11. Jika ada error, tampilkan pesan error
+  // 12. Jika berhasil, tampilkan pesan sukses
+  char* path = fileManager->currentPath.front;
+  Item item;
+  item = dequeue((fileManager->copied.front));
+  while (&item != NULL) {
+    {
+
+      // Cari item di tree
+      Item foundItem = searchFile(fileManager, path);
+      if (&foundItem == NULL) {
+        printf("File tidak ditemukan\n");
+        return;
+      }
+      // Simpan item ke dalam queue cut
+      enqueue(&(fileManager->cut), item);
+      item = dequeue((fileManager->copied.front));
+    }
+  }
+}
+/*
+  ├───blabla
+  │   └───blabla
+  │       │   blabla
+  │       │   blabla
+  │       │   blabla
+  │       │
+  │       ├───blabla
+  │       │       blabla
+  │       │       blabla
+  │       │       blabla
+  │       │
+  │       └───blabla
+  │               blabla
+  │               blabla
+  │               blabla
+  │
+  ├───blabla
+  └───blabla
+*/
+
+void printDirectory(FileManager* fileManager) {
+
+}
+void printTrash(FileManager* fileManager) {}
+
+
+char* getNameFromPath(char* path) {
+  char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
+  if (name != NULL) {
+    return name + 1; // skip karakter slash (/) terakhir
+  }
+  return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
+
+};
+
+bool isDirectory(char* path) {
+  // struct stat path_stat;
+  // stat(path, &path_stat);
+  // return S_ISDIR(path_stat.st_mode);
+}
 /*
   typedef struct FileManager {
     Tree root;
@@ -263,8 +375,8 @@ void printDirectory(FileManager* fileManager) {
 void printTrash(FileManager* fileManager) {}
 
 
-char* getNameFromPath(char* path){
-  char *name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
+char* getNameFromPath(char* path) {
+  char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
   if (name != NULL) {
     return name + 1; // skip karakter slash (/) terakhir
   }
@@ -273,92 +385,7 @@ char* getNameFromPath(char* path){
 };
 
 bool isDirectory(char* path) {
-  struct stat path_stat;
-  stat(path, &path_stat);
-  return S_ISDIR(path_stat.st_mode);
-}
-/*
-  typedef struct FileManager {
-    Tree root;
-    Tree rootTrash;
-    Stack undo;
-    Stack redo;
-    Queue selectedItem;
-    Queue currentPath;
-} FileManager;
-
-
-*/
-void copyFile(FileManager* fileManager) {
-  // 1. Cari item di tree
-  // 2. Masukkan file terpillih satu per satu ke dalam queue
-  // 3. a: Jika tidak ada, tampilkan pesan error
-  //    b: Lanjut ke langkah 4
-  // 4. Simpan di buffer
-  // 5. tampilkan pesan error
-  // 6. tampilkan pesan sukses
-
-}
-
-void cutFile(FileManager* fileManager) {
-
-
-}
-void pasteFile(FileManager* fileManager) {
-  // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
-  // 2. Cari item di tree
-  // 3. a: Jika tidak ada, tampilkan pesan error
-  //    b: Lanjut ke langkah 4
-  // 4. Simpan di buffer
-  // 5. Cari path di tree. 
-  // 6. a: Jika tidak ada, buatkan foldernya
-  //    b: Jika ada, lanjutkan
-  // 7. Simpan item ke path yang sudah ada
-  // 8. Simpan item ke tree
-  // 9. Hapus item dari queue
-  // 10. Simpan semua operasi di stack undo
-  // 11. Jika ada error, tampilkan pesan error
-  // 12. Jika berhasil, tampilkan pesan sukses
-}
-
-/*
-  ├───blabla
-  │   └───blabla
-  │       │   blabla
-  │       │   blabla
-  │       │   blabla
-  │       │
-  │       ├───blabla
-  │       │       blabla
-  │       │       blabla
-  │       │       blabla
-  │       │
-  │       └───blabla
-  │               blabla
-  │               blabla
-  │               blabla
-  │
-  ├───blabla
-  └───blabla
-*/
-
-void printDirectory(FileManager* fileManager) {
-
-}
-void printTrash(FileManager* fileManager) {}
-
-
-char* getNameFromPath(char* path){
-  char *name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
-  if (name != NULL) {
-    return name + 1; // skip karakter slash (/) terakhir
-  }
-  return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
-
-};
-
-bool isDirectory(char* path) {
-  struct stat path_stat;
-  stat(path, &path_stat);
-  return S_ISDIR(path_stat.st_mode);
+  // struct stat path_stat;
+  // stat(path, &path_stat);
+  // return S_ISDIR(path_stat.st_mode);
 }
