@@ -15,6 +15,7 @@ typedef struct FileManager {
   Queue copied;         // queue for copied items 
   Queue cut;            // queue for cut items
   Queue temp;           // temporary queue for operations
+  Queue selectedItem    // queue for selected item
 } FileManager;
 
 // Create empty filemanager 
@@ -35,6 +36,7 @@ void redo(FileManager* fileManager);
 void copyFile(FileManager* fileManager);
 void pasteFile(FileManager* fileManager);
 void cutFile(FileManager* fileManager);
+void selectFile(FileManager* fileManager);
 
 void printDirectory(FileManager* fileManager);
 void printTrash(FileManager* fileManager);

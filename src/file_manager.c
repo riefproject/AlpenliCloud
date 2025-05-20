@@ -326,7 +326,7 @@ void copyFile(FileManager* fileManager) {
   // 4. Simpan di buffer
   // 5. tampilkan pesan error
   // 6. tampilkan pesan sukses
-
+  
 }
 
 void cutFile(FileManager* fileManager) {
@@ -371,6 +371,18 @@ void pasteFile(FileManager* fileManager) {
   └───blabla
 */
 
+void selectFile(FileManager* fileManager, Item item) {
+  // 1. Pilih file yang ingin dipilih
+  // 2. Cari item di tree
+  // 3. a: Jika tidak ada, tampilkan pesan error
+  //    b: Lanjut ke langkah 4
+  // 4. Simpan item ke dalam queue selectedItem
+  // 5. Simpan semua operasi di stack undo
+  // 6. Jika ada error, tampilkan pesan error
+  // 7. Jika berhasil, tampilkan pesan sukses
+  
+
+}
 void printDirectory(FileManager* fileManager) {
 
 }
@@ -391,3 +403,4 @@ bool isDirectory(char* path) {
   // stat(path, &path_stat);
   // return S_ISDIR(path_stat.st_mode);
 }
+
