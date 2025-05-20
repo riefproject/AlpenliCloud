@@ -8,10 +8,7 @@ typedef enum OperationType {
     TYPE_DELETE,
     TYPE_UPDATE,
     TYPE_RECOVER,
-    TYPE_SEARCH,
-    TYPE_COPY,
     TYPE_PASTE,
-    TYPE_CUT,
     TYPE_PATH
 } OperationType;
 

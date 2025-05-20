@@ -6,12 +6,15 @@
 #include "stack.h"
 #include "queue.h"
 
+#define alloc(T) (T*)malloc(sizeof(T));
+
+
 typedef struct FileManager {
   Tree root;            // root directory
   Tree rootTrash;       // root trash (deleted files)   
   Stack undo;           // stack for undo operations
   Stack redo;           // stack for redo operations
-  Stack currentPath;    // queue for current path       
+  Queue currentPath;    // queue for current path       
   Queue copied;         // queue for copied items 
   Queue cut;            // queue for cut items
   Queue temp;           // temporary queue for operations
@@ -36,10 +39,10 @@ void redo(FileManager* fileManager);
 void copyFile(FileManager* fileManager);
 void pasteFile(FileManager* fileManager);
 void cutFile(FileManager* fileManager);
-void selectFile(FileManager* fileManager);
+void selectFile(FileManager* fileManager, Item item);
+void deselectFile(FileManager* fileManager, Item item);
+void clearSelectedFile(FileManager* fileManager);
 
-void printDirectory(FileManager* fileManager);
-void printTrash(FileManager* fileManager);
 
 // Mengembalikan nama file dari path lengkap
 char* getNameFromPath(char* path);

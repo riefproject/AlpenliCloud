@@ -265,32 +265,6 @@ void pasteFile(FileManager* fileManager) {
     }
   }
 }
-/*
-  ├───blabla
-  │   └───blabla
-  │       │   blabla
-  │       │   blabla
-  │       │   blabla
-  │       │
-  │       ├───blabla
-  │       │       blabla
-  │       │       blabla
-  │       │       blabla
-  │       │
-  │       └───blabla
-  │               blabla
-  │               blabla
-  │               blabla
-  │
-  ├───blabla
-  └───blabla
-*/
-
-void printDirectory(FileManager* fileManager) {
-
-}
-void printTrash(FileManager* fileManager) {}
-
 
 char* getNameFromPath(char* path) {
   char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
@@ -301,23 +275,6 @@ char* getNameFromPath(char* path) {
 
 };
 
-bool isDirectory(char* path) {
-  // struct stat path_stat;
-  // stat(path, &path_stat);
-  // return S_ISDIR(path_stat.st_mode);
-}
-/*
-  typedef struct FileManager {
-    Tree root;
-    Tree rootTrash;
-    Stack undo;
-    Stack redo;
-    Queue selectedItem;
-    Queue currentPath;
-} FileManager;
-
-
-*/
 void copyFile(FileManager* fileManager) {
   // 1. Cari item di tree
   // 2. Masukkan file terpillih satu per satu ke dalam queue
@@ -326,7 +283,7 @@ void copyFile(FileManager* fileManager) {
   // 4. Simpan di buffer
   // 5. tampilkan pesan error
   // 6. tampilkan pesan sukses
-  
+
 }
 
 void cutFile(FileManager* fileManager) {
@@ -350,44 +307,25 @@ void pasteFile(FileManager* fileManager) {
   // 12. Jika berhasil, tampilkan pesan sukses
 }
 
-/*
-  ├───blabla
-  │   └───blabla
-  │       │   blabla
-  │       │   blabla
-  │       │   blabla
-  │       │
-  │       ├───blabla
-  │       │       blabla
-  │       │       blabla
-  │       │       blabla
-  │       │
-  │       └───blabla
-  │               blabla
-  │               blabla
-  │               blabla
-  │
-  ├───blabla
-  └───blabla
-*/
-
 void selectFile(FileManager* fileManager, Item item) {
-  // 1. Pilih file yang ingin dipilih
-  // 2. Cari item di tree
-  // 3. a: Jika tidak ada, tampilkan pesan error
-  //    b: Lanjut ke langkah 4
-  // 4. Simpan item ke dalam queue selectedItem
-  // 5. Simpan semua operasi di stack undo
-  // 6. Jika ada error, tampilkan pesan error
-  // 7. Jika berhasil, tampilkan pesan sukses
-  
-
+  Item *itemToSelect = alloc(Item);
+  *itemToSelect = item;
+  enqueue(fileManager->selectedItem, (void*)itemToSelect);
 }
-void printDirectory(FileManager* fileManager) {
 
+void clearSelectedFile(FileManager* fileManager) {
+  while (!is_queue_empty(fileManager->selectedItem)) {
+    Item *item;
+    dequeue(fileManager->selectedItem, (void*)item);
+    free(item);
+  }
 }
-void printTrash(FileManager* fileManager) {}
 
+void deselectFile(FileManager* fileManager, Item item) {
+  Item *itemToDeselect = alloc(Item);
+  *itemToDeselect = item;
+  dequeue(fileManager->selectedItem, (void*)itemToDeselect);
+} 
 
 char* getNameFromPath(char* path) {
   char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
@@ -399,8 +337,8 @@ char* getNameFromPath(char* path) {
 };
 
 bool isDirectory(char* path) {
-  // struct stat path_stat;
-  // stat(path, &path_stat);
-  // return S_ISDIR(path_stat.st_mode);
+  struct stat path_stat;
+  stat(path, &path_stat);
+  return S_ISDIR(path_stat.st_mode);
 }
 
