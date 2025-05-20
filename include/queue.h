@@ -11,8 +11,8 @@
 #include "linked.h"
 
 typedef struct Queue{
-  address front;
-  address rear;
+  Node* front;
+  Node* rear;
 } Queue;
 
 // Function to create a queue
@@ -29,5 +29,8 @@ void dequeue(Queue* queue, infotype* data);
 void destroy_queue(Queue* queue);
 // Function to print the queue
 void print_queue(Queue queue);
+
+
+
 
 #endif // QUEUE_H

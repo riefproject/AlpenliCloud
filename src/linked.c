@@ -1,429 +1,244 @@
-#include <limits.h>
-#include <malloc.h>
+// File: linked_list.c
+// Author: Maulana Ishak
+// Date: 06-04-2025
+// Description: Implementation of linked list functions in C
+// License: MIT License
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "linked.h"
 
-/********** BODY SUB PROGRAM ***********/
-/**** Predikat untuk test keadaan LIST  ****/
-boolean ListEmpty(List L)
-/* Mengirim true jika List Kosong */
-{
-	return (Head(L) == Nil);
+// Initialize the linked list
+void create_list(LinkedList* list){
+  list->head = NULL;
 }
 
-/**** Konstruktor/Kreator List Kosong ****/
-void CreateList(List* L)
-/* IS : L sembarang */
-/* FS : Terbentuk List Kosong */
-{
-	Head(*L) = Nil;
+// Create a new node with the given data
+Node* create_node(infotype data){
+  Node* new_node = (Node*)malloc(sizeof(Node));
+  if(new_node == NULL){
+    printf("Overflow, Memory allocation failed\n");
+    return NULL;
+  }
+  new_node->data = data;
+  new_node->next = NULL;
+  return new_node;
 }
 
-/**** Manajemen Memory ****/
-address Alokasi(infotype X)
-/* Mengirimkan address hasil alokasi sebuah elemen */
-/* Jika alokasi berhasil, maka address != Nil, 	   */
-/*	dan misalnya menghasilkan P, maka Info(P) = X, Next(P) = Nil */
-/* Jika alokasi gagal, mengirimkan Nil */
-{
-	/* Kamus Lokal */
-	address P;
-	/* Algoritma */
-	P = (address)malloc(sizeof(ElmtList));
-	if (P != Nil)		/* Alokasi berhasil */
-	{
-		Info(P) = X;
-		Next(P) = Nil;
-	}
-	return (P);
+// Check if the list is empty
+bool is_list_empty(LinkedList list){
+  if(list.head == NULL){
+    return true;
+  }
+  return false;
 }
 
-void DeAlokasi(address P)
-/* IS : P terdefinisi */
-/* FS : P dikembalikan ke sistem */
-/* Melakukan dealokasi / pengembalian address P ke system */
-{
-	if (P != Nil) {
-		free(P);
-	}
-}
+// Check if given data exists in the list
+bool is_exist(LinkedList list, infotype data){
+  Node* curr;
 
-/**** Pencarian sebuah elemen List ****/
-address Search(List L, infotype X)
-/* Mencari apakah ada elemen list dengan Info(P) = X */
-/* Jika ada, mengirimkan address elemen tsb. */
-/* Jika tidak ada, mengirimkan Nil */
-/* Menggunakan variabel bertype boolean */
+  curr = list.head;
+  while(curr != NULL){
+    if(curr->data == data){
+      return true;
+    }else{
+      curr = curr->next;
+    }
+  }
 
-// [PENCARIAN: TIPE DATA OPEATION]
-// {
-// 	/* Kamus Lokal */
-// 	address P;
-// 	boolean found = false;
-// 	/* algoritma */
-// 	P = Head(L);
-// 	while ((P != Nil) && (!found)) {
-// 		if (Info(P) == X) {
-// 			found = true;
-// 		}
-// 		else {
-// 			P = Next(P);
-// 		}
-// 	}	/* P = Nil atau Ketemu */
-
-// 	return (P);
-// }
-
-boolean FSearch(List L, address P)
-/* Mencari apakah ada elemen list yang beralamat P */
-/* Mengirimkan true jika ada, false jika tidak ada */
-{
-	/* Kamus Lokal */
-	boolean found = false;
-	address PSearch;
-	/* Algortima */
-	PSearch = Head(L);
-	while ((PSearch != Nil) && (!found)) {
-		if (PSearch == P) {
-			found = true;
-		}
-		else {
-			PSearch = Next(PSearch);
-		}
-	}	/* PSearch = Nil atau Ketemu */
-
-	return (found);
-}
-
-address SearchPrec(List L, infotype X)
-/* Mengirimkan address elemen sebelum elemen yang nilainya = X */
-/* Mencari apakah ada elemen list dengan Info(P) = X */
-/* Jika ada, mengirimkan address Prec, dengan Next(Prec) = P dan Info(P) = X */
-/* Jika tidak ada, mengirimkan Nil */
-/* Jika P adalah elemen pertama, maka Prec = Nil */
-/* Search dengan spesifikasi seperti ini menghindari */
-/* traversal ulang jika setelah Search akan dilakukan operasi lain */
-// {
-// 	/* Kamus Lokal */
-// 	address Prec, P;
-// 	boolean found = false;
-// 	/* Algoritma */
-// 	Prec = Nil;
-// 	P = Head(L);
-// 	while ((P != Nil) && (!found)) {
-// 		if (Info(P) == X) {
-// 			found = true;
-// 		}
-// 		else {
-// 			Prec = P;
-// 			P = Next(P);
-// 		}
-// 	}    /* P = Nil atau Ketemu */
-// 	if (found) {
-// 		return (Prec);
-// 	}
-// 	else {
-// 		return (Nil);
-// 	}
-// }
-
-/**** PRIMITIF BERDASARKAN NILAI ****/
-/**** Penambahan Elemen ****/
-void InsVFirst(List* L, infotype X)
-/* IS : L mungkin Kosong */
-/* FS : melakukan alokasi sebuah elemen dan */
-/* menambahkan elemen pertama dengan nilai X jika alokasi berhasil */
-{
-	/* Kamus Lokal */
-	address P;
-	/* Algoritma */
-
-	P = Alokasi(X);
-
-	InsertHead(L, P);
-	//Buatkan algoritma sesuai spesifikasi modul ini
-}
-
-void InsVLast(List* L, infotype X)
-/* IS : L mungkin Kosong */
-/* FS : melakukan alokasi sebuah elemen dan */
-/* menambahkan elemen list di akhir (elemen terakhir adalah yang baru) */
-/* bernilai X jika alokasi berhasil. Jika alokasi gagal IS = FS */
-{
-	/* Kamus Lokal */
-	address P;
-
-	/* Algoritma */
-	P = Alokasi(X);
-
-	InsertLast(L, P);
-
-	//Buatkan algoritma sesuai spesifikasi modul ini
-}
-
-/**** Penghapusan Elemen ****/
-void DelVFirst(List* L, infotype* X)
-/* IS : L TIDAK Kosong */
-/* FS : Elemen pertama List dihapus, nilai info disimpan ke X */
-/* 	dan alamat elemen pertama di dealokasi */
-{
-	/* Kamus Lokal */
-	address P;
-
-	/* Algoritma */
-	P = (*L).head;
-
-	if (P != NULL) {
-
-		*X = P->info;
-
-		DelHead(L, &P);
-
-	}
-
-	//Buatkan algoritma sesuai spesifikasi modul ini
-}
-
-void DelVLast(List* L, infotype* X)
-/* IS : L TIDAK Kosong */
-/* FS : Elemen terakhir list dihapus : nilai info disimpan pada X */
-/* 	dan alamat elemen terakhir di dealokasi */
-{
-	/* Kamus Lokal */
-	address PDel;
-	/* Algoritma */
-	PDel = (*L).head;
-
-	while (PDel != NULL) {
-		if (PDel->next == NULL) {
-			*X = PDel->info;
-
-			DelHead(L, &PDel);
-
-			break;
-		}
-
-		if (PDel->next->next == NULL) {
-			*X = PDel->next->info;
-
-			DeAlokasi(PDel->next);
-
-			PDel->next = NULL;
-		}
-
-		PDel = PDel->next;
-	}
-
-	//Buatkan algoritma sesuai spesifikasi modul ini
-}
-
-/**** PRIMITIF BERDASARKAN ALAMAT ****/
-/**** Penambahan elemen berdasarkan alamat ****/
-void InsertFirst(List* L, address P)
-/* IS : L sembarang, P sudah dialokasi */
-/* FS : menambahkan elemen ber-address P sebagai elemen pertama */
-{
-	//Buatkan algoritma sesuai spesifikasi modul ini
-	if (P != NULL) {
-		P->next = (*L).head;
-
-		(*L).head = P;
-	}
-}
-
-void InsertAfter(List* L, address P, address Prec)
-/* IS : Prec pastilah elemen List dan bukan elemen terakhir */
-/*	P sudah dialokasi */
-/* FS : Insert P sebagai elemen sesudah elemen beralamat Prec */
-{
-	//Buatkan algoritma sesuai spesifikasi modul ini
-	if (ListEmpty(*L)) {
-		(*L).head = P;
-
-		return;
-	}
-
-	P->next = Prec->next;
-	Prec->next = P;
-}
-
-void InsertLast(List* L, address P)
-/* IS : L sembarang, P sudah dialokasi */
-/* FS : P ditambahkan sebagai elemen terakhir yang baru */
-{
-	/* Kamus Lokal */
-	address Last;
-	/* Algoritma */
-
-	Last = (*L).head;
-
-	if (P != NULL) {
-		while (Last != NULL) {
-			if (Last->next == NULL) {
-				Last->next = P;
-				break;
-			}
-
-			Last = Last->next;
-		}
-	}
-
-	//Buatkan algoritma sesuai spesifikasi modul ini
-}
-
-/**** Penghapusan sebuah elemen ****/
-void DelFirst(List* L, address* P)
-/* IS : L TIDAK kosong */
-/* FS : P adalah alamat elemen pertama list sebelum penghapusan */
-/*	elemen list berkurang satu (mungkin menjadi kosong) */
-/* First elemen yang baru adalah suksessor elemen pertama yang lama */
-{
-	//Buatkan algoritma sesuai spesifikasi modul ini
-	if (ListEmpty(*L)) return;
-
-	(*P) = (*L).head;
-
-	(*L).head = (*L).head->next;
-
-	DeAlokasi((*P));
-
-	(*P) = (*L).head;
-
+  return false;
 }
 
 
-void DelP(List* L, infotype X)
-/* IS : L sembarang */
-/* FS : Jika ada elemen list beraddress P, dengan Info(P) = X */
-/* 	Maka P dihapus dari list dan di dealokasi */
-/* Jika tidak ada elemen list dengan Info(P) = X, maka list tetap */
-/* List mungkin menjadi kosong karena penghapusan */
-{
-	/* Kamus Lokal */
-	address P, Prec;
-	boolean found = false;
-
-	/* Algoritma */
-	Prec = SearchPrec(*L, X);
-
-	if (Prec == NULL) {
-		(*L).head = NULL;
-
-		DeAlokasi((*L).head);
-
-		return;
-	}
-
-	P = Prec->next;
-
-	Prec->next = Prec->next->next;
-
-	P->next = NULL;
-
-	DeAlokasi(P);
-	//Buatkan algoritma sesuai spesifikasi modul ini
+// Print the linked list in forward order
+void print_list(LinkedList list){
+  Node* curr;
+  if(is_list_empty(list)){
+    printf("list empty\n");
+  }else{
+    curr = list.head;
+    while(curr->next != NULL){
+      printf("[%c]->", curr->data);
+      curr = curr->next;
+    }
+    printf("[%c]\n", curr->data);
+  }
 }
 
-void DelLast(List* L, address* P)
-/* IS : L TIDAK kosong */
-/* FS : P adalah alamat elemen terakhir list sebelum penghapusan */
-/*      Elemen list berkurang satu (mungkin menjadi kosong) */
-/*      Last elemen baru adalah predesessor elemen terakhir yang lama, jika ada */
-{
-	/* Kamus Lokal */
-	address Prec;
+void destroy_list(LinkedList* list){
+  Node* curr;
+  Node* temp;
 
-	/* Algoritma */
-	if ((*L).head->next == NULL) {
-		Prec = (*L).head;
+  curr = list->head;
+  while(curr != NULL){
+    temp = curr;
+    curr = curr->next;
 
-		*P = NULL;
+    temp->next = NULL;
+    free(temp);
+  }
+  list->head = NULL;
+}
 
-		(*L).head = NULL;
+// Get the length of the linked list
+int get_length(LinkedList list){
+  Node* curr;
+  int count;
 
-		DeAlokasi(Prec);
-	}
-	else {
-		Prec = (*L).head;
-		while (Prec->next->next != NULL) {
-			Prec = Prec->next;
-		}
+  curr = list.head;
+  count = 0;
 
-		DeAlokasi(Prec->next);
+  while(curr != NULL){
+    count++;
+    curr = curr->next;
+  }
 
-		Prec->next = NULL;
-
-		*P = Prec;
-	}
+  return count;
+  
 }
 
 
-void DelAfter(List* L, address* Pdel, address Prec)
-/* IS : L TIDAK Kosong, Prec adalah anggota List */
-/* FS : menghapus Next(Prec): Pdel adalah alamat elemen list yang dihapus */
-{
-	//Buatkan algoritma sesuai spesifikasi modul ini
-	if (ListEmpty(*L)) return;
+void insert_first(LinkedList* list, infotype data){
+  Node* new_node;
+  new_node = create_node(data);
+  if(new_node == NULL) return;
 
-	if (Prec == NULL) {
-		DelHead(L, Pdel);
-
-		return;
-	}
-
-	*Pdel = Prec->next;
-
-	if (*Pdel == NULL) return;
-
-	Prec->next = Prec->next->next;
+  if(is_list_empty(*list)){
+    list->head = new_node;
+  }else{
+    new_node->next = list->head;
+    list->head = new_node;
+  }
 }
 
-/**** PROSES SEMUA ELEMEN LIST  ****/
-void PrintInfo(List L)
-/* IS : L mungkin kosong */
-/* FS : Jika List tidak kosong, semua info yang disimpan pada elemen list */
-/*	diprint. Jika list kosong, hanya menuliskan "List Kosong" */
-{
-	/* Kamus Lokal */
-	address P;
-	/* Algoritma */
+void insert_last(LinkedList* list, infotype data){
+  Node  *new_node, *curr;
+  new_node = create_node(data);
+  if(new_node == NULL) return;
 
-	if (ListEmpty(L)) {
-		printf("%s", "List Kosong");
-		return;
-	}
-
-	P = L.head;
-
-	while (P != NULL) {
-		if (P->next == NULL) {
-			printf("[%s]-||\n", P->info);
-			break;
-		}
-
-		printf("[%s]->", P->info);
-
-		P = P->next;
-	}
-	//Buatkan algoritma sesuai spesifikasi modul ini
+  curr = list->head;
+  if(curr == NULL){
+    insert_first(list, data);
+  }else{
+    while(curr->next != NULL){
+      curr = curr->next;
+    }
+    curr->next = new_node;
+  }
 }
 
+void insert_at(LinkedList* list, int position, infotype data){
+  Node *new_node, *curr;
+  new_node = create_node(data);
+  if(new_node == NULL) return;
 
-void DelAll(List* L)
-/* Delete semua elemen list dan alamat elemen di dealokasi */
-{
-	/* Kamus Lokal */
-	address PDel;
-	/* Algoritma */
+  if(position < 1 || position > get_length(*list)){
+    printf("Invalid position\n");
+    return;
+  }
 
-	if (ListEmpty(*L)) return;
+  if(position == 1){
+    insert_first(list, data);
+  }else{
+    curr = list->head;
+    for(int i = 1; i < position-1; i++){
+      curr = curr->next;
+    }
+    new_node->next = curr->next;
+    curr->next = new_node;
+  }
+}
 
-	while ((*L).head != NULL) {
-		PDel = (*L).head;
-		(*L).head = (*L).head->next;
-		DeAlokasi(PDel);
-	}
-	//Buatkan algoritma sesuai spesifikasi modul ini
+void delete_first(LinkedList* list, infotype* temp){
+  Node* curr;
+  if(is_list_empty(*list)){
+    printf("List is empty\n");
+    return;
+  }else{
+    curr = list->head;
+    list->head = curr->next;
+    curr->next = NULL;
+
+    *temp = curr->data;
+    free(curr);
+    curr = NULL;
+  }
+}
+void delete_last(LinkedList* list, infotype* temp){
+  Node *curr, *prev;
+  if(is_list_empty(*list)){
+    printf("List is empty\n");
+    return;
+  }else{
+    curr = list->head;
+    prev = NULL;
+    while(curr->next != NULL){
+      prev = curr;
+      curr = curr->next;
+    }
+    *temp = curr->data;
+    if(prev == NULL){
+      free(curr);
+      list->head = NULL;
+    }else{
+      free(curr);
+      prev->next = NULL;
+    }
+  }
 }
 
 
 
+void delete_val(LinkedList* list, infotype data, infotype* temp){
+  Node *curr, *prev;
+  if(is_list_empty(*list)){
+    printf("List is empty\n");
+    return;
+  }else{
+    curr = list->head;
+    prev = NULL;
+    while(curr != NULL && curr->data != data){
+      prev = curr;
+      curr = curr->next;
+    }
+    if(curr == NULL){
+      printf("Node with data %d not found\n", data);
+      return;
+    }else{
+      if(prev == NULL){
+        list->head = curr->next;
+      }else{
+        prev->next = curr->next;
+      }
+      *temp = curr->data;
+      free(curr);
+    }
+  }
+}
+
+void delete_at(LinkedList* list, int position, infotype* temp){
+  Node *curr, *prev;
+  if(is_list_empty(*list)){
+    printf("List is empty\n");
+    return;
+  }else{
+    curr = list->head;
+    prev = NULL;
+    if(position < 1 || position > get_length(*list)){
+      printf("Invalid position\n");
+      return;
+    }
+    for(int i = 1; i < position; i++){
+      prev = curr;
+      curr = curr->next;
+    }
+    if(prev == NULL){
+      list->head = curr->next;
+    }else{
+      prev->next = curr->next;
+    }
+    *temp = curr->data;
+    free(curr);
+  }
+}

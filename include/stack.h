@@ -9,19 +9,13 @@
 
 #include "linked.h"
 
-typedef address Stack;
+typedef Node* Stack;
 
 void create_stack(Stack* stack);
-
 bool is_stack_empty(Stack stack);
-
 void push(Stack* stack, infotype data);
-
 void pop(Stack* stack, infotype* data);
-
 void pop_print(Stack* stack, infotype* data);
-
 void print_stack(Stack stack);
 
 #endif // STACK_H
-
