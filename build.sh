@@ -9,8 +9,8 @@ build() {
     echo "Compiling Aplendrive..."
     mkdir -p bin build/output/src build/output/library
 
-    CFLAGS="-Wall -Wextra -Iinclude -Ilib/raylib-v5.5/include "
-    LDFLAGS="lib/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+    CFLAGS="-Wall -Wextra -Iinclude -Ilib/raylib/include "
+    LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
 
     object_files=""
     for src_file in src/main.c; do

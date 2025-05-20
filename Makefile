@@ -2,8 +2,8 @@
 # Dalam Perbaikan
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -Ilib/raylib-v5.5/include
-LDFLAGS = lib/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+CFLAGS = -Wall -Wextra -Iinclude -Ilib/raylib/include
+LDFLAGS = lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
 
 SRC_DIR = src
 BUILD_DIR = build/output/src

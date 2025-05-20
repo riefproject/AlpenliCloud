@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "item.h"
 
+bool isCopy = 0;
+
 /* IS:
   Tree root = ?;
   Tree rootTrash = ?;
@@ -34,8 +36,7 @@ void createFileManager(FileManager* fileManager) {
   create_queue(&(fileManager->temp));
 }
 
-/*
-  IS:
+/* IS:
   Tree root = NULL;
   Tree rootTrash = NULL;
   Stack actionStack = NULL;
@@ -202,8 +203,6 @@ void redo(FileManager* fileManager) {}
     Queue selectedItem;
     Queue currentPath;
 } FileManager;
-
-
 */
 void copyFile(FileManager* fileManager) {
   // 1. deteksi file dipilih
@@ -214,24 +213,29 @@ void copyFile(FileManager* fileManager) {
   // 4. Simpan di buffer
   // 5. tampilkan pesan error
   // 6. tampilkan pesan sukses
-
-  char* path;
-  scanf("%s", path);
-  Item *item = malloc(sizeof(Item));
-  *item = searchFile(fileManager, path); 
-  if (item == NULL) {
-    printf("File tidak ditemukan\n");
+  if (fileManager->copied.front) fileManager->copied.front = NULL;
+  fileManager->copied = fileManager->selectedItem;
+  isCopy = true;
+  if (fileManager->copied.front == NULL) {
+    printf("Gagal Menyalin File!\n");
     return;
   }
-  // Simpan item ke dalam queue copied
-  enqueue(&(fileManager->copied), (void*)item);
+  fileManager->temp = fileManager->copied;
   printf("File berhasil disalin ke clipboard\n");
 }
 
 void cutFile(FileManager* fileManager) {
-
-
+  if (fileManager->cut.front) fileManager->cut.front = NULL;
+  fileManager->cut = fileManager->selectedItem;
+  isCopy = false;
+  if (fileManager->cut.front == NULL) {
+    printf("Gagal Menyalin File!\n");
+    return;
+  }
+  fileManager->temp = fileManager->cut;
+  printf("File berhasil dipotong ke clipboard\n");
 }
+
 void pasteFile(FileManager* fileManager) {
   // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
   // 2. Cari item di tree
@@ -284,6 +288,7 @@ void copyFile(FileManager* fileManager) {
   // 5. tampilkan pesan error
   // 6. tampilkan pesan sukses
 
+
 }
 
 void cutFile(FileManager* fileManager) {
@@ -308,24 +313,24 @@ void pasteFile(FileManager* fileManager) {
 }
 
 void selectFile(FileManager* fileManager, Item item) {
-  Item *itemToSelect = alloc(Item);
+  Item* itemToSelect = alloc(Item);
   *itemToSelect = item;
   enqueue(fileManager->selectedItem, (void*)itemToSelect);
 }
 
 void clearSelectedFile(FileManager* fileManager) {
   while (!is_queue_empty(fileManager->selectedItem)) {
-    Item *item;
+    Item* item;
     dequeue(fileManager->selectedItem, (void*)item);
     free(item);
   }
 }
 
 void deselectFile(FileManager* fileManager, Item item) {
-  Item *itemToDeselect = alloc(Item);
+  Item* itemToDeselect = alloc(Item);
   *itemToDeselect = item;
   dequeue(fileManager->selectedItem, (void*)itemToDeselect);
-} 
+}
 
 char* getNameFromPath(char* path) {
   char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
@@ -341,4 +346,3 @@ bool isDirectory(char* path) {
   stat(path, &path_stat);
   return S_ISDIR(path_stat.st_mode);
 }
-
