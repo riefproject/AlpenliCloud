@@ -1,28 +1,38 @@
 #include <stdio.h>
 #include <dirent.h>
-
 #include <sys/stat.h>
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+#include "raylib.h"
 
 int main ()
 {
-  DIR *dp;
+    InitWindow(400, 200, "raygui - controls test suite");
+    SetTargetFPS(60);
 
-  struct dirent *ep;     
-  dp = opendir("./");
+    bool showMessageBox = false;
 
-  if (dp != NULL) {
-    ep = readdir(dp);
+    while (!WindowShouldClose())
+    {
+        // Draw
+        //----------------------------------------------------------------------------------
+        BeginDrawing();
+            ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
-    while (ep != NULL) {
-      printf("%s\n", ep->d_name);
-      ep = readdir(dp);
+            if (GuiButton((Rectangle){ 24, 24, 120, 30 }, "#191#Show Message")) showMessageBox = true;
+
+            if (showMessageBox)
+            {
+                int result = GuiMessageBox((Rectangle){ 85, 70, 250, 100 },
+                    "#191#Message Box", "Hi! This is a message!", "Nice;Cool");
+
+                if (result >= 0) showMessageBox = false;
+            }
+
+        EndDrawing();
     }
 
-    closedir(dp);
+    CloseWindow();
     return 0;
-  } else {
-    perror ("Couldn't open the directory");
-    return -1;
-  }
 }
 
