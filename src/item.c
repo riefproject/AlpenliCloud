@@ -3,13 +3,18 @@
 #include <string.h>
 #include <time.h>
 
-// typedef struct Item{
+// typedef struct Item {
 //   char* name;
+//   Queue path;
 //   size_t size;
 //   ItemType type;
 //   time_t created_at, updated_at, deleted_at;
 // }Item;
 
+// typedef struct TrashItem{
+//   Item item;
+//   Queue *origin;
+// } TrashItem;
 
 Item createItem(char *name, char* path, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at){
   return (Item){
@@ -23,9 +28,10 @@ Item createItem(char *name, char* path, size_t size, ItemType type, time_t creat
   };
 }
 
-TrashItem createTrashItem(Item item, char *origin){
+TrashItem createTrashItem(Item item, char* origin){
   return (TrashItem){
     .item = item,
     .origin = strdup(origin)
   };
 }
+

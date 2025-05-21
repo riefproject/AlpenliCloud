@@ -20,9 +20,9 @@ void create_queue(Queue* queue);
 // Function to check if the queue is empty
 bool is_queue_empty(Queue queue);
 // Function to enqueue an element into the queue
-void enqueue(Queue* queue, Item data);
+void enqueue(Queue* queue, infotype data);
 // Function to dequeue an element from the queue
-Item dequeue(Queue* queue);
+infotype dequeue(Queue* queue);
 // Function to get the front element of the queue
 void destroy_queue(Queue* queue);
 // Function to print the queue

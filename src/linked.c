@@ -15,7 +15,7 @@ void create_list(LinkedList* list){
 }
 
 // Create a new node with the given data
-Node* create_node(infotype data){
+Node* create_node(void* data){
   Node* new_node = (Node*)malloc(sizeof(Node));
   if(new_node == NULL){
     printf("Overflow, Memory allocation failed\n");

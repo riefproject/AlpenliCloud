@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nbtree.h"
+#include <string.h>
 
 void create_tree(Tree* tree) {
     *tree = NULL;
 }
 
-Node* create_node(treeInfotype data) {
-    Node *newNode = (Node *)malloc(sizeof(Node));
+Tree create_node_tree(treeInfotype data) {
+    TreeNode*newNode = (TreeNode*)malloc(sizeof(TreeNode));
     if (newNode == NULL) return NULL;
   
     newNode->item = data;
@@ -18,7 +19,7 @@ Node* create_node(treeInfotype data) {
 }
   
 void insert_node(Tree parent, treeInfotype data) {
-    Node* child = create_node(data);
+    TreeNode* child = create_node_tree(data);
     if (parent == NULL || child == NULL) return;
   
     child->parent = parent;

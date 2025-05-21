@@ -3,15 +3,15 @@
 #include "item.h"
 
 typedef Item treeInfotype;
-typedef struct Node* Tree;
-typedef struct Node{
+typedef struct TreeNode* Tree;
+typedef struct TreeNode{
   treeInfotype item;
   Tree next_brother, first_son, parent;
-}Node;
+}TreeNode;
 
 void create_tree(Tree* tree);
 
-Node* create_node(treeInfotype data);
+Tree create_node_tree(treeInfotype data);
 
 void insert_node(Tree parent, treeInfotype data);
 
