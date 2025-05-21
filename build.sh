@@ -1,6 +1,10 @@
 #!/bin/bash
 
-SRC_DIRS=("src" "src/gui")
+# pake array karna akan diiterasi. Kalo mau nambah subfolder tambahin aja
+SRC_DIRS=("src" 
+          "src/gui" 
+          "src/data_structure")
+
 BUILD_DIR="build/output"
 BIN_DIR="bin"
 EXE_NAME="AlpenliCloud.exe"
@@ -8,7 +12,11 @@ EXE_PATH="$BIN_DIR/$EXE_NAME"
 RESOURCE_RC="assets/resource.rc"
 RESOURCE_RES="assets/resource.res"
 
-CFLAGS="-Iinclude -Ilib/raylib/include"
+# bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
+CFLAGS="-Iinclude 
+        -Iinclude/gui
+        -Iinclude/data_structure
+        -Ilib/raylib/include"
 LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
 
 object_files=()
