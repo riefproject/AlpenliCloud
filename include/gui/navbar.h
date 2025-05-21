@@ -2,10 +2,7 @@
 #define NAVBAR_H
 
 #include <stdbool.h>
-#include <string.h>
-
-#include "gui/component.h"
-
+#include "raylib.h"
 typedef struct Navbar {
     bool textboxPatheditMode;
     char textboxPath[1024];
