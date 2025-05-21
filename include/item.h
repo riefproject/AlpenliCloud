@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include "queue.h"
 
 typedef enum ItemType {
   ITEM_FOLDER,
@@ -19,12 +20,12 @@ typedef struct Item {
 
 typedef struct TrashItem{
   Item item;
-  char *origin;
+  char* origin;
 } TrashItem;
 
 // OPERASI
 Item createItem(char *name, char* path, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
-TrashItem createTrashItem(Item item, char *origin);
+TrashItem createTrashItem(Item item, char* origin);
 // Getter
 
 

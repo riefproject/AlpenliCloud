@@ -14,11 +14,11 @@ typedef struct FileManager {
   Tree rootTrash;       // root trash (deleted files)   
   Stack undo;           // stack for undo operations
   Stack redo;           // stack for redo operations
-  Queue currentPath;    // queue for current path       
+  char* currentPath;    // queue for current path       
   Queue copied;         // queue for copied items 
   Queue cut;            // queue for cut items
   Queue temp;           // temporary queue for operations
-  Queue selectedItem    // queue for selected item
+  Queue selectedItem;    // queue for selected item
 } FileManager;
 
 // Create empty filemanager 
@@ -31,7 +31,7 @@ void createFile(FileManager* fileManager);
 void deleteFile(FileManager* fileManager);
 void renameFile(FileManager* fileManager, char* filePath, char* newName);
 void recoverFile(FileManager* fileManager);
-void searchFile(FileManager* fileManager);
+Item searchFile(FileManager* fileManager, char* path);
 
 void undo(FileManager* fileManager);
 void redo(FileManager* fileManager);
