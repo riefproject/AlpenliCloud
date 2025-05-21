@@ -1,5 +1,5 @@
 #include "operation.h"
-#include <string.h>s
+#include <string.h>
 
 Operation createOperation(char* from, char* to, OperationType type){
   return (Operation){
