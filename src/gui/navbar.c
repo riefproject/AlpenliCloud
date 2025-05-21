@@ -1,5 +1,10 @@
+#include <string.h>
+#include <stdbool.h>
+
+#include "gui/component.h"
 #include "gui/navbar.h"
 #include "raygui.h"
+
 
 void createNavbar(Navbar *navbar)
 {
