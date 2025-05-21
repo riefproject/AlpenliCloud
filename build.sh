@@ -22,6 +22,15 @@ build() {
         fi
     done
 
+    for src_file in src/gui/*.c; do
+        if [ -f "$src_file" ]; then
+            filename=$(basename "$src_file")
+            object_file="build/output/src/${filename%.c}.o"
+            compile "$src_file" "$object_file"
+            object_files="$object_files $object_file"
+        fi
+    done
+
     echo "🔧 Linking..."
     windres assets/resource.rc -O coff -o assets/resource.res
     gcc $object_files assets/resource.res -o bin/AlpenliCloud.exe $LDFLAGS $RSTFLAGS
@@ -31,7 +40,7 @@ build() {
         exit 1
     fi
 
-    clear
+    # clear
     echo "🚀 Running AlpenliCloud..."
     sleep 1
     ./bin/AlpenliCloud.exe || echo "❌ AlpenliCloud failed to start! Check for errors."
