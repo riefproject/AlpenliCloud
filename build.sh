@@ -1,78 +1,85 @@
 #!/bin/bash
 
+# Direktori penting
+SRC_DIRS=("src" "src/gui")
+BUILD_DIR="build/output"
+BIN_DIR="bin"
+RESOURCE_RES="assets/resource.res"
+RESOURCE_RC="assets/resource.rc"
+EXE_NAME="AlpenliCloud.exe"
+
+# Flags
+CFLAGS="-Iinclude -Ilib/raylib/include"
+LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+
+object_files=()
+
 clean() {
-    echo "🧹 Cleaning build directories..."
-    rm -rf bin build
+    echo "🧹 Cleaning build directories..."
+    rm -rf "$BUILD_DIR" "$BIN_DIR"
+}
+
+compile_if_needed() {
+    local src_file=$1
+    local out_file=$2
+
+    mkdir -p "$(dirname "$out_file")"
+
+    if [ ! -f "$out_file" ] || [ "$src_file" -nt "$out_file" ]; then
+        echo "🔨 Compiling $src_file..."
+        gcc $CFLAGS -c "$src_file" -o "$out_file"
+        if [ $? -ne 0 ]; then
+            echo "❌ Compilation failed: $src_file"
+            exit 1
+        fi
+    else
+        echo "✅ Skipping $src_file (up to date)"
+    fi
+    object_files+=("$out_file")
+}
+
+compile_sources() {
+    for dir in "${SRC_DIRS[@]}"; do
+        for src_file in "$dir"/*.c; do
+            [ -f "$src_file" ] || continue
+            local filename=$(basename "$src_file" .c)
+            local out_file="$BUILD_DIR/$dir/${filename}.o"
+            compile_if_needed "$src_file" "$out_file"
+        done
+    done
+}
+
+link_executable() {
+    echo "🔧 Linking..."
+    windres "$RESOURCE_RC" -O coff -o "$RESOURCE_RES"
+    gcc "${object_files[@]}" "$RESOURCE_RES" -o "$BIN_DIR/$EXE_NAME" $LDFLAGS
+
+    if [ $? -ne 0 ]; then
+        echo "❌ Linking failed!"
+        exit 1
+    fi
 }
 
 build() {
-    echo "Compiling Aplendrive..."
-    mkdir -p bin build/output/src build/output/library
+    echo "📦 Building AlpenliCloud..."
+    mkdir -p "$BIN_DIR"
 
-    CFLAGS="-Iinclude -Ilib/raylib/include "
-    LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+    compile_sources
+    link_executable
 
-    object_files=""
-    for src_file in src/*.c; do
-        if [ -f "$src_file" ]; then
-            filename=$(basename "$src_file")
-            object_file="build/output/src/${filename%.c}.o"
-            compile "$src_file" "$object_file"
-            object_files="$object_files $object_file"
-        fi
-    done
-
-    for src_file in src/gui/*.c; do
-        if [ -f "$src_file" ]; then
-            filename=$(basename "$src_file")
-            object_file="build/output/src/${filename%.c}.o"
-            compile "$src_file" "$object_file"
-            object_files="$object_files $object_file"
-        fi
-    done
-
-    echo "🔧 Linking..."
-    windres assets/resource.rc -O coff -o assets/resource.res
-    gcc $object_files assets/resource.res -o bin/AlpenliCloud.exe $LDFLAGS $RSTFLAGS
-
-    if [ $? -ne 0 ]; then
-        echo "❌ Linking failed!"
-        exit 1
-    fi
-
-    # clear
-    echo "🚀 Running AlpenliCloud..."
-    sleep 1
-    ./bin/AlpenliCloud.exe || echo "❌ AlpenliCloud failed to start! Check for errors."
+    echo "🚀 Running AlpenliCloud..."
+    sleep 1
+    "./$BIN_DIR/$EXE_NAME" || echo "❌ Execution failed!"
 }
 
-compile() {
-    local src_file=$1
-    local out_file=$2
-
-    echo "🔨 Compiling $src_file..."
-    gcc $CFLAGS -c "$src_file" -o "$out_file"
-
-    if [ $? -ne 0 ]; then
-        echo "❌ Compilation of $src_file failed!"
-        exit 1
-    fi
-}
-
+# Command handler
 case "$1" in
-    "clean")
-        clean
-        ;;
-    "rebuild")
-        clean
-        build
-        ;;
-    "")
-        build
-        ;;
-    *)
-        echo "❌ Unknown parameter: $1"
-        echo "Usage: $0 [clean|rebuild]"
-        exit 1
-        ;;
+    "clean") clean ;;
+    "rebuild") clean; build ;;
+    ""|"build") build ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo "Usage: $0 [clean|rebuild|build]"
+        exit 1
+        ;;
 esac
