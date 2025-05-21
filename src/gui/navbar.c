@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "macro.h"
 #include "gui/component.h"
 #include "gui/navbar.h"
 #include "raygui.h"
@@ -33,4 +34,6 @@ void drawNavbar(Navbar *navbar)
 
     if (GuiTextBox((Rectangle){navbar->currentZeroPosition.x + 500 + 24 * 3 + DEFAULT_PADDING * 4, navbar->currentZeroPosition.y, 170, 24}, navbar->textboxSearch, 1024, navbar->textboxSearcheditMode))
         navbar->textboxSearcheditMode = !navbar->textboxSearcheditMode;
+
+    GuiLine((Rectangle){navbar->currentZeroPosition.x, navbar->currentZeroPosition.y + 24, navbar->currentZeroPosition.width, 10}, NULL);
 }

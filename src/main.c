@@ -5,9 +5,11 @@
 #include <sys/stat.h>
 #include "raygui.h"
 #include "raylib.h"
-#include "gui/component.h"
+#include "macro.h"
+
 #include "gui/titlebar.h"
 #include "gui/navbar.h"
+#include "gui/toolbar.h"
 #include "gui/sidebar.h"
 #include "gui/body.h"
 #include "file_manager.h"
@@ -18,7 +20,6 @@ int main()
     // ----------------------------------------------------------------------------------------
     int screenWidth = 800;
     int screenHeight = 450;
-    int padding = 10;
     
     FileManager fileManager;
     
@@ -28,7 +29,7 @@ int main()
     TitleBar titleBar;
     createTitleBar(&titleBar, screenWidth, screenHeight);
     
-    Rectangle currentZeroPosition = {padding, titleBar.height + padding, screenWidth - padding * 2, screenHeight - titleBar.height - padding * 2}; 
+    Rectangle currentZeroPosition = {DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2}; 
     
     SetConfigFlags(FLAG_WINDOW_UNDECORATED);
     SetTargetFPS(60);
@@ -42,13 +43,14 @@ int main()
     Navbar navbar;
     createNavbar(&navbar);
     
+    Toolbar toolbar;
+    createToolbar(&toolbar);
+
     Sidebar sidebar;
     createSidebar(&sidebar);
 
     Body body;
     createBody(&body);
-    
-
 
     while (!titleBar.exitWindow && !WindowShouldClose())
     {
@@ -57,6 +59,8 @@ int main()
         updateTitleBar(&titleBar);
 
         updateNavbar(&navbar, currentZeroPosition);
+
+        updateToolbar(&toolbar, currentZeroPosition);
 
         updateSidebar(&sidebar, currentZeroPosition);
 
@@ -76,7 +80,7 @@ int main()
         
         drawNavbar(&navbar);
         
-        
+        drawToolbar(&toolbar);
 
         EndDrawing();
     }

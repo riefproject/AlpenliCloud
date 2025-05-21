@@ -1,5 +1,5 @@
 #include "gui/body.h"
-#include "gui/component.h"
+#include "macro.h"
 
 #include "raygui.h"
 #include <stdio.h>
@@ -14,12 +14,15 @@ void createBody(Body *body)
 void updateBody(Body *body, Rectangle currentZeroPosition)
 {
     body->currentZeroPosition = currentZeroPosition;
+    
     body->panelRec = (Rectangle) {
         body->currentZeroPosition.x + 170 + DEFAULT_PADDING, 
-        body->currentZeroPosition.y + DEFAULT_PADDING + 24, 
+        body->currentZeroPosition.y + DEFAULT_PADDING * 2 + 24 * 2, 
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING, 
-        body->currentZeroPosition.height - DEFAULT_PADDING - 24
+        body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2
     };
+
+
 }
 
 void drawBody(Body *body)
