@@ -1,10 +1,15 @@
+// File         : dll.c (or linkedlist at github)
+// Author       : Arief F-sa Wijaya
+// Source       : https://github.com/riefproject/reestruct
+// Name         : reestruct v0.1
+// Description  : Implementation of generic Double LinkedList functions in C
+// License      : MIT License
+
 #include "dll.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <assert.h>
-#include <unistd.h>
 
 // ===================================================
 //            . . . DOUBLY LINKED LIST . . .
