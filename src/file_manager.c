@@ -10,6 +10,9 @@
 #include "utils.h"
 #include "item.h"
 #include <time.h>
+#include "raylib.h"
+#include <string.h>
+#define ROOT ".dir/root"
 
 bool isCopy = 0;
 /* IS:
@@ -36,6 +39,17 @@ void createFileManager(FileManager *fileManager)
     create_queue(&(fileManager->cut));
     create_queue(&(fileManager->temp));
 }
+
+void initFileManager(FileManager* fileManager){
+  Item rootItem;
+  if(fileManager->root == NULL){
+    rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0,0,0);
+    fileManager->root = create_node_tree(rootItem);
+    fileManager->currentPath = ROOT;
+  }
+}
+
+
 
 /* IS:
   Tree root = NULL;
@@ -324,4 +338,32 @@ bool isDirectory(char *path)
     struct stat path_stat;
     stat(path, &path_stat);
     return S_ISDIR(path_stat.st_mode);
+}
+
+char* _createDuplicatedFolderName(char* filePath, char* suffix){
+  char* newPath =  TextFormat("%s%s", filePath, suffix);
+  if(DirectoryExists(newPath)){
+    newPath = _createDuplicatedFolderName(newPath, suffix);
+  }
+  return newPath;
+}
+
+char* _createDuplicatedFileName(char* filePath, char* suffix){
+  size_t len;
+  char* extention = strrchr(filePath, '.');
+  if(extention){
+    len = extention - filePath;
+  }else{
+    len = strlen(filePath);
+  }
+  char* nameOnly = (char*)malloc(len + 1);
+  strncpy(nameOnly, filePath, len);
+  nameOnly[len] = '\0';
+
+  char* newPath =  TextFormat("%s%s%s", nameOnly,suffix, extention);
+  if(FileExists(newPath)){
+    newPath = _createDuplicatedFileName(newPath, suffix);
+  }
+  return newPath;
+
 }
