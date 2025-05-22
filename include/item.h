@@ -16,6 +16,7 @@ typedef struct Item {
   size_t size;
   ItemType type;
   time_t created_at, updated_at, deleted_at;
+  bool selected;
 }Item;
 
 typedef struct TrashItem{

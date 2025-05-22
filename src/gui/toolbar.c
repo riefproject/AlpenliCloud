@@ -19,28 +19,30 @@ void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition)
 
 void drawToolbar(Toolbar *toolbar)
 {
-    GuiButtonCustom((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y, 84, 24}, "#65# NEW", "CREATE NEW ITEM", false);
+    float x = toolbar->currentZeroPosition.x;
+    float y = toolbar->currentZeroPosition.y;
+    float width = toolbar->currentZeroPosition.width;
 
-    // Tombol "PILIH BANYAK"
-    GuiButtonCustom(
-        (Rectangle){toolbar->currentZeroPosition.x + toolbar->currentZeroPosition.width - 130, toolbar->currentZeroPosition.y, 130, 24},
-        "#112# PILIH BANYAK",
-        "RENAME", true);
+    
+    GuiButtonCustom((Rectangle){x, y, 84, 24}, "#65# NEW", "CREATE NEW ITEM", false);
 
-    // Tombol lainnya mundur dari tombol "PILIH BANYAK"
-    float rightStartX = toolbar->currentZeroPosition.x + toolbar->currentZeroPosition.width - 130 - DEFAULT_PADDING;
+    
+    GuiButtonCustom((Rectangle){x + 84 + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
+
+    
+    float rightStartX = x + width;
 
     rightStartX -= 24; 
-    GuiButtonCustom((Rectangle){rightStartX, toolbar->currentZeroPosition.y, 24, 24}, "#22#", "RENAME", true);
+    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#22#", "RENAME", true);
 
     rightStartX -= 24 + DEFAULT_PADDING; 
-    GuiButtonCustom((Rectangle){rightStartX, toolbar->currentZeroPosition.y, 24, 24}, "#18#", "PASTE", true);
+    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#18#", "PASTE", true);
 
     rightStartX -= 24 + DEFAULT_PADDING; 
-    GuiButtonCustom((Rectangle){rightStartX, toolbar->currentZeroPosition.y, 24, 24}, "#16#", "COPY", true);
+    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#16#", "COPY", true);
 
     rightStartX -= 24 + DEFAULT_PADDING; 
-    GuiButtonCustom((Rectangle){rightStartX, toolbar->currentZeroPosition.y, 24, 24}, "#17#", "CUT", true);
+    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#17#", "CUT", true);
 
     GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
 }

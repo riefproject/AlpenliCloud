@@ -141,11 +141,8 @@ void updateTitleBar(TitleBar *titleBar)
         }
     }
 
-    if (IsWindowResized() || IsWindowMaximized())
-    {
-        titleBar->screenWidth = GetScreenWidth();
-        titleBar->screenHeight = GetScreenHeight();
-    }
+    titleBar->screenWidth = GetScreenWidth();
+    titleBar->screenHeight = GetScreenHeight();
 }
 
 void drawTitleBar(TitleBar *titleBar)
