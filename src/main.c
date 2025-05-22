@@ -12,6 +12,7 @@
 #include "gui/toolbar.h"
 #include "gui/sidebar.h"
 #include "gui/body.h"
+#include "file_manager.h"
 
 int main()
 {
@@ -19,6 +20,11 @@ int main()
     // ----------------------------------------------------------------------------------------
     int screenWidth = 800;
     int screenHeight = 450;
+    
+    FileManager fileManager;
+    
+    createFileManager(&fileManager);
+    
 
     TitleBar titleBar;
     createTitleBar(&titleBar, screenWidth, screenHeight);
@@ -66,7 +72,7 @@ int main()
         updateSidebar(&sidebar, currentZeroPosition);
 
         updateBody(&body, currentZeroPosition);
-
+        
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
