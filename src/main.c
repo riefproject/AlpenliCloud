@@ -14,6 +14,11 @@
 #include "gui/body.h"
 #include "file_manager.h"
 
+
+// int main(){
+//     // MakeDirectory(".dir/baru");
+// }
+
 int main()
 {
     // Windows config
@@ -24,6 +29,9 @@ int main()
     FileManager fileManager;
     
     createFileManager(&fileManager);
+    initFileManager(&fileManager);
+    // createFile(&fileManager, ITEM_FOLDER, "ini dibuat pake createFile");
+    // createFile(&fileManager, ITEM_FILE, "iniFileBaru.txt");
     
 
     TitleBar titleBar;

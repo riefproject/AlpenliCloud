@@ -10,6 +10,9 @@
 #include "utils.h"
 #include "item.h"
 #include <time.h>
+#include "raylib.h"
+#include <string.h>
+#define ROOT ".dir/root"
 
 bool isCopy = 0;
 
@@ -36,6 +39,17 @@ void createFileManager(FileManager* fileManager) {
   create_queue(&(fileManager->cut));
   create_queue(&(fileManager->temp));
 }
+
+void initFileManager(FileManager* fileManager){
+  Item rootItem;
+  if(fileManager->root == NULL){
+    rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0,0,0);
+    fileManager->root = create_node_tree(rootItem);
+    fileManager->currentPath = ROOT;
+  }
+}
+
+
 
 /* IS:
   Tree root = NULL;
@@ -78,69 +92,45 @@ int loadFile(FileManager* fileManager, char* path) {
   }
 }
 
-void createFile(FileManager* fileManager) {
-  int choice;
-  char* fileName = NULL;
-  char filepath[512];
-  time_t createTime;
+void createFile(FileManager* fileManager, ItemType type, char* name) {
+  Item newItem, parentToSearch;
+  char* path;
+  Tree currentNode;
+  time_t createdTime;
+  FILE* newFile;
 
-  while (true) {
-    system("cls");
-    printf("New Item\n");
-    printf("Pilih type:\n");
-    printf("1. File\n");
-    printf("2. Folder\n");
-    printf("Pilih type (1/2): ");
-    scanf("%d", &choice);
-    getchar();
-
-    if (choice == 1 || choice == 2) break;
-    printf("Pilihan tidak valid. Tekan enter untuk lanjut...\n");
-    getchar();
-  }
-
-  printf("Masukkan nama %s: ", (choice == 1) ? "file" : "folder");
-  inputString(&fileName);
-
-  snprintf(filepath, sizeof(filepath), "%s/%s", fileManager->currentPath, fileName);
-
-  if (choice == 1) {
-
-    FILE* newFile = fopen(filepath, "w");
-    if (newFile == NULL) {
-      perror("Gagal membuat file");
-      free(fileName);
-      return;
+  currentNode = searchTree(fileManager->root,createItem(getNameFromPath(fileManager->currentPath), fileManager->currentPath,0,ITEM_FOLDER,0,0,0));
+  // printf("%s\n", fileManager->currentPath);
+  if(currentNode != NULL){
+    path = TextFormat("%s/%s", fileManager->currentPath, name);
+    createdTime = time(NULL);
+    newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
+    // printf("%s", path);
+    if(type == ITEM_FOLDER){
+      if(DirectoryExists(path)){
+        path = createDuplicatedFolderName(path, "(1)");
+      } 
+      if(MakeDirectory(path) != 0){
+        printf("Gagal membuat folder\n");
+        return;
+      }
+    }else if (type == ITEM_FILE){
+      if(FileExists(path)){
+        path = createDuplicatedFileName(path, "(1)");
+      } 
+      newFile = fopen(path, "w");
+      if(newFile == NULL){
+        printf("Gagal membuat file %s\n", name);
+        return;
+      }
+      fclose(newFile);
     }
-    fclose(newFile);
 
-    // dapatkan waktu saat file dibuat
-    createTime = time(NULL);
-
-
-    Item newNode = createItem(fileName, filepath, 0, ITEM_FILE, createTime, createTime, 0);
-    insert_node(fileManager->root, newNode);
-
-    printf("File berhasil dibuat. Tekan enter untuk lanjut...\n");
-    getchar();
-  }
-  else if (choice == 2) {
-    int status = mkdir(filepath);
-
-    if (status != 0) {
-      perror("Gagal membuat folder");
-      free(fileName);
-      return;
-    }
-    createTime = time(NULL);
-    Item item = createItem(fileName, filepath, 0, ITEM_FOLDER, createTime, createTime, 0);
-    insert_node(fileManager->root, item);
-
-    printf("Folder berhasil dibuat. Tekan enter untuk lanjut...\n");
-    getchar();
+    insert_node(currentNode, newItem);
+  }else{
+    printf("Direktori parent tidak ditemukan");
   }
 
-  free(fileName);
 }
 
 
@@ -300,4 +290,32 @@ bool isDirectory(char* path) {
   struct stat path_stat;
   stat(path, &path_stat);
   return S_ISDIR(path_stat.st_mode);
+}
+
+char* createDuplicatedFolderName(char* filePath, char* suffix){
+  char* newPath =  TextFormat("%s%s", filePath, suffix);
+  if(DirectoryExists(newPath)){
+    newPath = createDuplicatedFolderName(newPath, suffix);
+  }
+  return newPath;
+}
+
+char* createDuplicatedFileName(char* filePath, char* suffix){
+  size_t len;
+  char* extention = strrchr(filePath, '.');
+  if(extention){
+    len = extention - filePath;
+  }else{
+    len = strlen(filePath);
+  }
+  char* nameOnly = (char*)malloc(len + 1);
+  strncpy(nameOnly, filePath, len);
+  nameOnly[len] = '\0';
+
+  char* newPath =  TextFormat("%s%s%s", nameOnly,suffix, extention);
+  if(FileExists(newPath)){
+    newPath = createDuplicatedFileName(newPath, suffix);
+  }
+  return newPath;
+
 }

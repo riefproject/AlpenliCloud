@@ -25,9 +25,9 @@ typedef struct FileManager {
 void createFileManager(FileManager* fileManager);
 
 // Define filemanager with default value
-void initFileManager(FileManager* fileManager, char* path);
+void initFileManager(FileManager* fileManager);
 
-void createFile(FileManager* fileManager);
+void createFile(FileManager* fileManager, ItemType type, char* name);
 void deleteFile(FileManager* fileManager);
 void renameFile(FileManager* fileManager, char* filePath, char* newName);
 void recoverFile(FileManager* fileManager);
@@ -47,6 +47,8 @@ void clearSelectedFile(FileManager* fileManager);
 // Mengembalikan nama file dari path lengkap
 char* getNameFromPath(char* path);
 
+char* createDuplicatedFolderName(char* dirPath, char* suffix);
+char* createDuplicatedFileName(char* filePath, char* suffix);
 // Cek apakah path adalah folder
 bool isDirectory(char* path);
 
