@@ -44,12 +44,29 @@ void deselectFile(FileManager* fileManager, Item item);
 void clearSelectedFile(FileManager* fileManager);
 
 
+/*
+====================================================================
+  Helper Functions (PRIVATE)
+==================================================================
+*/
 // Mengembalikan nama file dari path lengkap
-char* getNameFromPath(char* path);
+char* _getNameFromPath(char* path);
 
-char* createDuplicatedFolderName(char* dirPath, char* suffix);
-char* createDuplicatedFileName(char* filePath, char* suffix);
+/* 
+  Membuat nama folder baru dengan menambahkan suffix untuk folder duplikat
+  suffix adalah string yang ditambahkan ke belakang nama folder
+  Misal: "folder" menjadi "folder(1)"
+*/
+char* _createDuplicatedFolderName(char* dirPath, char* suffix);
+
+/* 
+  Membuat nama file baru dengan menambahkan suffix untuk file duplikat
+  suffix adalah string yang ditambahkan ke belakang nama file
+  Misal: "file.txt" menjadi "file(1).txt"
+*/
+char* _createDuplicatedFileName(char* filePath, char* suffix);
+
 // Cek apakah path adalah folder
-bool isDirectory(char* path);
+bool _isDirectory(char* path);
 
 #endif // !FILE_MANAGER_H

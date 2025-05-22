@@ -99,7 +99,7 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
   time_t createdTime;
   FILE* newFile;
 
-  currentNode = searchTree(fileManager->root,createItem(getNameFromPath(fileManager->currentPath), fileManager->currentPath,0,ITEM_FOLDER,0,0,0));
+  currentNode = searchTree(fileManager->root,createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath,0,ITEM_FOLDER,0,0,0));
   // printf("%s\n", fileManager->currentPath);
   if(currentNode != NULL){
     path = TextFormat("%s/%s", fileManager->currentPath, name);
@@ -108,7 +108,7 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
     // printf("%s", path);
     if(type == ITEM_FOLDER){
       if(DirectoryExists(path)){
-        path = createDuplicatedFolderName(path, "(1)");
+        path = _createDuplicatedFolderName(path, "(1)");
       } 
       if(MakeDirectory(path) != 0){
         printf("Gagal membuat folder\n");
@@ -116,7 +116,7 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
       }
     }else if (type == ITEM_FILE){
       if(FileExists(path)){
-        path = createDuplicatedFileName(path, "(1)");
+        path = _createDuplicatedFileName(path, "(1)");
       } 
       newFile = fopen(path, "w");
       if(newFile == NULL){
@@ -165,7 +165,7 @@ Item searchFile(FileManager* fileManager, char* path) {
   Item item ={0};
   Item itemToSearch;
   Tree foundTree;
-  itemToSearch = createItem(getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
+  itemToSearch = createItem(_getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
   foundTree = searchTree(fileManager->root, item);
   if(foundTree == NULL) {
     printf("File tidak ditemukan\n");
@@ -255,7 +255,7 @@ void pasteFile(FileManager* fileManager) {
   }
 }
 
-char* getNameFromPath(char* path) {
+char* _getNameFromPath(char* path) {
   char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
   if (name != NULL) {
     return name + 1; // skip karakter slash (/) terakhir
@@ -286,21 +286,21 @@ void deselectFile(FileManager* fileManager, Item item) {
 }
 
 
-bool isDirectory(char* path) {
+bool _isDirectory(char* path) {
   struct stat path_stat;
   stat(path, &path_stat);
   return S_ISDIR(path_stat.st_mode);
 }
 
-char* createDuplicatedFolderName(char* filePath, char* suffix){
+char* _createDuplicatedFolderName(char* filePath, char* suffix){
   char* newPath =  TextFormat("%s%s", filePath, suffix);
   if(DirectoryExists(newPath)){
-    newPath = createDuplicatedFolderName(newPath, suffix);
+    newPath = _createDuplicatedFolderName(newPath, suffix);
   }
   return newPath;
 }
 
-char* createDuplicatedFileName(char* filePath, char* suffix){
+char* _createDuplicatedFileName(char* filePath, char* suffix){
   size_t len;
   char* extention = strrchr(filePath, '.');
   if(extention){
@@ -314,7 +314,7 @@ char* createDuplicatedFileName(char* filePath, char* suffix){
 
   char* newPath =  TextFormat("%s%s%s", nameOnly,suffix, extention);
   if(FileExists(newPath)){
-    newPath = createDuplicatedFileName(newPath, suffix);
+    newPath = _createDuplicatedFileName(newPath, suffix);
   }
   return newPath;
 
