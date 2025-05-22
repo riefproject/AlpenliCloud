@@ -32,7 +32,7 @@ int main()
 
     initFileManager(&fileManager);
 
-    return 0;
+    // return 0;
 
     TitleBar titleBar;
     createTitleBar(&titleBar, screenWidth, screenHeight);
@@ -76,7 +76,7 @@ int main()
         
         updateSidebar(&sidebar, currentZeroPosition);
         
-        updateBody(&body, currentZeroPosition);
+        updateBody(&body, currentZeroPosition, &fileManager);
         
 
         // Draw
@@ -97,6 +97,7 @@ int main()
         
         EndDrawing();
     }
+
     for (int i = 0; i < 100; i++){
   
         printf("MAIN -- %d:%d\n", i, body.selected[i]);

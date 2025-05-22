@@ -2,6 +2,7 @@
 #include "macro.h"
 #include "item.h"
 #include "file_manager.h"
+// #include <time.h>
 
 #include "raygui.h"
 #include <stdio.h>
@@ -21,14 +22,16 @@ void createBody(Body *b)
     for (int i = 0; i < 100; i++)
     {
         body.selected[i] = false;
-        // printf("-- %d:%d\n", i, body.selected[i]);
     }
+
     *b = body;
 }
 
-void updateBody(Body *body, Rectangle currentZeroPosition)
+void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileManager)
 {
     body->currentZeroPosition = currentZeroPosition;
+
+    body->fileManager = fileManager;
 
     body->panelRec = (Rectangle){
         body->currentZeroPosition.x + 170 + DEFAULT_PADDING,
@@ -47,6 +50,8 @@ void updateBody(Body *body, Rectangle currentZeroPosition)
 
 void drawBody(Body *body)
 {
+    Tree cursor = body->fileManager->treeCursor;
+
     float headerHeight = 30;
     float rowHeight = 24;
 
@@ -63,12 +68,15 @@ void drawBody(Body *body)
     float startY = body->panelRec.y + headerHeight + body->panelScroll.y;
     float startX = body->panelRec.x + body->panelScroll.x;
 
-    for (int i = 0; i < 100; i++)
+    int i = 0;
+    while (cursor != NULL)
     {
-        drawTableItem(body, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
+        drawTableItem(body, cursor->item, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
 
         if ((i + 1) * rowHeight + headerHeight > body->panelContentRec.height)
             body->panelContentRec.height = (i + 1) * rowHeight + headerHeight;
+        i++;
+        cursor = cursor->next_brother;
     }
 
     float headerX = body->panelRec.x + body->panelScroll.x;
@@ -77,7 +85,7 @@ void drawBody(Body *body)
     EndScissorMode();
 }
 
-void drawTableItem(Body *body, int index, float startX, float startY, float rowHeight, float colWidths[4])
+void drawTableItem(Body *body, Item item, int index, float startX, float startY, float rowHeight, float colWidths[5])
 {
     float checkboxWidth = body->showCheckbox ? 28 : 0;
     float totalContentWidth = checkboxWidth + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
@@ -112,16 +120,17 @@ void drawTableItem(Body *body, int index, float startX, float startY, float rowH
         }
     }
 
-    DrawText(TextFormat("File_%03d.txt", index), colX + 8, rowY + 6, 10, DARKGRAY);
+    DrawText(TextFormat("%s", item.name), colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[0];
 
-    DrawText("Text File", colX + 8, rowY + 6, 10, DARKGRAY);
+    DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[1];
 
-    DrawText("4 KB", colX + 8, rowY + 6, 10, DARKGRAY);
+    DrawText(TextFormat("%d", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[2];
 
-    DrawText("2025-05-21 10:00", colX + 8, rowY + 6, 10, DARKGRAY);
+    // time_t time = time(item.updated_at);
+    DrawText(TextFormat("2025-05-21 10:00"), colX + 8, rowY + 6, 10, DARKGRAY);
 }
 
 void drawTableHeader(Body *body, float x, float y, float colWidths[])

@@ -15,7 +15,7 @@ typedef struct FileManager
   Stack undo;     // stack for undo operations
   Stack redo;     // stack for redo operations
 
-  Item treeCursor;
+  Tree *treeCursor;
 
   char *currentPath;  // queue for current path
   Queue copied;       // queue for copied items

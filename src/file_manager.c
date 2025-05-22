@@ -48,13 +48,13 @@ void initFileManager(FileManager *fileManager)
         rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0, 0, 0);
         fileManager->root = create_node_tree(rootItem);
         fileManager->currentPath = ROOT;
+
+        fileManager->treeCursor = fileManager->root;
+
+        loadTree(fileManager->treeCursor, ROOT);
+        printf("\n\n");        
+        printTree(fileManager->treeCursor, 0);
     }
-
-    loadTree(fileManager->root, ROOT);
-
-    printf("\n\n");
-
-    printTree(fileManager->root, 0);
 }
 
 /* IS:
