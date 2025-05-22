@@ -1,12 +1,15 @@
 #include "gui/component.h"
 #include "raylib.h"
 #include "raygui.h"
+#include "macro.h"
 
-bool GuiButtonTooltip(Rectangle bounds, const char *text, const char *tooltip)
+bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled)
 {
+    if (disabled) GuiDisable();
+    
     bool pressed = GuiButton(bounds, text);
 
-    if (CheckCollisionPointRec(GetMousePosition(), bounds))
+    if (CheckCollisionPointRec(GetMousePosition(), bounds) && !disabled)
     {
         int padding = 5;
         int fontSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
@@ -40,6 +43,30 @@ bool GuiButtonTooltip(Rectangle bounds, const char *text, const char *tooltip)
         );
     }
 
+    GuiEnable();
+
     return pressed;
 }
 
+bool GuiTextBoxCustom(Rectangle bounds, const char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled)
+{
+    bool pressedEnter = false;
+
+    if (disabled) GuiDisable();
+
+    if (GuiTextBox(bounds, inputText, textSize, *editMode)) *editMode = !*editMode;
+
+    if (*editMode && IsKeyPressed(KEY_ENTER))
+    {
+        pressedEnter = true;
+        *editMode = false;
+    }
+
+    if (!*editMode && inputText[0] == '\0') {
+        GuiLabel((Rectangle){bounds.x + TINY_PADING, bounds.y + bounds.height / 2, 20}, placeholder);
+    }
+
+    if (disabled) GuiEnable();
+
+    return pressedEnter;
+}

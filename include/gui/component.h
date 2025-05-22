@@ -10,6 +10,8 @@
     
 // } Component;
 
-bool GuiButtonTooltip(Rectangle bounds, const char *text, const char *tooltip);
+bool GuiTextBoxCustom(Rectangle bounds, const char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled);
+
+bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled);
 
 #endif // COMPONENT_H

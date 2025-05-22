@@ -19,24 +19,24 @@ int main()
     // ----------------------------------------------------------------------------------------
     int screenWidth = 800;
     int screenHeight = 450;
-    
+
     TitleBar titleBar;
     createTitleBar(&titleBar, screenWidth, screenHeight);
-    
-    Rectangle currentZeroPosition = {DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2}; 
-    
-    SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+
+    Rectangle currentZeroPosition = {DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
+
+    SetConfigFlags( FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
-    
+
     InitWindow(screenWidth, screenHeight, "raygui - controls test suite");
     // ----------------------------------------------------------------------------------------
-    
+
     // initialization
     // ----------------------------------------------------------------------------------------
 
     Navbar navbar;
     createNavbar(&navbar);
-    
+
     Toolbar toolbar;
     createToolbar(&toolbar);
 
@@ -48,6 +48,13 @@ int main()
 
     while (!titleBar.exitWindow && !WindowShouldClose())
     {
+        if (IsWindowResized() || IsWindowMaximized)
+        {
+            screenWidth = GetScreenWidth();
+            screenHeight = GetScreenHeight();
+            currentZeroPosition = (Rectangle) {DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
+        }
+
         // Update
         //----------------------------------------------------------------------------------
         updateTitleBar(&titleBar);
@@ -69,12 +76,12 @@ int main()
         drawTitleBar(&titleBar);
 
         drawBody(&body);
-        
+
         drawSidebar(&sidebar);
-        
-        drawNavbar(&navbar);
-        
+
         drawToolbar(&toolbar);
+
+        drawNavbar(&navbar);
 
         EndDrawing();
     }
