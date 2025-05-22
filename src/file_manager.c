@@ -40,16 +40,22 @@ void createFileManager(FileManager *fileManager)
     create_queue(&(fileManager->temp));
 }
 
-void initFileManager(FileManager* fileManager){
-  Item rootItem;
-  if(fileManager->root == NULL){
-    rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0,0,0);
-    fileManager->root = create_node_tree(rootItem);
-    fileManager->currentPath = ROOT;
-  }
+void initFileManager(FileManager *fileManager)
+{
+    Item rootItem;
+    if (fileManager->root == NULL)
+    {
+        rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0, 0, 0);
+        fileManager->root = create_node_tree(rootItem);
+        fileManager->currentPath = ROOT;
+    }
+
+    loadTree(fileManager->root, ROOT);
+
+    printf("\n\n");
+
+    printTree(fileManager->root, 0);
 }
-
-
 
 /* IS:
   Tree root = NULL;
@@ -59,41 +65,71 @@ void initFileManager(FileManager* fileManager){
   Queue currentPath = NULL;
 
   FS:
-  Tree root = loadFile(*filemanager, "./root/dir/");
-  Tree rootTrash = loadFile(*filemanager, "./root/trash/");
+  Tree root = loadTree(*filemanager, "./root/dir/");
+  Tree rootTrash = loadTree(*filemanager, "./root/trash/");
   Stack actionStack = NULL;
   Queue selectedItem = NULL;
   Queue currentPath = enqueue("./root/");
 */
+
 // void initFileManager(FileManager* fileManager) {
 //   printf("Hello World!");
 
 // }
 
-int loadFile(FileManager *fileManager, char *path)
+Tree loadTree(Tree tree, char *path)
 {
     DIR *dp;
     struct dirent *ep;
-    time_t createTime;
+    struct stat statbuf;
 
     dp = opendir(path);
-
-    if (dp != NULL)
+    if (dp == NULL)
     {
-        createTime = time(NULL);
-        while ((ep = readdir(dp)) != NULL)
-        {
-            Item data = createItem(ep->d_name, path, 0, ITEM_FILE, createTime, createTime, 0);
-            insert_node(fileManager->root, data);
-        }
-        closedir(dp);
-        return 0;
-    }
-    else
-    {
-        perror("Couldn't open the directory");
+        perror("Tidak dapat membuka direktori");
         return -1;
     }
+
+    while ((ep = readdir(dp)) != NULL)
+    {
+        if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
+            continue;
+
+        char *fullPath = malloc(strlen(path) + strlen(ep->d_name) + 2);
+        sprintf(fullPath, "%s/%s", path, ep->d_name);
+
+        if (stat(fullPath, &statbuf) == -1)
+        {
+            perror("Gagal mendapatkan info file");
+            continue;
+        }
+
+        time_t now = time(NULL);
+        printf("Memproses: %s\n", fullPath);
+
+        if (S_ISDIR(statbuf.st_mode))
+        {
+            Item data = createItem(ep->d_name, path, (long)statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
+            Tree newTree = insert_node(tree, data);
+            printf("  (Direktori) Rekursi ke: %s\n", fullPath);
+            loadTree(newTree, fullPath);
+        }
+        else if (S_ISREG(statbuf.st_mode))
+        {
+            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
+            insert_node(tree, data);
+            printf("  (File) Ditemukan file: %s\n", fullPath);
+        }
+        else
+        {
+            printf("  (Tipe lain) Ditemukan: %s\n", fullPath);
+        }
+
+        free(fullPath);
+    }
+
+    closedir(dp);
+    return 0;
 }
 
 void createFile(FileManager *fileManager)
@@ -340,30 +376,36 @@ bool isDirectory(char *path)
     return S_ISDIR(path_stat.st_mode);
 }
 
-char* _createDuplicatedFolderName(char* filePath, char* suffix){
-  char* newPath =  TextFormat("%s%s", filePath, suffix);
-  if(DirectoryExists(newPath)){
-    newPath = _createDuplicatedFolderName(newPath, suffix);
-  }
-  return newPath;
+char *_createDuplicatedFolderName(char *filePath, char *suffix)
+{
+    char *newPath = TextFormat("%s%s", filePath, suffix);
+    if (DirectoryExists(newPath))
+    {
+        newPath = _createDuplicatedFolderName(newPath, suffix);
+    }
+    return newPath;
 }
 
-char* _createDuplicatedFileName(char* filePath, char* suffix){
-  size_t len;
-  char* extention = strrchr(filePath, '.');
-  if(extention){
-    len = extention - filePath;
-  }else{
-    len = strlen(filePath);
-  }
-  char* nameOnly = (char*)malloc(len + 1);
-  strncpy(nameOnly, filePath, len);
-  nameOnly[len] = '\0';
+char *_createDuplicatedFileName(char *filePath, char *suffix)
+{
+    size_t len;
+    char *extention = strrchr(filePath, '.');
+    if (extention)
+    {
+        len = extention - filePath;
+    }
+    else
+    {
+        len = strlen(filePath);
+    }
+    char *nameOnly = (char *)malloc(len + 1);
+    strncpy(nameOnly, filePath, len);
+    nameOnly[len] = '\0';
 
-  char* newPath =  TextFormat("%s%s%s", nameOnly,suffix, extention);
-  if(FileExists(newPath)){
-    newPath = _createDuplicatedFileName(newPath, suffix);
-  }
-  return newPath;
-
+    char *newPath = TextFormat("%s%s%s", nameOnly, suffix, extention);
+    if (FileExists(newPath))
+    {
+        newPath = _createDuplicatedFileName(newPath, suffix);
+    }
+    return newPath;
 }

@@ -30,7 +30,7 @@ int main()
 
     createFileManager(&fileManager);
 
-    loadFile(&fileManager, "./.root/dir");
+    initFileManager(&fileManager);
 
     return 0;
 

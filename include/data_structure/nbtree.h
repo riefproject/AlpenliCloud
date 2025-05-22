@@ -13,9 +13,13 @@ void create_tree(Tree* tree);
 
 Tree create_node_tree(treeInfotype data);
 
-void insert_node(Tree parent, treeInfotype data);
+Tree insert_node(Tree parent, treeInfotype data);
 
 Tree searchTree(Tree root, treeInfotype data);
+
+void printIndent(int depth);
+
+void printTree(Tree node, int depth);
 
 
 #endif // !NBTREE_H

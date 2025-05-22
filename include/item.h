@@ -13,7 +13,7 @@ typedef enum ItemType {
 typedef struct Item {
   char* name;
   char* path;
-  size_t size;
+  long size;
   ItemType type;
   time_t created_at, updated_at, deleted_at;
   bool selected;
@@ -25,7 +25,7 @@ typedef struct TrashItem{
 } TrashItem;
 
 // OPERASI
-Item createItem(char *name, char* path, size_t size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
+Item createItem(char *name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
 TrashItem createTrashItem(Item item, char* origin);
 // Getter
 

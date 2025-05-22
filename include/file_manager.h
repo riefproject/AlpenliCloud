@@ -28,9 +28,9 @@ typedef struct FileManager
 void createFileManager(FileManager *fileManager);
 
 // Define filemanager with default value
-void initFileManager(FileManager *fileManager, char *path);
+void initFileManager(FileManager *fileManager);
 
-int loadFile(FileManager *fileManager, char *path);
+Tree loadTree(Tree tree, char *path);
 
 void createFile(FileManager *fileManager);
 void deleteFile(FileManager *fileManager);
