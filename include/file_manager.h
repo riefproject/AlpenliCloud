@@ -49,6 +49,7 @@ void clearSelectedFile(FileManager* fileManager);
   Helper Functions (PRIVATE)
 ==================================================================
 */
+
 // Mengembalikan nama file dari path lengkap
 char* _getNameFromPath(char* path);
 
