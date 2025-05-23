@@ -15,13 +15,13 @@ typedef struct FileManager
   Stack undo;     // stack for undo operations
   Stack redo;     // stack for redo operations
 
-  Tree *treeCursor;
+  Tree treeCursor;
 
   char *currentPath;  // queue for current path
   Queue copied;       // queue for copied items
   Queue cut;          // queue for cut items
   Queue temp;         // temporary queue for operations
-  Queue selectedItem; // queue for selected item
+  LinkedList selectedItem; // linkedlist for selected item
 } FileManager;
 
 // Create empty filemanager
@@ -53,5 +53,13 @@ char *getNameFromPath(char *path);
 
 // Cek apakah path adalah folder
 bool isDirectory(char *path);
+
+void windowsOpenWith(char *path);
+
+char *getCurrentPath(Tree tree);
+
+void goBack(FileManager *fileManager);
+
+void goTo(FileManager *FileManager, Tree tree);
 
 #endif // !FILE_MANAGER_H

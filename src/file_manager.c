@@ -38,6 +38,7 @@ void createFileManager(FileManager *fileManager)
     create_queue(&(fileManager->copied));
     create_queue(&(fileManager->cut));
     create_queue(&(fileManager->temp));
+    create_list(&(fileManager->selectedItem));
 }
 
 void initFileManager(FileManager *fileManager)
@@ -52,8 +53,7 @@ void initFileManager(FileManager *fileManager)
         fileManager->treeCursor = fileManager->root;
 
         loadTree(fileManager->treeCursor, ROOT);
-        printf("\n\n");        
-        printTree(fileManager->treeCursor, 0);
+        printf("\n\n");
     }
 }
 
@@ -76,7 +76,6 @@ void initFileManager(FileManager *fileManager)
 //   printf("Hello World!");
 
 // }
-
 Tree loadTree(Tree tree, char *path)
 {
     DIR *dp;
@@ -104,21 +103,16 @@ Tree loadTree(Tree tree, char *path)
             continue;
         }
 
-        time_t now = time(NULL);
-        printf("Memproses: %s\n", fullPath);
-
         if (S_ISDIR(statbuf.st_mode))
         {
-            Item data = createItem(ep->d_name, path, (long)statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
+            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
             Tree newTree = insert_node(tree, data);
-            printf("  (Direktori) Rekursi ke: %s\n", fullPath);
             loadTree(newTree, fullPath);
         }
         else if (S_ISREG(statbuf.st_mode))
         {
             Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
             insert_node(tree, data);
-            printf("  (File) Ditemukan file: %s\n", fullPath);
         }
         else
         {
@@ -260,79 +254,79 @@ void redo(FileManager *fileManager) {}
     Queue currentPath;
 } FileManager;
 */
-void copyFile(FileManager *fileManager)
-{
-    // 1. deteksi file dipilih
-    // 1. Cari item di tree
-    // 2. Masukkan file terpillih satu per satu ke dalam queue
-    // 3. a: Jika tidak ada, tampilkan pesan error
-    //    b: Lanjut ke langkah 4
-    // 4. Simpan di buffer
-    // 5. tampilkan pesan error
-    // 6. tampilkan pesan sukses
-    if (fileManager->copied.front)
-        fileManager->copied.front = NULL;
-    fileManager->copied = fileManager->selectedItem;
-    isCopy = true;
-    if (fileManager->copied.front == NULL)
-    {
-        printf("Gagal Menyalin File!\n");
-        return;
-    }
-    fileManager->temp = fileManager->copied;
-    printf("File berhasil disalin ke clipboard\n");
-}
+// void copyFile(FileManager *fileManager)
+// {
+//     // 1. deteksi file dipilih
+//     // 1. Cari item di tree
+//     // 2. Masukkan file terpillih satu per satu ke dalam queue
+//     // 3. a: Jika tidak ada, tampilkan pesan error
+//     //    b: Lanjut ke langkah 4
+//     // 4. Simpan di buffer
+//     // 5. tampilkan pesan error
+//     // 6. tampilkan pesan sukses
+//     if (fileManager->copied.front)
+//         fileManager->copied.front = NULL;
+//     fileManager->copied = fileManager->selectedItem;
+//     isCopy = true;
+//     if (fileManager->copied.front == NULL)
+//     {
+//         printf("Gagal Menyalin File!\n");
+//         return;
+//     }
+//     fileManager->temp = fileManager->copied;
+//     printf("File berhasil disalin ke clipboard\n");
+// }
 
-void cutFile(FileManager *fileManager)
-{
-    if (fileManager->cut.front)
-        fileManager->cut.front = NULL;
-    fileManager->cut = fileManager->selectedItem;
-    isCopy = false;
-    if (fileManager->cut.front == NULL)
-    {
-        printf("Gagal Menyalin File!\n");
-        return;
-    }
-    fileManager->temp = fileManager->cut;
-    printf("File berhasil dipotong ke clipboard\n");
-}
+// void cutFile(FileManager *fileManager)
+// {
+//     if (fileManager->cut.front)
+//         fileManager->cut.front = NULL;
+//     fileManager->cut = fileManager->selectedItem;
+//     isCopy = false;
+//     if (fileManager->cut.front == NULL)
+//     {
+//         printf("Gagal Menyalin File!\n");
+//         return;
+//     }
+//     fileManager->temp = fileManager->cut;
+//     printf("File berhasil dipotong ke clipboard\n");
+// }
 
-void pasteFile(FileManager *fileManager)
-{
-    // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
-    // 2. Cari item di tree
-    // 3. a: Jika tidak ada, tampilkan pesan error
-    //    b: Lanjut ke langkah 4
-    // 4. Simpan di buffer
-    // 5. Cari path di tree.
-    // 6. a: Jika tidak ada, buatkan foldernya
-    //    b: Jika ada, lanjutkan
-    // 7. Simpan item ke path yang sudah ada
-    // 8. Simpan item ke tree
-    // 9. Hapus item dari queue
-    // 10. Simpan semua operasi di stack undo
-    // 11. Jika ada error, tampilkan pesan error
-    // 12. Jika berhasil, tampilkan pesan sukses
-    char *path = fileManager->currentPath;
-    Item *item;
-    item = (Item *)dequeue(&(fileManager->copied));
-    while (item != NULL)
-    {
-        {
-            // Cari item di tree
-            Item foundItem = searchFile(fileManager, path);
-            if (&foundItem == NULL)
-            {
-                printf("File tidak ditemukan\n");
-                return;
-            }
-            // Simpan item ke dalam queue cut
-            enqueue(&(fileManager->cut), item);
-            item = dequeue(&(fileManager->copied));
-        }
-    }
-}
+// void pasteFile(FileManager *fileManager)
+// {
+//     // 1. Ambil item yang dipilih dari queue satu per satu (iterasi sampai NULL)
+//     // 2. Cari item di tree
+//     // 3. a: Jika tidak ada, tampilkan pesan error
+//     //    b: Lanjut ke langkah 4
+//     // 4. Simpan di buffer
+//     // 5. Cari path di tree.
+//     // 6. a: Jika tidak ada, buatkan foldernya
+//     //    b: Jika ada, lanjutkan
+//     // 7. Simpan item ke path yang sudah ada
+//     // 8. Simpan item ke tree
+//     // 9. Hapus item dari queue
+//     // 10. Simpan semua operasi di stack undo
+//     // 11. Jika ada error, tampilkan pesan error
+//     // 12. Jika berhasil, tampilkan pesan sukses
+//     char *path = fileManager->currentPath;
+//     Item *item;
+//     item = (Item *)dequeue(&(fileManager->copied));
+//     while (item != NULL)
+//     {
+//         {
+//             // Cari item di tree
+//             Item foundItem = searchFile(fileManager, path);
+//             if (&foundItem == NULL)
+//             {
+//                 printf("File tidak ditemukan\n");
+//                 return;
+//             }
+//             // Simpan item ke dalam queue cut
+//             enqueue(&(fileManager->cut), item);
+//             item = dequeue(&(fileManager->copied));
+//         }
+//     }
+// }
 
 char *getNameFromPath(char *path)
 {
@@ -344,30 +338,30 @@ char *getNameFromPath(char *path)
     return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
 };
 
-void selectFile(FileManager *fileManager, Item item)
-{
-    Item *itemToSelect = alloc(Item);
-    *itemToSelect = item;
-    enqueue(&(fileManager->selectedItem), (void *)itemToSelect);
-}
+// void selectFile(FileManager *fileManager, Item item)
+// {
+//     Item *itemToSelect = alloc(Item);
+//     *itemToSelect = item;
+//     enqueue(&(fileManager->selectedItem), (void *)itemToSelect);
+// }
 
-void clearSelectedFile(FileManager *fileManager)
-{
-    while (!is_queue_empty(fileManager->selectedItem))
-    {
-        Item *item;
-        item = dequeue(&(fileManager->selectedItem));
-        free(item);
-    }
-}
+// void clearSelectedFile(FileManager *fileManager)
+// {
+//     while (!is_queue_empty(fileManager->selectedItem))
+//     {
+//         Item *item;
+//         item = dequeue(&(fileManager->selectedItem));
+//         free(item);
+//     }
+// }
 
-void deselectFile(FileManager *fileManager, Item item)
-{
-    Item *itemToDeselect = alloc(Item);
-    *itemToDeselect = item;
-    itemToDeselect = (Item *)dequeue(&(fileManager->selectedItem));
-    free(itemToDeselect);
-}
+// void deselectFile(FileManager *fileManager, Item item)
+// {
+//     Item *itemToDeselect = alloc(Item);
+//     *itemToDeselect = item;
+//     itemToDeselect = (Item *)dequeue(&(fileManager->selectedItem));
+//     free(itemToDeselect);
+// }
 
 bool isDirectory(char *path)
 {
@@ -408,4 +402,85 @@ char *_createDuplicatedFileName(char *filePath, char *suffix)
         newPath = _createDuplicatedFileName(newPath, suffix);
     }
     return newPath;
+}
+
+void windowsOpenWith(char *path)
+{
+    printf("%s\n", path);
+
+    char *command = "cmd /c start \"\"";
+    int length = strlen(command) + strlen(path) + 5;
+
+    char *executeableCommand = malloc(length);
+
+    printf("%d\n", length);
+
+    snprintf(executeableCommand, length, "%s \"%s\" /OPENAS", command, path);
+
+    printf("%s\n", executeableCommand);
+
+    system(executeableCommand);
+
+    free(executeableCommand);
+}
+
+char *getCurrentPath(Tree tree)
+{
+    char *path = strdup("");
+    if (!path)
+        return NULL;
+
+    while (tree != NULL)
+    {
+        char *name = tree->item.name;
+        size_t newLen = strlen(name) + strlen(path) + 2;
+
+        char *newPath = malloc(newLen);
+        if (!newPath)
+        {
+            free(path);
+            return NULL;
+        }
+
+        if (tree->parent == NULL)
+        {
+            snprintf(newPath, newLen, "%s%s", name, path); 
+        }
+        else
+        {
+            snprintf(newPath, newLen, "/%s%s", name, path); 
+        }
+        free(path);
+        path = newPath;
+        tree = tree->parent;
+    }
+
+    return path;
+}
+
+void goTo(FileManager *fileManager, Tree tree)
+{
+    if (!fileManager || !tree)
+        return;
+
+    fileManager->treeCursor = tree;
+
+    char *newPath = getCurrentPath(tree);
+    if (newPath)
+    {
+        // free(fileManager->currentPath);
+        fileManager->currentPath = newPath;
+    }
+
+    printf("%s\n", newPath);
+}
+
+void goBack(FileManager *fileManager)
+{
+    if (!fileManager || !fileManager->treeCursor)
+        return;
+
+    Tree parent = fileManager->treeCursor->parent;
+    if (parent)
+        goTo(fileManager, parent);
 }

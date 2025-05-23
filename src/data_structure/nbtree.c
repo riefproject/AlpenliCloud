@@ -23,23 +23,23 @@ Tree create_node_tree(treeInfotype data)
 
 Tree insert_node(Tree parent, treeInfotype data)
 {
-  TreeNode *child = create_node_tree(data);
-  if (parent == NULL || child == NULL)
-    return;
+  Tree child = create_node_tree(data);
 
-  printf("%s=================\n", parent->item.name);
+  // kembalikan jika dia root dan gagal alokasi
+  if (parent == NULL || child == NULL) return NULL;
 
-  if (parent->first_son == NULL)
-  {
+  child->parent = parent;
+
+  if (parent->first_son == NULL) {
     parent->first_son = child;
-  }
-  else
-  {
+  } else {
     Tree sibling = parent->first_son;
     while (sibling->next_brother != NULL)
       sibling = sibling->next_brother;
     sibling->next_brother = child;
   }
+
+  return child;
 }
 
 Tree searchTree(Tree root, treeInfotype item)
@@ -75,7 +75,6 @@ void printTree(Tree node, int depth)
     return;
 
   // Cetak node saat ini
-  printIndent(depth);
 
   char *typeStr = node->item.type == ITEM_FOLDER ? "(folder)" : "(file)";
 
@@ -83,21 +82,33 @@ void printTree(Tree node, int depth)
   char updated_at_str[20];
   strftime(updated_at_str, sizeof(updated_at_str), "%Y-%m-%d", localtime(&node->item.updated_at));
 
-  printf("%s %s (size: %ld, updated: %s)\n",
-         typeStr,
-         node->item.name,
-         node->item.size,
-         updated_at_str);
+  printIndent(depth);
+  printf("==================================\n");
+  printIndent(depth);
+  printf("item name: %s\n", node->item.name);
+  printIndent(depth);
+  printf("first son name: %s\n", node->first_son == NULL ? "NULL" : node->first_son->item.name);
+  printIndent(depth);
+  printf("brother name: %s\n", node->next_brother == NULL ? "NULL" : node->next_brother->item.name);
+  printIndent(depth);
+  printf("parent name: %s\n", node->parent == NULL ? "NULL" : node->parent->item.name);
+  printIndent(depth);
+  printf("size: %d\n", node->item.size);
+  printIndent(depth);
+  printf("path: %s\n", node->item.path);
 
-  // Cetak anak (first_son)
-  if (node->first_son != NULL)
-  {
-    printTree(node->first_son, depth + 1);
-  }
+  printIndent(depth);
+  printf("==================================\n");
 
   // Cetak saudara (next_brother)
   if (node->next_brother != NULL)
   {
     printTree(node->next_brother, depth);
+  }
+
+  // Cetak anak (first_son)
+  if (node->first_son != NULL)
+  {
+    printTree(node->first_son, depth + 1);
   }
 }

@@ -2,6 +2,8 @@
 #include "macro.h"
 #include "item.h"
 #include "file_manager.h"
+#include "item.h"
+
 // #include <time.h>
 
 #include "raygui.h"
@@ -16,7 +18,7 @@ void createBody(Body *b)
     body.panelScroll = (Vector2){0};
 
     body.focusedIndex = -1;
-    body.showCheckbox = true;
+    body.showCheckbox = false;
     body.selectedAll = false;
     body.previousSelectedAll = false;
     for (int i = 0; i < 100; i++)
@@ -51,6 +53,7 @@ void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileMana
 void drawBody(Body *body)
 {
     Tree cursor = body->fileManager->treeCursor;
+    cursor = cursor->first_son;
 
     float headerHeight = 30;
     float rowHeight = 24;
@@ -71,7 +74,7 @@ void drawBody(Body *body)
     int i = 0;
     while (cursor != NULL)
     {
-        drawTableItem(body, cursor->item, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
+        drawTableItem(body, cursor, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
 
         if ((i + 1) * rowHeight + headerHeight > body->panelContentRec.height)
             body->panelContentRec.height = (i + 1) * rowHeight + headerHeight;
@@ -85,8 +88,9 @@ void drawBody(Body *body)
     EndScissorMode();
 }
 
-void drawTableItem(Body *body, Item item, int index, float startX, float startY, float rowHeight, float colWidths[5])
+void drawTableItem(Body *body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5])
 {
+    Item item = subTree->item;
     float checkboxWidth = body->showCheckbox ? 28 : 0;
     float totalContentWidth = checkboxWidth + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
 
@@ -98,6 +102,22 @@ void drawTableItem(Body *body, Item item, int index, float startX, float startY,
     if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         body->focusedIndex = index;
+        if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FOLDER)
+        {
+            goTo(body->fileManager, subTree);
+        }
+        if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FILE)
+        {
+            int length = strlen(item.path) + strlen(item.name) + 2;
+
+            char *executeableCommand = malloc(length);
+            
+            snprintf(executeableCommand, length, "%s/%s", item.path, item.name);
+            
+            windowsOpenWith(executeableCommand);
+
+            free(executeableCommand);
+        }
     }
 
     Color bgColor = (body->focusedIndex == index) ? Fade(BLUE, 0.2f) : ((index % 2 == 0) ? WHITE : (Color){245, 245, 245, 255});
@@ -112,12 +132,13 @@ void drawTableItem(Body *body, Item item, int index, float startX, float startY,
             rowY + (rowHeight - 14) / 2,
             14, 14};
 
-        GuiCheckBox(checkBox, NULL, &body->selected[index]);
-        colX += checkboxWidth;
-        if (index == 100)
+        GuiCheckBox(checkBox, NULL, &item.selected);
+        if (item.selected)
         {
-            exit(0);
+           
         }
+        
+        colX += checkboxWidth;
     }
 
     DrawText(TextFormat("%s", item.name), colX + 8, rowY + 6, 10, DARKGRAY);
@@ -129,8 +150,12 @@ void drawTableItem(Body *body, Item item, int index, float startX, float startY,
     DrawText(TextFormat("%d", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[2];
 
-    // time_t time = time(item.updated_at);
-    DrawText(TextFormat("2025-05-21 10:00"), colX + 8, rowY + 6, 10, DARKGRAY);
+    struct tm *local = localtime(&item.updated_at);
+
+    char buffer[100];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", local);
+
+    DrawText(TextFormat("%s", buffer), colX + 8, rowY + 6, 10, DARKGRAY);
 }
 
 void drawTableHeader(Body *body, float x, float y, float colWidths[])

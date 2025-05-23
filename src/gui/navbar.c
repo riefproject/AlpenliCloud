@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "macro.h"
+#include "file_manager.h"
 #include "gui/component.h"
 #include "gui/navbar.h"
 #include "raygui.h"
@@ -18,8 +19,9 @@ void createNavbar(Navbar *navbar)
     navbar->currentZeroPosition = (Rectangle){0};
 }
 
-void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition)
+void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager)
 {
+    navbar->fileManager = fileManager;
     navbar->currentZeroPosition = currentZeroPosition;
 }
 
@@ -44,8 +46,8 @@ void drawNavbar(Navbar *navbar)
 
     GuiButtonCustom((Rectangle){x, y, buttonSize, buttonSize}, "#56#", "UNDO", false);
     GuiButtonCustom((Rectangle){x + buttonSize + spacing, y, buttonSize, buttonSize}, "#57#", "REDO", false);
-    GuiButtonCustom((Rectangle){x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize}, "#117#", "BACK", false);
-
+    if (GuiButtonCustom((Rectangle){x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize}, "#117#", "BACK", false))
+        goBack(navbar->fileManager);
 
     GuiTextBoxCustom((Rectangle){pathBoxStartX, y, pathBoxWidth, buttonSize}, "#1#", navbar->textboxPath, 1024, &navbar->textboxPatheditMode, false);
     GuiTextBoxCustom((Rectangle){searchBoxX, y, searchBoxWidth, buttonSize}, "#42# Search Item", navbar->textboxSearch, 1024, &navbar->textboxSearcheditMode, false);

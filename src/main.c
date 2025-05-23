@@ -13,6 +13,7 @@
 #include "gui/sidebar.h"
 #include "gui/body.h"
 #include "file_manager.h"
+// #include "nbtree.h"
 
 
 // int main(){
@@ -31,6 +32,8 @@ int main()
     createFileManager(&fileManager);
 
     initFileManager(&fileManager);
+
+    printTree((fileManager.treeCursor), 0);
 
     // return 0;
 
@@ -70,7 +73,7 @@ int main()
         //----------------------------------------------------------------------------------
         updateTitleBar(&titleBar);
         
-        updateNavbar(&navbar, currentZeroPosition);
+        updateNavbar(&navbar, currentZeroPosition, &fileManager);
         
         updateToolbar(&toolbar, currentZeroPosition);
         
@@ -98,10 +101,6 @@ int main()
         EndDrawing();
     }
 
-    for (int i = 0; i < 100; i++){
-  
-        printf("MAIN -- %d:%d\n", i, body.selected[i]);
-    }
     exit(1);
 
     CloseWindow();
