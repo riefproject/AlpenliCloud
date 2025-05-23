@@ -1,38 +1,49 @@
-# [ERROR]
-# Dalam Perbaikan
+# Directories
+SRC_DIRS = src src/gui src/data_structure
+BUILD_DIR = build/output
+BIN_DIR = bin
+EXE_NAME = AlpenliCloud.exe
+EXE_PATH = $(BIN_DIR)/$(EXE_NAME)
 
-CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -Ilib/raylib/include
+# Resource files
+RESOURCE_RC = assets/resource.rc
+RESOURCE_RES = assets/resource.res
+
+# Compiler flags
+CFLAGS = -Iinclude -Iinclude/gui -Iinclude/data_structure -Ilib/raylib/include
 LDFLAGS = lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
 
-SRC_DIR = src
-BUILD_DIR = build/output/src
-BIN_DIR = bin
+# Find all .c files in source directories
+SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
+OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
 
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
-TARGET = $(BIN_DIR)/AlpenliCloud.exe
-
+# Default target
 .PHONY: all clean rebuild
+all: $(EXE_PATH)
 
-all: $(TARGET)
-	@echo "🚀 Running AlpenliCloud..."
-	@$(TARGET) || echo "❌ AlpenliCloud failed to start! Check for errors."
-
-$(TARGET): $(OBJS) | $(BIN_DIR)
-	@echo "🔧 Linking..."
-	windres assets/resource.rc -O coff -o assets/resource.res
-	@$(CC) $(OBJS) assets/resource.res -o $@ $(LDFLAGS) $(RSTFLAGS)
-
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+# Create directories
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(@D)
 	@echo "🔨 Compiling $<..."
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@gcc $(CFLAGS) -c $< -o $@
 
-$(BIN_DIR) $(BUILD_DIR):
-	@if not exist $@ mkdir $@
+# Resource compilation
+$(RESOURCE_RES): $(RESOURCE_RC)
+	@echo "🎨 Compiling resource file..."
+	@windres $< -O coff -o $@
 
+# Linking
+$(EXE_PATH): $(OBJS) $(RESOURCE_RES)
+	@mkdir -p $(BIN_DIR)
+	@echo "🔧 Linking..."
+	@gcc $(OBJS) $(RESOURCE_RES) -o $@ $(LDFLAGS)
+	@echo "🚀 Build complete!"
+	@echo "Run './$(EXE_PATH)' to start AlpenliCloud"
+
+# Clean build files
 clean:
 	@echo "🧹 Cleaning build directories..."
-	@rm -rf $(BIN_DIR) build
+	@rm -rf $(BUILD_DIR) $(BIN_DIR) $(RESOURCE_RES)
 
+# Rebuild everything
 rebuild: clean all
