@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "file_manager.h"
+#include "win_utils.h"
 #include "stack.h"
 #include "queue.h"
 #include "nbtree.h"
@@ -226,8 +227,7 @@ void copyFile(FileManager* fileManager) {
         fileManager->copied.front = NULL;
     Node* temp = fileManager->selectedItem.head;
     while (temp != NULL) {
-        Item* itemToCopy = alloc(Item);
-        *itemToCopy = temp->data;
+        Item* itemToCopy = (Item*)temp->data;
         enqueue(&(fileManager->copied), itemToCopy);
         temp = temp->next;
     }
@@ -245,8 +245,7 @@ void cutFile(FileManager* fileManager) {
         fileManager->copied.front = NULL;
     Node* temp = fileManager->selectedItem.head;
     while (temp != NULL) {
-        Item* itemToCopy = alloc(Item);
-        *itemToCopy = temp->data;
+        Item* itemToCopy = (Item*)temp->data;
         enqueue(&(fileManager->copied), itemToCopy);
         temp = temp->next;
     }
@@ -280,8 +279,7 @@ void pasteFile(FileManager* fileManager) {
     }
     Node* temp = fileManager->temp.front;
     while (temp != NULL) {
-        Item* itemToPaste = alloc(Item);
-        *itemToPaste = temp->data;
+        Item* itemToPaste = (Item*)temp->data;
         Tree foundTree = searchTree(fileManager->root, *itemToPaste);
         if (foundTree == NULL) {
             printf("File tidak ditemukan\n");
@@ -337,7 +335,7 @@ void pasteFile(FileManager* fileManager) {
             // hapus item di origin path
             char* originPath = TextFormat("%s/%s", foundTree->item.path, foundTree->item.name);
             if (isDirectory(originPath)) {
-                if (RemoveDirectory(originPath) != 0) {
+                if (RemoveItemsRecurse(originPath) != 0) {
                     printf("Gagal menghapus folder %s\n", foundTree->item.name);
                     return;
                 }
