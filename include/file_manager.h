@@ -32,7 +32,7 @@ void initFileManager(FileManager *fileManager);
 
 Tree loadTree(Tree tree, char *path);
 
-void createFile(FileManager *fileManager);
+void createFile(FileManager* fileManager, ItemType type, char* name);
 void deleteFile(FileManager *fileManager);
 void renameFile(FileManager *fileManager, char *filePath, char *newName);
 void recoverFile(FileManager *fileManager);
@@ -48,8 +48,27 @@ void selectFile(FileManager *fileManager, Item item);
 void deselectFile(FileManager *fileManager, Item item);
 void clearSelectedFile(FileManager *fileManager);
 
+/*
+====================================================================
+  Helper Functions (PRIVATE)
+==================================================================
+*/
 // Mengembalikan nama file dari path lengkap
-char *getNameFromPath(char *path);
+char* _getNameFromPath(char* path);
+
+/* 
+  Membuat nama folder baru dengan menambahkan suffix untuk folder duplikat
+  suffix adalah string yang ditambahkan ke belakang nama folder
+  Misal: "folder" menjadi "folder(1)"
+*/
+char* _createDuplicatedFolderName(char* dirPath, char* suffix);
+
+/* 
+  Membuat nama file baru dengan menambahkan suffix untuk file duplikat
+  suffix adalah string yang ditambahkan ke belakang nama file
+  Misal: "file.txt" menjadi "file(1).txt"
+*/
+char* _createDuplicatedFileName(char* filePath, char* suffix);
 
 // Cek apakah path adalah folder
 bool isDirectory(char *path);

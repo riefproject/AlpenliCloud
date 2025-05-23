@@ -86,7 +86,7 @@ Tree loadTree(Tree tree, char *path)
     if (dp == NULL)
     {
         perror("Tidak dapat membuka direktori");
-        return -1;
+        return NULL;
     }
 
     while ((ep = readdir(dp)) != NULL)
@@ -126,75 +126,45 @@ Tree loadTree(Tree tree, char *path)
     return 0;
 }
 
-void createFile(FileManager *fileManager)
-{
-    int choice;
-    char *fileName = NULL;
-    char filepath[512];
-    time_t createTime;
+void createFile(FileManager* fileManager, ItemType type, char* name) {
+  Item newItem, parentToSearch;
+  char* path;
+  Tree currentNode;
+  time_t createdTime;
+  FILE* newFile;
 
-    while (true)
-    {
-        system("cls");
-        printf("New Item\n");
-        printf("Pilih type:\n");
-        printf("1. File\n");
-        printf("2. Folder\n");
-        printf("Pilih type (1/2): ");
-        scanf("%d", &choice);
-        getchar();
-
-        if (choice == 1 || choice == 2)
-            break;
-        printf("Pilihan tidak valid. Tekan enter untuk lanjut...\n");
-        getchar();
+  currentNode = searchTree(fileManager->root,createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath,0,ITEM_FOLDER,0,0,0));
+  // printf("%s\n", fileManager->currentPath);
+  if(currentNode != NULL){
+    path = TextFormat("%s/%s", fileManager->currentPath, name);
+    createdTime = time(NULL);
+    newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
+    // printf("%s", path);
+    if(type == ITEM_FOLDER){
+      if(DirectoryExists(path)){
+        path = _createDuplicatedFolderName(path, "(1)");
+      } 
+      if(MakeDirectory(path) != 0){
+        printf("Gagal membuat folder\n");
+        return;
+      }
+    }else if (type == ITEM_FILE){
+      if(FileExists(path)){
+        path = _createDuplicatedFileName(path, "(1)");
+      } 
+      newFile = fopen(path, "w");
+      if(newFile == NULL){
+        printf("Gagal membuat file %s\n", name);
+        return;
+      }
+      fclose(newFile);
     }
 
-    printf("Masukkan nama %s: ", (choice == 1) ? "file" : "folder");
-    inputString(&fileName);
+    insert_node(currentNode, newItem);
+  }else{
+    printf("Direktori parent tidak ditemukan");
+  }
 
-    snprintf(filepath, sizeof(filepath), "%s/%s", fileManager->currentPath, fileName);
-
-    if (choice == 1)
-    {
-
-        FILE *newFile = fopen(filepath, "w");
-        if (newFile == NULL)
-        {
-            perror("Gagal membuat file");
-            free(fileName);
-            return;
-        }
-        fclose(newFile);
-
-        // dapatkan waktu saat file dibuat
-        createTime = time(NULL);
-
-        Item newNode = createItem(fileName, filepath, 0, ITEM_FILE, createTime, createTime, 0);
-        insert_node(fileManager->root, newNode);
-
-        printf("File berhasil dibuat. Tekan enter untuk lanjut...\n");
-        getchar();
-    }
-    else if (choice == 2)
-    {
-        int status = mkdir(filepath);
-
-        if (status != 0)
-        {
-            perror("Gagal membuat folder");
-            free(fileName);
-            return;
-        }
-        createTime = time(NULL);
-        Item item = createItem(fileName, filepath, 0, ITEM_FOLDER, createTime, createTime, 0);
-        insert_node(fileManager->root, item);
-
-        printf("Folder berhasil dibuat. Tekan enter untuk lanjut...\n");
-        getchar();
-    }
-
-    free(fileName);
 }
 
 void deleteFile(FileManager *fileManager) {}
@@ -230,7 +200,7 @@ Item searchFile(FileManager *fileManager, char *path)
     Item item = {0};
     Item itemToSearch;
     Tree foundTree;
-    itemToSearch = createItem(getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
+    itemToSearch = createItem(_getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
     foundTree = searchTree(fileManager->root, item);
     if (foundTree == NULL)
     {
@@ -328,7 +298,7 @@ void redo(FileManager *fileManager) {}
 //     }
 // }
 
-char *getNameFromPath(char *path)
+char *_getNameFromPath(char *path)
 {
     char *name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
     if (name != NULL)
