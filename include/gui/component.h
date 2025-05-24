@@ -28,10 +28,12 @@ typedef struct NewButtonProperty {
     bool showModal;
     bool inputEditMode;
 
+    bool itemCreated;
+
     bool disabled;
 } NewButtonProperty;
 
-bool GuiNewButton(NewButtonProperty* buttonProperty);
+void GuiNewButton(NewButtonProperty* buttonProperty);
 
 bool GuiTextBoxCustom(Rectangle bounds, char* icon, char* placeholder, char* inputText, int textSize, bool* editMode, bool disabled);
 
