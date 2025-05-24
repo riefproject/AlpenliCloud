@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-bool GuiNewButton(NewButtonProperty* buttonProperty) {
+void GuiNewButton(NewButtonProperty* buttonProperty) {
     bool itemCreated = false;
 
     // Tombol utama
@@ -128,18 +128,18 @@ bool GuiNewButton(NewButtonProperty* buttonProperty) {
 
         if (GuiButton(btnCreate, "Create") && strcmp(buttonProperty->inputBuffer, "") != 0) {
             itemCreated = true;
+            buttonProperty->itemCreated = true;
             buttonProperty->showModal = false;
             buttonProperty->inputEditMode = false;
         }
-
+        
         if (GuiButton(btnCancel, "Cancel") || quit) {
+            buttonProperty->itemCreated = false;
             buttonProperty->showModal = false;
             buttonProperty->inputEditMode = false;
             strcpy(buttonProperty->inputBuffer, "");
         }
     }
-
-    return itemCreated;
 }
 
 bool GuiButtonCustom(Rectangle bounds, const char* text, const char* tooltip, bool disabled) {
