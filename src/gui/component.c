@@ -48,10 +48,10 @@ bool GuiNewButton(NewButtonProperty* buttonProperty) {
 
         if (GuiButton(fileBtn, "#8# File")) {
             buttonProperty->selectedType = ITEM_FILE;
-            *buttonProperty->showModal = true;
+            buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
             strcpy(buttonProperty->inputBuffer, "");
-            *buttonProperty->inputEditMode = true;
+            buttonProperty->inputEditMode = true;
         }
 
         // Tombol Folder
@@ -63,10 +63,10 @@ bool GuiNewButton(NewButtonProperty* buttonProperty) {
 
         if (GuiButton(folderBtn, "#204# Folder")) {
             buttonProperty->selectedType = ITEM_FOLDER;
-            *buttonProperty->showModal = true;
+            buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
             strcpy(buttonProperty->inputBuffer, "");
-            *buttonProperty->inputEditMode = true;
+            buttonProperty->inputEditMode = true;
         }
 
         // Tutup dropdown jika klik di luar area dropdown & tombol
@@ -104,7 +104,7 @@ bool GuiNewButton(NewButtonProperty* buttonProperty) {
         if (GuiTextBoxCustom(inputBox, NULL, "Enter name...",
             buttonProperty->inputBuffer,
             MAX_STRING_LENGTH,
-            buttonProperty->inputEditMode,
+            &buttonProperty->inputEditMode,
             false)) {
             if (strcmp(buttonProperty->inputBuffer, "") != 0) {
                 itemCreated = true;

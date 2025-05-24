@@ -33,7 +33,7 @@ void updateSidebar(Sidebar* sidebar, Rectangle currentZeroPosition, FileManager*
 
 void drawSidebar(Sidebar* sidebar);
 
-void drawSidebarItem(SidebarItem* node, Vector2* pos, int depth, float width, float height, float* scrollWidth);
+void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
 
 int getMaxChildLabelWidth(SidebarItem* node, int depth, int textSize);
 
