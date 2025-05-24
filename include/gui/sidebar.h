@@ -6,11 +6,12 @@
 #include "file_manager.h"
 #include "raylib.h"
 
+typedef struct SidebarItem SidebarItem;
 typedef struct SidebarItem {
     Tree tree;
     bool isExpanded;
-    struct TreeViewState *first_son;
-    struct TreeViewState *next_brother;
+    SidebarItem *first_son;
+    SidebarItem *next_brother;
 } SidebarItem;
 
 typedef struct Sidebar {
@@ -33,7 +34,7 @@ void updateSidebar(Sidebar *sidebar, Rectangle currentZeroPosition, FileManager 
 
 void drawSidebar(Sidebar *sidebar);
 
-void drawSidebarItem(SidebarItem *node, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
+void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
 
 int getMaxChildLabelWidth(SidebarItem *node, int depth, int textSize);
 

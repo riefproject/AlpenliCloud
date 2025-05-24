@@ -25,9 +25,9 @@ typedef struct NewButtonProperty
     int dropdownIndex;
     bool dropdownActive;
 
-    ItemType *selectedType;
-    bool *showModal;
-    bool *inputEditMode;
+    ItemType selectedType;
+    bool showModal;
+    bool inputEditMode;
 
     bool disabled;
 } NewButtonProperty;
