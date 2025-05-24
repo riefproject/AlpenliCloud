@@ -181,6 +181,9 @@ char* _createDuplicatedFileName(char* filePath, char* suffix);
 // Cek apakah path adalah folder
 bool isDirectory(char* path);
 
+// Mendapatkan direktori saja dari full path
+char* _getDirectoryFromPath(char* path);
+
 void windowsOpenWith(char* path);
 
 Tree getCurrentRoot(FileManager *fileManager);

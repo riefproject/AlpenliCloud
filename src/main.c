@@ -31,7 +31,7 @@ int main() {
 
     initFileManager(&fileManager);
 
-    printTree((fileManager.treeCursor), 0);
+    // printTree((fileManager.treeCursor), 0);
 
     // return 0;
 

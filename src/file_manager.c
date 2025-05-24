@@ -196,7 +196,7 @@ void renameFile(FileManager *fileManager, char *filePath, char *newName) {
         printf("File tidak ditemukan\n");
         return;
     }
-    newPath = TextFormat("%s/%s", fileManager->currentPath, newName);
+    newPath = TextFormat("%s/%s", _getDirectoryFromPath(filePath), newName);
     // rename file
     if (foundTree->item.type == ITEM_FILE) {
         if (DirectoryExists(newPath)) {
@@ -813,4 +813,25 @@ void sort_children(Tree *parent) {
     }
 
     (*parent)->first_son = sorted;
+}
+
+char* _getDirectoryFromPath(char* path){
+    char* lastSlash = strrchr(path, '/');
+    if (lastSlash == NULL){
+        return strdup("");
+    }
+
+    size_t len = lastSlash - path + 1;
+    char* dirPath = malloc(len + 1); 
+
+    if (dirPath == NULL){
+        perror("malloc failed");
+        exit(1);
+    }
+
+    strncpy(dirPath, path, len);
+    dirPath[len] = '\0'; 
+
+    return dirPath; 
+    
 }
