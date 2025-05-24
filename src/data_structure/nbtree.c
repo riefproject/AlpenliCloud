@@ -3,14 +3,12 @@
 #include "nbtree.h"
 #include <string.h>
 
-void create_tree(Tree *tree)
-{
+void create_tree(Tree* tree) {
   *tree = NULL;
 }
 
-Tree create_node_tree(treeInfotype data)
-{
-  TreeNode *newNode = (TreeNode *)malloc(sizeof(TreeNode));
+Tree create_node_tree(treeInfotype data) {
+  TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
   if (newNode == NULL)
     return NULL;
 
@@ -21,8 +19,7 @@ Tree create_node_tree(treeInfotype data)
   return newNode;
 }
 
-Tree insert_node(Tree parent, treeInfotype data)
-{
+Tree insert_node(Tree parent, treeInfotype data) {
   Tree child = create_node_tree(data);
 
   // kembalikan jika dia root dan gagal alokasi
@@ -32,7 +29,8 @@ Tree insert_node(Tree parent, treeInfotype data)
 
   if (parent->first_son == NULL) {
     parent->first_son = child;
-  } else {
+  }
+  else {
     Tree sibling = parent->first_son;
     while (sibling->next_brother != NULL)
       sibling = sibling->next_brother;
@@ -42,8 +40,7 @@ Tree insert_node(Tree parent, treeInfotype data)
   return child;
 }
 
-Tree searchTree(Tree root, treeInfotype item)
-{
+Tree searchTree(Tree root, treeInfotype item) {
   // Kalau tree kosoong, return null
   if (root == NULL)
     return NULL;
@@ -60,23 +57,20 @@ Tree searchTree(Tree root, treeInfotype item)
 }
 
 // Fungsi bantu untuk mencetak indentasi
-void printIndent(int depth)
-{
-  for (int i = 0; i < depth; i++)
-  {
+void printIndent(int depth) {
+  for (int i = 0; i < depth; i++) {
     printf("  "); // dua spasi per level
   }
 }
 
 // Fungsi rekursif untuk mencetak pohon
-void printTree(Tree node, int depth)
-{
+void printTree(Tree node, int depth) {
   if (node == NULL)
     return;
 
   // Cetak node saat ini
 
-  char *typeStr = node->item.type == ITEM_FOLDER ? "(folder)" : "(file)";
+  char* typeStr = node->item.type == ITEM_FOLDER ? "(folder)" : "(file)";
 
   // Format waktu
   char updated_at_str[20];
@@ -101,14 +95,12 @@ void printTree(Tree node, int depth)
   printf("==================================\n");
 
   // Cetak saudara (next_brother)
-  if (node->next_brother != NULL)
-  {
+  if (node->next_brother != NULL) {
     printTree(node->next_brother, depth);
   }
 
   // Cetak anak (first_son)
-  if (node->first_son != NULL)
-  {
+  if (node->first_son != NULL) {
     printTree(node->first_son, depth + 1);
   }
 }

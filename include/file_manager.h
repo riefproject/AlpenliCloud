@@ -9,44 +9,120 @@
 #define alloc(T) (T *)malloc(sizeof(T));
 
 typedef struct FileManager {
-  Tree root;      // root directory
-  Tree rootTrash; // root trash (deleted files)
-  Stack undo;     // stack for undo operations
-  Stack redo;     // stack for redo operations
+  Tree root;              // root directory
+  Tree rootTrash;         // root trash (deleted files)
+  Stack undo;             // stack for undo operations
+  Stack redo;             // stack for redo operations
 
-  Tree treeCursor;
+  Tree treeCursor;        // current tree cursor 
+  // (tree dengan root adalah direktori saat ini)
 
-  char* currentPath;  // queue for current path
-  Queue copied;       // queue for copied items
-  Queue cut;          // queue for cut items
-  Queue temp;         // temporary queue for operations
+  char* currentPath;       // queue for current path
+  Queue copied;            // queue for copied items
+  Queue cut;               // queue for cut items
+  Queue temp;              // temporary queue for operations
   LinkedList selectedItem; // linkedlist for selected item
 } FileManager;
 
-// Create empty filemanager
+// HELPER PROTOTYPE: Line 130
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void createFileManager(FileManager* fileManager);
 
-// Define filemanager with default value
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void initFileManager(FileManager* fileManager);
 
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 Tree loadTree(Tree tree, char* path);
 
-#ifndef ITEM_OPERATION
-#define ITEM_OPERATION
-void createFile(FileManager* fileManager, ItemType type, char* name);
-void deleteFile(FileManager* fileManager);
-void renameFile(FileManager* fileManager, char* filePath, char* newName);
-void recoverFile(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 Item searchFile(FileManager* fileManager, char* path);
 
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void createFile(FileManager* fileManager, ItemType type, char* name);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void deleteFile(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void renameFile(FileManager* fileManager, char* filePath, char* newName);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void recoverFile(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void copyFile(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void pasteFile(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void cutFile(FileManager* fileManager);
-#endif
+
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void undo(FileManager* fileManager);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void redo(FileManager* fileManager);
+
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void selectFile(FileManager* fileManager, Item item);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void deselectFile(FileManager* fileManager, Item item);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
 void clearSelectedFile(FileManager* fileManager);
 
 /*
@@ -54,6 +130,25 @@ void clearSelectedFile(FileManager* fileManager);
   Helper Functions (PRIVATE)
 ==================================================================
 */
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void _deleteSingleItem(char* fullPath, ItemType type, char* name);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void _copyFileContent(char* srcPath, char* destPath);
+
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void _copyFolderRecursive(char* srcPath, char* destPath);
+
 // Mengembalikan nama file dari path lengkap
 char* _getNameFromPath(char* path);
 
@@ -82,6 +177,6 @@ void goBack(FileManager* fileManager);
 
 void goTo(FileManager* FileManager, Tree tree);
 
-void sort_children(Tree *parent);
+void sort_children(Tree* parent);
 
 #endif // !FILE_MANAGER_H

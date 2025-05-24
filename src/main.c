@@ -20,8 +20,7 @@
 //     // MakeDirectory(".dir/baru");
 // }
 
-int main()
-{
+int main() {
     // Windows config
     // ----------------------------------------------------------------------------------------
     int screenWidth = 800;
@@ -40,12 +39,12 @@ int main()
     TitleBar titleBar;
     createTitleBar(&titleBar, screenWidth, screenHeight);
 
-    Rectangle currentZeroPosition = {DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
-
+    Rectangle currentZeroPosition = { DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
 
-    InitWindow(screenWidth, screenHeight, "raygui - controls test suite");
+    InitWindow(screenWidth, screenHeight, "AlpenliCloud");
+    SetWindowIcon(LoadImage("resources/icon.png"));
     // ----------------------------------------------------------------------------------------
 
     // initialization
@@ -62,25 +61,24 @@ int main()
 
     Body body;
     createBody(&body);
-    
-    while (!titleBar.exitWindow && !WindowShouldClose())
-    {
+
+    while (!titleBar.exitWindow && !WindowShouldClose()) {
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
-        
+        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
+
         // Update
         //----------------------------------------------------------------------------------
         updateTitleBar(&titleBar);
-        
+
         updateNavbar(&navbar, currentZeroPosition, &fileManager);
-        
+
         updateToolbar(&toolbar, currentZeroPosition);
-        
+
         updateSidebar(&sidebar, currentZeroPosition);
-        
+
         updateBody(&body, currentZeroPosition, &fileManager);
-        
+
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -91,13 +89,13 @@ int main()
         drawTitleBar(&titleBar);
 
         drawBody(&body);
-        
+
         drawSidebar(&sidebar);
-        
+
         drawToolbar(&toolbar);
-        
+
         drawNavbar(&navbar);
-        
+
         EndDrawing();
     }
 
