@@ -16,10 +16,10 @@ Item createItem(char* name, char* path, long size, ItemType type, time_t created
   };
 }
 
-TrashItem createTrashItem(Item item, char* origin) {
-  return (TrashItem) {
-    .item = item,
-      .origin = strdup(origin)
-  };
-}
+// TrashItem createTrashItem(Item item, char* origin) {
+//   return (TrashItem) {
+//     .item = item,
+//       .origin = strdup(origin)
+//   };
+// }
 
