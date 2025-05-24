@@ -114,27 +114,26 @@ Tree loadTree(Tree tree, char* path) {
  * IS:
  * FS:
 ================================================================================*/
-void createFile(FileManager* fileManager, ItemType type, char* name) {
+void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name) {
     Item newItem, parentToSearch;
     char *path;
     char *currentFullPath;
     Tree currentNode;
     time_t createdTime;
     FILE* newFile;
+    Operation *newOperation;
 
     if(strlen(name) + 1 >= 255){
         printf("nama file terlalu panjang, gagal membuat file\n");
         return;
     }
-    currentFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
+    currentFullPath = strdup(dirPath);
     currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(currentFullPath), currentFullPath, 0, ITEM_FOLDER, 0, 0, 0));
-    // printf("\ncurrent path: %s\n", currentFullPath);
-    // printf("current name: %s\n", _getNameFromPath(currentFullPath));
+    printf("\ncurrent path: %s\n", currentFullPath);
+    printf("current name: %s\n", _getNameFromPath(currentFullPath));
     if (currentNode != NULL) {
         path = TextFormat("%s/%s", currentFullPath, name);
         createdTime = time(NULL);
-        newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
-        // printf("%s", path);
         if (type == ITEM_FOLDER) {
             if (DirectoryExists(path)) {
                 path = _createDuplicatedFolderName(path, "(1)");
@@ -155,11 +154,17 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
             }
             fclose(newFile);
         }
-
+        
+        newItem = createItem(_getNameFromPath(path), path, 0, type, createdTime, createdTime, -1);
         insert_node(currentNode, newItem);
+        newOperation = alloc(Operation);
+        printf("===============path:%s\n", path);
+        *newOperation = createOperation(path, NULL, ACTION_CREATE);
+        push(&fileManager->undo, newOperation);
+
     }
     else {
-        printf("Direktori parent tidak ditemukan");
+        printf("Direktori parent tidak ditemukan : %s\n", dirPath);
     }
 }
 
@@ -501,23 +506,26 @@ void undo(FileManager* fileManager) {
     }
     operationToUndo = alloc(Operation);
     operationToUndo = (Operation*)pop(&(fileManager->undo));
-    push(&(fileManager->redo), operationToUndo);
     switch (operationToUndo->type) {
-    case ACTION_CREATE:
+        case ACTION_CREATE:
+        printf("Undo Path: %s\n", operationToUndo->from);
         // Hapus item yang baru dibuat
         foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
         if (foundTree != NULL) {
+            operationToUndo->isDir = foundTree->item.type == ITEM_FILE  ? false : true;
             _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
             printf("Undo create: %s\n", operationToUndo->from);
+        }else{
+            printf("Item tidak ditemukan untuk dihapus: %s\n", operationToUndo->from);
         }
         break;
-    case ACTION_DELETE:
+        case ACTION_DELETE:
         // Kembalikan item yang dihapus
         // foundTree = searchTree(fileManager->, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
         if (foundTree != NULL) {
         }
         break;
-    case ACTION_UPDATE:
+        case ACTION_UPDATE:
         // Kembalikan nama item yang diubah
         foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
         if (foundTree != NULL) {
@@ -525,7 +533,7 @@ void undo(FileManager* fileManager) {
             printf("Undo update: %s to %s\n", operationToUndo->from, operationToUndo->to);
         }
         break;
-    case ACTION_RECOVER:
+        case ACTION_RECOVER:
         // Hapus item yang sudah di-recover
         foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
         if (foundTree != NULL) {
@@ -533,21 +541,39 @@ void undo(FileManager* fileManager) {
             printf("Undo recover: %s\n", operationToUndo->from);
         }
         break;
-    case ACTION_PASTE:
+        case ACTION_PASTE:
         // Hapus item yang sudah di-paste
-
+        
         break;
-
-    default:
+        
+        default:
         break;
     }
+    push(&(fileManager->redo), operationToUndo);
+    // printf("Redo Pushed : %s\n", operationToUndo->from);
 }
 
 /*  Prosedur
  *  IS:
  *  FS:
 ================================================================================*/
-void redo(FileManager* fileManager) {}
+void redo(FileManager* fileManager) {
+    Operation* operationToRedo;
+    if(fileManager->redo == NULL) {
+        printf("No actions to redo.\n");
+        return;
+    }
+    operationToRedo = alloc(Operation);
+    operationToRedo = (Operation*)pop(&(fileManager->redo));
+    push(&(fileManager->undo), operationToRedo);
+    switch (operationToRedo->type) {
+        case ACTION_CREATE:
+            // Buat item yang sudah dihapus
+            createFile(fileManager, operationToRedo->isDir ? ITEM_FOLDER : ITEM_FILE,_getDirectoryFromPath(operationToRedo->from),_getNameFromPath(operationToRedo->from));
+            printf("Redo create: %s\n", operationToRedo->from);
+            break;
+    }
+}
 
 // ================================================================================
 // . . . HELPER FUNC / PROC . . .
@@ -962,7 +988,7 @@ char* _getDirectoryFromPath(char* path){
         return strdup("");
     }
 
-    size_t len = lastSlash - path + 1;
+    size_t len = lastSlash - path;
     char* dirPath = malloc(len + 1); 
 
     if (dirPath == NULL){

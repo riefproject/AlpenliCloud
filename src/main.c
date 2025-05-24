@@ -31,8 +31,15 @@ int main() {
 
     initFileManager(&fileManager);
 
+    // createFile(&fileManager, ITEM_FILE,".dir/root" ,"INI FILE BARU DIBUAT.txt");
+    // // printTree((fileManager.treeCursor), 0);
+    // printf("Enter to Undo...");
+    // getchar();
+    // undo(&fileManager);
+    // printf("Enter to redo...");
+    // getchar();
+    // redo(&fileManager);
 
-    // printTree((fileManager.treeCursor), 0);
 
     // return 0;
 

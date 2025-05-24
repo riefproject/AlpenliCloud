@@ -49,7 +49,8 @@ void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
 
     if (toolbar->newButtonProperty.itemCreated) {
         char *name = toolbar->newButtonProperty.inputBuffer;
-        createFile(toolbar->fileManager, toolbar->newButtonProperty.selectedType, name);
+        char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+        createFile(toolbar->fileManager, toolbar->newButtonProperty.selectedType,dirPath, name);
         toolbar->newButtonProperty.itemCreated = false;
     }
 }
