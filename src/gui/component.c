@@ -5,16 +5,17 @@
 #include "raylib.h"
 
 #include <string.h>
+#include <stdlib.h>
 
-bool GuiNewButton(NewButtonProperty *buttonProperty) {
+bool GuiNewButton(NewButtonProperty* buttonProperty) {
     bool itemCreated = false;
 
     // Tombol utama
     if (GuiButtonCustom(
-            buttonProperty->btnRect,
-            buttonProperty->placeholder,
-            buttonProperty->tooltip,
-            buttonProperty->disabled)) {
+        buttonProperty->btnRect,
+        buttonProperty->placeholder,
+        buttonProperty->tooltip,
+        buttonProperty->disabled)) {
         buttonProperty->dropdownActive = !buttonProperty->dropdownActive;
         buttonProperty->showModal = false;
     }
@@ -32,7 +33,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             buttonProperty->btnRect.x,
             buttonProperty->btnRect.y + btnHeight + 2,
             btnWidth,
-            totalHeight};
+            totalHeight };
 
         // Gambar latar belakang dan border
         DrawRectangleRec(dropdownBg, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
@@ -43,14 +44,14 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             dropdownBg.x + DEFAULT_PADDING,
             dropdownBg.y + DEFAULT_PADDING,
             btnWidth - 2 * DEFAULT_PADDING,
-            btnHeight};
+            btnHeight };
 
         if (GuiButton(fileBtn, "#8# File")) {
             buttonProperty->selectedType = ITEM_FILE;
-            buttonProperty->showModal = true;
+            *buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
             strcpy(buttonProperty->inputBuffer, "");
-            buttonProperty->inputEditMode = true;
+            *buttonProperty->inputEditMode = true;
         }
 
         // Tombol Folder
@@ -58,14 +59,14 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             fileBtn.x,
             fileBtn.y + btnHeight + DEFAULT_PADDING,
             fileBtn.width,
-            btnHeight};
+            btnHeight };
 
         if (GuiButton(folderBtn, "#204# Folder")) {
             buttonProperty->selectedType = ITEM_FOLDER;
-            buttonProperty->showModal = true;
+            *buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
             strcpy(buttonProperty->inputBuffer, "");
-            buttonProperty->inputEditMode = true;
+            *buttonProperty->inputEditMode = true;
         }
 
         // Tutup dropdown jika klik di luar area dropdown & tombol
@@ -85,7 +86,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
         buttonProperty->modalRect.y = (screenH - buttonProperty->modalRect.height) / 2;
         bool quit = false;
 
-        const char *typeStr = (buttonProperty->selectedType == ITEM_FILE) ? "File" : "Folder";
+        const char* typeStr = (buttonProperty->selectedType == ITEM_FILE) ? "File" : "Folder";
         char title[64];
         snprintf(title, sizeof(title), "Create New %s", typeStr);
 
@@ -98,13 +99,13 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             buttonProperty->modalRect.x + 20,
             buttonProperty->modalRect.y + 45,
             buttonProperty->modalRect.width - 40,
-            30};
+            30 };
 
         if (GuiTextBoxCustom(inputBox, NULL, "Enter name...",
-                             buttonProperty->inputBuffer,
-                             MAX_STRING_LENGTH,
-                             &buttonProperty->inputEditMode,
-                             false)) {
+            buttonProperty->inputBuffer,
+            MAX_STRING_LENGTH,
+            buttonProperty->inputEditMode,
+            false)) {
             if (strcmp(buttonProperty->inputBuffer, "") != 0) {
                 itemCreated = true;
                 buttonProperty->showModal = false;
@@ -117,13 +118,13 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             buttonProperty->modalRect.x + 20,
             buttonProperty->modalRect.y + buttonProperty->modalRect.height - 45,
             (buttonProperty->modalRect.width - 50) / 2,
-            30};
+            30 };
 
         Rectangle btnCancel = {
             btnCreate.x + btnCreate.width + 10,
             btnCreate.y,
             btnCreate.width,
-            30};
+            30 };
 
         if (GuiButton(btnCreate, "Create") && strcmp(buttonProperty->inputBuffer, "") != 0) {
             itemCreated = true;
@@ -141,7 +142,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
     return itemCreated;
 }
 
-bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled) {
+bool GuiButtonCustom(Rectangle bounds, const char* text, const char* tooltip, bool disabled) {
     if (disabled)
         GuiDisable();
 
@@ -157,14 +158,18 @@ bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bo
 
         Vector2 tooltipPos = {
             bounds.x,
-            bounds.y + bounds.height + 5};
+            bounds.y + bounds.height + 5 };
 
         DrawRectangleRec(
-            (Rectangle){tooltipPos.x, tooltipPos.y, tooltipWidth, tooltipHeight},
+            (Rectangle) {
+            tooltipPos.x, tooltipPos.y, tooltipWidth, tooltipHeight
+        },
             Fade(GetColor(GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL)), 0.95f));
 
         DrawRectangleLinesEx(
-            (Rectangle){tooltipPos.x, tooltipPos.y, tooltipWidth, tooltipHeight},
+            (Rectangle) {
+            tooltipPos.x, tooltipPos.y, tooltipWidth, tooltipHeight
+        },
             1,
             GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL)));
 
@@ -181,7 +186,7 @@ bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bo
     return pressed;
 }
 
-bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled) {
+bool GuiTextBoxCustom(Rectangle bounds, char* icon, char* placeholder, char* inputText, int textSize, bool* editMode, bool disabled) {
     bool pressedEnter = false;
 
     if (disabled)
@@ -189,7 +194,7 @@ bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inp
 
     float textOffsetX = bounds.x + TINY_PADDING;
     if (icon != NULL && icon[0] != '\0') {
-        GuiLabel((Rectangle){bounds.x + TINY_PADDING, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, icon);
+        GuiLabel((Rectangle) { bounds.x + TINY_PADDING, bounds.y + bounds.height / 2 - 10, bounds.width, 20 }, icon);
         textOffsetX += 24;
     }
 
@@ -202,12 +207,14 @@ bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inp
             pressedEnter = true;
             *editMode = false;
         }
-    } else {
+    }
+    else {
         DrawRectangleLinesEx(bounds, 1, Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), 0.6f));
         if (inputText[0] == '\0') {
-            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, placeholder);
-        } else {
-            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, inputText);
+            GuiLabel((Rectangle) { textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20 }, placeholder);
+        }
+        else {
+            GuiLabel((Rectangle) { textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20 }, inputText);
         }
 
         if (CheckCollisionPointRec(GetMousePosition(), bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
