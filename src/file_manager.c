@@ -472,7 +472,8 @@ void undo(FileManager* fileManager) {
     }
     operationToUndo = alloc(Operation);
     operationToUndo = (Operation*) pop(&(fileManager->undo));
-    switch (operationToUndo->type) {
+    push(&(fileManager->redo), operationToUndo);
+    switch (operationToUndo->type) 
     {
         case ACTION_CREATE:
             // Hapus item yang baru dibuat
