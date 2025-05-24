@@ -19,13 +19,15 @@ typedef struct Item {
   bool selected;
 }Item;
 
-typedef struct TrashItem{
+typedef struct TrashItem {
   Item item;
-  char* origin;
+  char* originalPath;     // path asli sebelum dihapus
+  time_t deletedTime;     // waktu dihapus
+  char* trashPath;        // path di dalam folder trash fisik
 } TrashItem;
 
 // OPERASI
-Item createItem(char *name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
+Item createItem(char* name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
 
 TrashItem createTrashItem(Item item, char* origin);
 // Getter

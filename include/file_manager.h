@@ -10,7 +10,7 @@
 
 typedef struct FileManager {
   Tree root;              // root directory
-  Tree rootTrash;         // root trash (deleted files)
+  LinkedList trash;         // root trash (deleted files)
   Stack undo;             // stack for undo operations
   Stack redo;             // stack for redo operations
 
@@ -135,7 +135,7 @@ void clearSelectedFile(FileManager* fileManager);
  *  IS:
  *  FS:
 ================================================================================*/
-void _moveToTrash(Tree itemTree);
+void _moveToTrash(FileManager* fileManager, Tree itemTree);
 
 /*  Prosedur
  *  IS:
@@ -160,7 +160,8 @@ void _copyFileContent(char* srcPath, char* destPath);
  *  FS:
 ================================================================================*/
 void _copyFolderRecursive(char* srcPath, char* destPath);
-
+void _removeFromTrash(FileManager* fileManager, char* itemName);
+void _addBackToTree(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
 // Mengembalikan nama file dari path lengkap
 char* _getNameFromPath(char* path);
 
@@ -183,7 +184,7 @@ bool isDirectory(char* path);
 
 void windowsOpenWith(char* path);
 
-Tree getCurrentRoot(FileManager *fileManager);
+Tree getCurrentRoot(FileManager* fileManager);
 
 char* getCurrentPath(Tree tree);
 
