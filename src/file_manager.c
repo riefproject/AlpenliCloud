@@ -14,6 +14,7 @@
 #include "win_utils.h"
 #include <string.h>
 
+
 #include <time.h>
 #define _DIR ".dir/"
 #define ROOT ".dir/root"
@@ -121,6 +122,10 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
     time_t createdTime;
     FILE* newFile;
 
+    if(strlen(name) + 1 >= 255){
+        printf("nama file terlalu panjang, gagal membuat file\n");
+        return;
+    }
     currentFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
     currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(currentFullPath), currentFullPath, 0, ITEM_FOLDER, 0, 0, 0));
     // printf("\ncurrent path: %s\n", currentFullPath);
