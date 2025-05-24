@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#include "file_action.h"
 #include "file_manager.h"
 #include "win_utils.h"
 #include "stack.h"
@@ -201,7 +202,39 @@ Item searchFile(FileManager* fileManager, char* path) {
     return item;
 }
 
-void undo(FileManager* fileManager) {}
+void undo(FileManager* fileManager) {
+    //     if (fileManager->undo == NULL) {
+    //         printf("No actions to undo.\n");
+    //         return;
+    //     }
+
+    //     Action* action = (Action*)malloc(sizeof(Action));
+    //     pop(&(fileManager->undo), action);
+    //     push(&(fileManager->redo), action);
+    //     switch (action->type) {
+    //     case ACTION_MOVE:
+    //     {
+    //         FileManager* fm = fileManager;
+    //         fm->treeCursor = searchTree(fm->root, createItem(_getNameFromPath(action->src), action->src, 0, ITEM_FOLDER, 0, 0, 0));
+
+
+    //     }
+    //     break;
+    //     case ACTION_DELETE:
+    //         break;
+    //     case ACTION_RENAME:
+    //         rename(action->dst, action->src);
+    //         break;
+    //     case ACTION_CREATE:
+    //         if (action->isDir) {
+    //             rmdir(action->src);
+    //         }
+    //         else {
+    //             remove(action->src);
+    //         }
+    //         break;
+    //     }
+}
 void redo(FileManager* fileManager) {}
 
 /*
@@ -350,6 +383,7 @@ void pasteFile(FileManager* fileManager) {
         }
     }
 }
+
 char* _getNameFromPath(char* path) {
     char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
     if (name != NULL) {
@@ -358,30 +392,57 @@ char* _getNameFromPath(char* path) {
     return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
 };
 
-// void selectFile(FileManager *fileManager, Item item)
-// {
-//     Item *itemToSelect = alloc(Item);
-//     *itemToSelect = item;
-//     enqueue(&(fileManager->selectedItem), (void *)itemToSelect);
-// }
+void selectFile(FileManager* fileManager, Item item) {
+    if (fileManager->selectedItem.head == NULL) {
+        fileManager->selectedItem.head = (Node*)malloc(sizeof(Node));
+        fileManager->selectedItem.head->data = malloc(sizeof(Item));
+        *(Item*)fileManager->selectedItem.head->data = item;
+        fileManager->selectedItem.head->next = NULL;
+    }
+    else {
+        Node* temp = fileManager->selectedItem.head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = (Node*)malloc(sizeof(Node));
+        temp->next->data = malloc(sizeof(Item));
+        *(Item*)temp->next->data = item;
+        temp->next->next = NULL;
+    }
+}
 
-// void clearSelectedFile(FileManager *fileManager)
-// {
-//     while (!is_queue_empty(fileManager->selectedItem))
-//     {
-//         Item *item;
-//         item = dequeue(&(fileManager->selectedItem));
-//         free(item);
-//     }
-// }
+void clearSelectedFile(FileManager* fileManager) {
+    Node* temp = fileManager->selectedItem.head;
+    while (temp != NULL) {
+        Node* next = temp->next;
+        free(temp->data);
+        free(temp);
+        temp = next;
+    }
+    fileManager->selectedItem.head = NULL;
+}
 
-// void deselectFile(FileManager *fileManager, Item item)
-// {
-//     Item *itemToDeselect = alloc(Item);
-//     *itemToDeselect = item;
-//     itemToDeselect = (Item *)dequeue(&(fileManager->selectedItem));
-//     free(itemToDeselect);
-// }
+void deselectFile(FileManager* fileManager, Item item) {
+    Node* temp = fileManager->selectedItem.head;
+    Node* prev = NULL;
+
+    while (temp != NULL) {
+        Item data = *(Item*)temp->data;
+        if (data.path == item.path && data.name == item.name) {
+            if (prev == NULL) {
+                fileManager->selectedItem.head = temp->next;
+            }
+            else {
+                prev->next = temp->next;
+            }
+            free(temp->data);
+            free(temp);
+            return;
+        }
+        prev = temp;
+        temp = temp->next;
+    }
+}
 
 bool isDirectory(char* path) {
     struct stat path_stat;
