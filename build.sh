@@ -13,12 +13,16 @@ RESOURCE_RC="assets/resource.rc"
 RESOURCE_RES="assets/resource.res"
 
 # bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
-CFLAGS="-Iinclude 
+WNO="-Wno-discarded-qualifiers
+     -Wno-unused-parameter
+     -Wno-unused-variable"
+
+CFLAGS="$WNO
+        -Iinclude 
         -Iinclude/gui
         -Iinclude/data_structure
         -Ilib/raylib/include"
 LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
-
 object_files=()
 
 clean() {

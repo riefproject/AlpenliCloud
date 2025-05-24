@@ -1,1 +1,0 @@
-gcc src/main.c -o coba.exe -Wall -Wextra -Iinclude -Ilib/raylib/include lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
