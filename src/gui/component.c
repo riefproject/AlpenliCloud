@@ -131,14 +131,14 @@ void GuiNewButton(NewButtonProperty* buttonProperty) {
             btnCreate.width,
             30 };
 
-        if (GuiButton(btnCreate, "Create") && strcmp(buttonProperty->inputBuffer, "") != 0) {
+        if ((GuiButton(btnCreate, "Create") || IsKeyPressed(KEY_ENTER)) && strcmp(buttonProperty->inputBuffer, "") != 0) {
             itemCreated = true;
             buttonProperty->itemCreated = true;
             buttonProperty->showModal = false;
             buttonProperty->sidebar->isSidebarClickable = true;
             buttonProperty->inputEditMode = false;
         }
-        
+
         if (GuiButton(btnCancel, "Cancel") || quit) {
             buttonProperty->itemCreated = false;
             buttonProperty->showModal = false;

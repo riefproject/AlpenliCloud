@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "file_manager.h"
+#include "utils.h"
 #include "gui/body.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
@@ -33,12 +34,12 @@ int main() {
 
     createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
     // printTree((fileManager.treeCursor), 0);
-    printf("Enter to Undo...");
-    getchar();
-    undo(&fileManager);
-    printf("Enter to redo...");
-    getchar();
-    redo(&fileManager);
+    // printf("Enter to Undo...");
+    // getchar();
+    // undo(&fileManager);
+    // printf("Enter to redo...");
+    // getchar();
+    // redo(&fileManager);
 
 
     // return 0;
@@ -89,6 +90,7 @@ int main() {
 
         updateBody(&body, currentZeroPosition, &fileManager);
 
+        ShortcutKeys(&toolbar);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
