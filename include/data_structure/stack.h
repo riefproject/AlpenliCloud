@@ -14,7 +14,7 @@ typedef Node* Stack;
 void create_stack(Stack* stack);
 bool is_stack_empty(Stack stack);
 void push(Stack* stack, infotype data);
-void pop(Stack* stack, infotype* data);
+void* pop(Stack* stack);
 void pop_print(Stack* stack, infotype* data);
 void print_stack(Stack stack);
 

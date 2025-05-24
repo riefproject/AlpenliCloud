@@ -14,6 +14,8 @@
 #include <time.h>
 #include "raylib.h"
 #include <string.h>
+#include "operation.h"
+
 #define ROOT ".dir/root"
 #define TRASH ".dir/trash"
 
@@ -183,29 +185,39 @@ void deleteFile(FileManager* fileManager) {
     printf("File berhasil dipindah ke trash\n");
 }
 
-/* Rename/Update item name
- *  IS: Item yang akan di rename sudah ada di dalam queue SelectedFile
- *  FS: Item yang akan di rename sudah tidak ada di dalam queue SelectedFile
- *      dan nama Item sudah diupdate
-================================================================================*/
+/* Procedur untuk Rename/Update item name
+ *  IS: Nama item belum berubah
+ *  FS: Nama item berubah
+ * note: file path adalah full path, bukan path direktori
+================================================================================
+*/
 void renameFile(FileManager* fileManager, char* filePath, char* newName) {
     Item item;
-
+    Tree foundTree;
+    char* newPath;
     // Cari item
-    item = searchFile(fileManager, filePath);
-    // if (item == NULL) { // reviewed by Arief: bang struct itu ga bisa null, cheking null hanya untuk pointer cmiiw
-    //   printf("File tidak ditemukan\n");
-    //   return;
-    // }
-
+    item = createItem(_getNameFromPath(filePath), filePath, 0, 0, 0, 0, 0);
+    foundTree = searchTree(fileManager->treeCursor, item);
+    if (foundTree == NULL) {
+        printf("File tidak ditemukan\n");
+        return;
+    }
+    newPath= TextFormat("%s/%s", fileManager->currentPath, newName);
     // rename file
-    char newPath[512];
-    snprintf(newPath, sizeof(newPath), "%s/%s", fileManager->currentPath, newName);
+    if(foundTree->item.type == ITEM_FILE){
+        if(DirectoryExists(newPath)){
+            newPath = _createDuplicatedFileName(newPath, "(1)");
+        }
+    }else if(foundTree->item.type == ITEM_FILE){
+        if(FileExists(newPath)){
+            newPath = _createDuplicatedFolderName(newPath, "(1)");
+        }
+    }
     rename(filePath, newPath);
 
     // update item
-    item.name = strdup(newName);
-    item.path = strdup(newPath);
+    foundTree->item.name = strdup(newName);
+    foundTree->item.path = strdup(newPath);
 
     printf("File berhasil diubah namanya menjadi %s\n", newName);
 }
@@ -452,37 +464,55 @@ void deselectFile(FileManager* fileManager, Item item) {
  *  FS:
 ================================================================================*/
 void undo(FileManager* fileManager) {
-    //     if (fileManager->undo == NULL) {
-    //         printf("No actions to undo.\n");
-    //         return;
-    //     }
+    Operation *operationToUndo;
+    Tree foundTree;
+    if (fileManager->undo == NULL) {
+        printf("No actions to undo.\n");
+        return;
+    }
+    operationToUndo = alloc(Operation);
+    operationToUndo = (Operation*) pop(&(fileManager->undo));
+    switch (operationToUndo->type) {
+    {
+        case ACTION_CREATE:
+            // Hapus item yang baru dibuat
+            foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
+            if (foundTree != NULL) {
+                _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
+                printf("Undo create: %s\n", operationToUndo->from);
+            }
+            break;
+        case ACTION_DELETE:
+            // Kembalikan item yang dihapus
+            foundTree = searchTree(fileManager->rootTrash, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
+            if (foundTree != NULL) {
 
-    //     Action* action = (Action*)malloc(sizeof(Action));
-    //     pop(&(fileManager->undo), action);
-    //     push(&(fileManager->redo), action);
-    //     switch (action->type) {
-    //     case ACTION_MOVE:
-    //     {
-    //         FileManager* fm = fileManager;
-    //         fm->treeCursor = searchTree(fm->root, createItem(_getNameFromPath(action->src), action->src, 0, ITEM_FOLDER, 0, 0, 0));
+            }
+            break;
+        case ACTION_UPDATE:
+            // Kembalikan nama item yang diubah
+            foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
+            if (foundTree != NULL) {
+                renameFile(fileManager, foundTree->item.path, operationToUndo->to);
+                printf("Undo update: %s to %s\n", operationToUndo->from, operationToUndo->to);
+            }
+            break;
+        case ACTION_RECOVER:
+            // Hapus item yang sudah di-recover
+            foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->from), operationToUndo->from, 0, ITEM_FILE, 0, 0, 0));
+            if (foundTree != NULL) {
+                _moveToTrash(foundTree);
+                printf("Undo recover: %s\n", operationToUndo->from);
+            }
+            break;
+        case ACTION_PASTE:
+            // Hapus item yang sudah di-paste
 
-
-    //     }
-    //     break;
-    //     case ACTION_DELETE:
-    //         break;
-    //     case ACTION_RENAME:
-    //         rename(action->dst, action->src);
-    //         break;
-    //     case ACTION_CREATE:
-    //         if (action->isDir) {
-    //             rmdir(action->src);
-    //         }
-    //         else {
-    //             remove(action->src);
-    //         }
-    //         break;
-    //     }
+            break;
+        
+        default:
+            break;
+    }
 }
 
 /*  Prosedur

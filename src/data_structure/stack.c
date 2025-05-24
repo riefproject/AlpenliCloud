@@ -25,11 +25,13 @@ void push(Stack* stack, infotype data){
 }
 
 // Pop an element from the stack
-void pop(Stack* stack, infotype* data){
+void* pop(Stack* stack){
   LinkedList temp_list;
+  void* popped_data;
   temp_list.head = *stack;
-  delete_first(&temp_list, data);
+  delete_first(&temp_list, &popped_data);
   *stack = temp_list.head;
+  return popped_data;
 }
 
 void pop_print(Stack* stack, infotype* data){
