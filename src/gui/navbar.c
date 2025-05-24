@@ -1,15 +1,14 @@
-#include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
-#include "macro.h"
 #include "file_manager.h"
 #include "gui/component.h"
 #include "gui/navbar.h"
+#include "macro.h"
 #include "raygui.h"
 
-void createNavbar(Navbar *navbar)
-{
+void createNavbar(Navbar *navbar) {
     navbar->textboxPatheditMode = false;
     strcpy(navbar->textboxPath, "");
 
@@ -19,15 +18,13 @@ void createNavbar(Navbar *navbar)
     navbar->currentZeroPosition = (Rectangle){0};
 }
 
-void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager)
-{
+void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager) {
     navbar->fileManager = fileManager;
 
     navbar->currentZeroPosition = currentZeroPosition;
 }
 
-void drawNavbar(Navbar *navbar)
-{
+void drawNavbar(Navbar *navbar) {
     float x = navbar->currentZeroPosition.x;
     float y = navbar->currentZeroPosition.y;
     float totalWidth = navbar->currentZeroPosition.width;

@@ -1,22 +1,21 @@
 #include "body.h"
-#include "macro.h"
-#include "item.h"
 #include "file_manager.h"
 #include "item.h"
+#include "macro.h"
 
 // #include <time.h>
 
 #include "raygui.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-void createBody(Body* b) {
-    Body body = { 0 };
-    body.panelRec = (Rectangle){ 0 };
-    body.panelContentRec = (Rectangle){ 0, 0, 170, 340 };
-    body.panelView = (Rectangle){ 0 };
-    body.panelScroll = (Vector2){ 0 };
+void createBody(Body *b) {
+    Body body = {0};
+    body.panelRec = (Rectangle){0};
+    body.panelContentRec = (Rectangle){0, 0, 170, 340};
+    body.panelView = (Rectangle){0};
+    body.panelScroll = (Vector2){0};
 
     body.focusedIndex = -1;
     body.showCheckbox = false;
@@ -29,7 +28,7 @@ void createBody(Body* b) {
     *b = body;
 }
 
-void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileManager) {
+void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileManager) {
     body->currentZeroPosition = currentZeroPosition;
 
     body->fileManager = fileManager;
@@ -38,7 +37,7 @@ void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileMana
         body->currentZeroPosition.x + 170 + DEFAULT_PADDING,
         body->currentZeroPosition.y + DEFAULT_PADDING * 2 + 24 * 2,
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING,
-        body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2 };
+        body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2};
 
     if (body->selectedAll) {
         for (int i = 0; i < 100; i++) {
@@ -47,17 +46,17 @@ void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileMana
     }
 }
 
-void drawBody(Body* body) {
+void drawBody(Body *body) {
     Tree cursor = body->fileManager->treeCursor;
 
     sort_children(&cursor);
-    
+
     cursor = cursor->first_son;
 
     float headerHeight = 30;
     float rowHeight = 24;
 
-    float colWidths[5] = { 300, 100, 100, 200 };
+    float colWidths[5] = {300, 100, 100, 200};
     float checkboxWidth = body->showCheckbox ? 20 : 0;
     float totalContentWidth = checkboxWidth + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
 
@@ -86,7 +85,7 @@ void drawBody(Body* body) {
     EndScissorMode();
 }
 
-void drawTableItem(Body* body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]) {
+void drawTableItem(Body *body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]) {
     Item item = subTree->item;
     float checkboxWidth = body->showCheckbox ? 28 : 0;
     float totalContentWidth = checkboxWidth + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
@@ -94,7 +93,7 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
     float rowY = startY + index * rowHeight;
     float rowX = startX;
 
-    Rectangle rowRec = { rowX, rowY, totalContentWidth, rowHeight };
+    Rectangle rowRec = {rowX, rowY, totalContentWidth, rowHeight};
 
     if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         body->focusedIndex = index;
@@ -104,7 +103,7 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
         if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FILE) {
             int length = strlen(item.path) + strlen(item.name) + 2;
 
-            char* executeableCommand = malloc(length);
+            char *executeableCommand = malloc(length);
 
             snprintf(executeableCommand, length, "%s/%s", item.path, item.name);
 
@@ -114,7 +113,7 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
         }
     }
 
-    Color bgColor = (body->focusedIndex == index) ? Fade(BLUE, 0.2f) : ((index % 2 == 0) ? WHITE : (Color) { 245, 245, 245, 255 });
+    Color bgColor = (body->focusedIndex == index) ? Fade(BLUE, 0.2f) : ((index % 2 == 0) ? WHITE : (Color){245, 245, 245, 255});
     DrawRectangleRec(rowRec, bgColor);
 
     float colX = rowX;
@@ -123,11 +122,10 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
         Rectangle checkBox = {
             colX + 7,
             rowY + (rowHeight - 14) / 2,
-            14, 14 };
+            14, 14};
 
         GuiCheckBox(checkBox, NULL, &item.selected);
         if (item.selected) {
-
         }
 
         colX += checkboxWidth;
@@ -142,7 +140,7 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
     DrawText(TextFormat("%d", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[2];
 
-    struct tm* local = localtime(&item.updated_at);
+    struct tm *local = localtime(&item.updated_at);
 
     char buffer[100];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", local);
@@ -150,20 +148,20 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
     DrawText(TextFormat("%s", buffer), colX + 8, rowY + 6, 10, DARKGRAY);
 }
 
-void drawTableHeader(Body* body, float x, float y, float colWidths[]) {
+void drawTableHeader(Body *body, float x, float y, float colWidths[]) {
     int fontSize = 10;
     int headerHeight = 30;
 
     float colX = x;
 
-    DrawRectangleRec((Rectangle) { x, y, colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + (body->showCheckbox ? 28 : 0), headerHeight }, LIGHTGRAY);
-    DrawRectangleLinesEx((Rectangle) { x, y, colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + (body->showCheckbox ? 28 : 0), headerHeight }, 1, DARKGRAY);
+    DrawRectangleRec((Rectangle){x, y, colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + (body->showCheckbox ? 28 : 0), headerHeight}, LIGHTGRAY);
+    DrawRectangleLinesEx((Rectangle){x, y, colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + (body->showCheckbox ? 28 : 0), headerHeight}, 1, DARKGRAY);
 
     if (body->showCheckbox) {
         Rectangle checkRect = {
             colX + 7,
             y + (headerHeight - 14) / 2,
-            14, 14 };
+            14, 14};
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
         colX += 28;
     }
