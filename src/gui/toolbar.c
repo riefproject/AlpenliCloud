@@ -7,7 +7,7 @@
 #include "raygui.h"
 #include "file_manager.h"
 
-void createToolbar(Toolbar *toolbar, FileManager *fileManager) {
+void createToolbar(Toolbar* toolbar, FileManager* fileManager) {
 
     toolbar->newButtonProperty = (NewButtonProperty){
         .btnRect = {50, 50, 100, 24},
@@ -24,11 +24,15 @@ void createToolbar(Toolbar *toolbar, FileManager *fileManager) {
         .inputEditMode = false,
         .disabled = false,
     };
-    toolbar->currentZeroPosition = (Rectangle){0};
+    toolbar->currentZeroPosition = (Rectangle){ 0 };
     toolbar->fileManager = fileManager;
+    toolbar->isButtonCopyActive = false;
+    toolbar->isButtonCutActive = false;
+    toolbar->isButtonDeleteActive = false;
+    toolbar->isButtonPasteActive = false;
 }
 
-void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
+void updateToolbar(Toolbar* toolbar, Rectangle currentZeroPosition) {
     toolbar->currentZeroPosition = currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
 
@@ -47,38 +51,55 @@ void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
     toolbar->newButtonProperty.modalRect.y = (screenHeight - modalHeight) / 2;
 
     if (toolbar->newButtonProperty.itemCreated) {
-        char *name = toolbar->newButtonProperty.inputBuffer;
+        char* name = toolbar->newButtonProperty.inputBuffer;
         createFile(toolbar->fileManager, toolbar->newButtonProperty.selectedType, name);
         toolbar->newButtonProperty.itemCreated = false;
     }
+    if (toolbar->isButtonCopyActive) {
+        copyFile(toolbar->fileManager);
+        toolbar->isButtonCopyActive = false;
+    }
+    if (toolbar->isButtonCutActive) {
+        cutFile(toolbar->fileManager);
+        toolbar->isButtonCutActive = false;
+    }
+    if (toolbar->isButtonDeleteActive) {
+        deleteFile(toolbar->fileManager);
+        toolbar->isButtonDeleteActive = false;
+    }
+    if (toolbar->isButtonPasteActive) {
+        pasteFile(toolbar->fileManager);
+        toolbar->isButtonPasteActive = false;
+    }
+
 }
 
-void drawToolbar(Toolbar *toolbar) {
+void drawToolbar(Toolbar* toolbar) {
     float x = toolbar->currentZeroPosition.x;
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
 
-    GuiButtonCustom((Rectangle){x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
+    GuiButtonCustom((Rectangle) { x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24 }, "#112# PILIH BANYAK", "MULTI SELECT", true);
 
     int rightStartx = x + width;
 
     x += toolbar->newButtonProperty.btnRect.width + 130;
     x += 24;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", true);
+    GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#22#", "RENAME", false);
 
     x += 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", true);
+    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", false);
 
     x += 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", true);
+    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#16#", "COPY", false);
 
     x += 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", true);
+    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#17#", "CUT", false);
 
     rightStartx -= 24;
-    GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", true);
+    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle) { rightStartx, y, 24, 24 }, "#143#", "DELETE", false);
 
     GuiNewButton(&toolbar->newButtonProperty);
 
-    GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
+    GuiLine((Rectangle) { toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10 }, NULL);
 }

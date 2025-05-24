@@ -115,8 +115,8 @@ Tree loadTree(Tree tree, char* path) {
 ================================================================================*/
 void createFile(FileManager* fileManager, ItemType type, char* name) {
     Item newItem, parentToSearch;
-    char *path;
-    char *currentFullPath;
+    char* path;
+    char* currentFullPath;
     Tree currentNode;
     time_t createdTime;
     FILE* newFile;
@@ -383,30 +383,51 @@ void pasteFile(FileManager* fileManager) {
             return;
         }
 
-        char* path = TextFormat("%s/%s", fileManager->currentPath, itemToPaste->name);
+        // Path untuk file/folder baru di lokasi tujuan
+        char* destinationFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
+        char* newPath = TextFormat("%s/%s", destinationFullPath, itemToPaste->name);
         char* originPath = TextFormat("%s/%s", foundTree->item.path, foundTree->item.name);
 
         // COPY/CUT sama-sama butuh copy content dulu
         if (foundTree->item.type == ITEM_FOLDER) {
-            if (DirectoryExists(path)) {
-                path = _createDuplicatedFolderName(path, "(1)");
+            if (DirectoryExists(newPath)) {
+                newPath = _createDuplicatedFolderName(newPath, "(1)");
             }
-            if (MakeDirectory(path) != 0) {
+            if (MakeDirectory(newPath) != 0) {
                 printf("Gagal membuat folder\n");
                 return;
             }
-            _copyFolderRecursive(originPath, path);
+            _copyFolderRecursive(originPath, newPath);
         }
         else if (foundTree->item.type == ITEM_FILE) {
-            if (FileExists(path)) {
-                path = _createDuplicatedFileName(path, "(1)");
+            if (FileExists(newPath)) {
+                newPath = _createDuplicatedFileName(newPath, "(1)");
             }
-            _copyFileContent(originPath, path);
+            _copyFileContent(originPath, newPath);
         }
 
-        // Kalau cut, gunakan fungsi delete helper
+        // Insert item baru ke tree di lokasi tujuan
+        Tree currentNode = searchTree(fileManager->root,
+            createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+
+        if (currentNode != NULL) {
+            Item newItem = createItem(
+                _getNameFromPath(newPath),    // nama file dari path baru
+                newPath,                      // path lengkap baru
+                foundTree->item.size,         // ukuran sama
+                foundTree->item.type,         // tipe sama
+                foundTree->item.created_at,   // waktu buat sama
+                time(NULL),                   // waktu modif = sekarang
+                0                            // tidak dihapus
+            );
+            insert_node(currentNode, newItem);
+            printf("Item %s berhasil ditambahkan ke tree\n", newItem.name);
+        }
+
+        // Kalau cut, hapus dari lokasi asal dan tree
         if (!isCopy) {
             _deleteSingleItem(originPath, foundTree->item.type, foundTree->item.name);
+            remove_node(&(fileManager->root), foundTree);
         }
 
         temp = temp->next;
@@ -948,23 +969,23 @@ void sort_children(Tree* parent) {
     (*parent)->first_son = sorted;
 }
 
-char* _getDirectoryFromPath(char* path){
+char* _getDirectoryFromPath(char* path) {
     char* lastSlash = strrchr(path, '/');
-    if (lastSlash == NULL){
+    if (lastSlash == NULL) {
         return strdup("");
     }
 
     size_t len = lastSlash - path + 1;
-    char* dirPath = malloc(len + 1); 
+    char* dirPath = malloc(len + 1);
 
-    if (dirPath == NULL){
+    if (dirPath == NULL) {
         perror("malloc failed");
         exit(1);
     }
 
     strncpy(dirPath, path, len);
-    dirPath[len] = '\0'; 
+    dirPath[len] = '\0';
 
-    return dirPath; 
-    
+    return dirPath;
+
 }
