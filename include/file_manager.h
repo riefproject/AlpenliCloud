@@ -55,7 +55,7 @@ Item searchFile(FileManager* fileManager, char* path);
  *  IS:
  *  FS:
 ================================================================================*/
-void createFile(FileManager* fileManager, ItemType type, char* name);
+void createFile(FileManager* fileManager, ItemType type,char* dirPath, char* name);
 
 /*  Prosedur
  *  IS:

@@ -31,8 +31,15 @@ int main() {
 
     initFileManager(&fileManager);
 
-
+    createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
     // printTree((fileManager.treeCursor), 0);
+    printf("Enter to Undo...");
+    getchar();
+    undo(&fileManager);
+    printf("Enter to redo...");
+    getchar();
+    redo(&fileManager);
+
 
     // return 0;
 
@@ -53,7 +60,7 @@ int main() {
     Navbar navbar;
     createNavbar(&navbar);
 
-    
+
     Sidebar sidebar;
     createSidebar(&sidebar);
 
@@ -63,12 +70,12 @@ int main() {
     Body body;
     createBody(&body);
 
-    
+
 
     while (!titleBar.exitWindow && !WindowShouldClose()) {
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
+        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
 
         // Update
         //----------------------------------------------------------------------------------
