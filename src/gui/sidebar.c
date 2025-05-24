@@ -82,6 +82,7 @@ void drawSidebarItem(SidebarItem *node, Vector2 *pos, int depth, float width, fl
             const char *label = TextFormat("%s %s", arrow, itemNode->item.name);
 
             // Hitung panjang label jika ditampilkan
+            int iconWidth = MeasureText(arrow, GuiGetStyle(DEFAULT, TEXT_SIZE));
             int labelWidth = MeasureText(label, GuiGetStyle(DEFAULT, TEXT_SIZE)) + indent + DEFAULT_PADDING;
 
             // Selalu update scrollWidth dengan label node ini
@@ -89,21 +90,19 @@ void drawSidebarItem(SidebarItem *node, Vector2 *pos, int depth, float width, fl
                 *scrollWidth = labelWidth;
             }
 
-            Rectangle bounds = {
-                pos->x + indent,
-                pos->y,
-                width - indent,
-                height};
+            // Rectangle bounds = ;
 
             // Toggle expand/collapse
-            if (CheckCollisionPointRec(GetMousePosition(), bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){pos->x + indent, pos->y, iconWidth, height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if (itemNode->first_son != NULL) {
                     node->isExpanded = !node->isExpanded;
                 }
             }
 
             // Draw item
-            GuiLabel(bounds, label);
+            GuiPanel((Rectangle){pos->x + indent, pos->y, labelWidth - indent, height}, NULL);
+            GuiPanel((Rectangle){pos->x + indent, pos->y, iconWidth, height}, NULL);
+            GuiLabel((Rectangle){pos->x + indent, pos->y, labelWidth - indent, height}, label);
             pos->y += height;
 
             // Jika di-expand, rekursi untuk anak, dan hitung lebar anak-anak juga
