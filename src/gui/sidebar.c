@@ -102,7 +102,6 @@ void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, 
                 printf("Navigating to: %s\n", itemNode->item.name);
             }
 
-            GuiSetState(STATE_PRESSED);
             GuiPanel((Rectangle){pos->x + indent, pos->y, labelWidth - indent, height}, NULL);
             // GuiPanel((Rectangle){pos->x + indent, pos->y, iconWidth - TINY_PADDING, height}, NULL);
             GuiLabel((Rectangle){pos->x + indent, pos->y, labelWidth - indent, height}, label);
