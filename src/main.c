@@ -53,7 +53,7 @@ int main() {
     createNavbar(&navbar);
 
     Toolbar toolbar;
-    createToolbar(&toolbar);
+    createToolbar(&toolbar, &fileManager);
 
     Sidebar sidebar;
     createSidebar(&sidebar);

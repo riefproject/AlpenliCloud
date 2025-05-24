@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <time.h>
+#define _DIR ".dir/"
 #define ROOT ".dir/root"
 #define TRASH ".dir/trash"
 
@@ -113,14 +114,17 @@ Tree loadTree(Tree tree, char *path) {
 void createFile(FileManager *fileManager, ItemType type, char *name) {
     Item newItem, parentToSearch;
     char *path;
+    char *currentFullPath;
     Tree currentNode;
     time_t createdTime;
     FILE *newFile;
 
-    currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath, 0, ITEM_FOLDER, 0, 0, 0));
-    // printf("%s\n", fileManager->currentPath);
+    currentFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
+    currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(currentFullPath), currentFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+    // printf("\ncurrent path: %s\n", currentFullPath);
+    // printf("current name: %s\n", _getNameFromPath(currentFullPath));
     if (currentNode != NULL) {
-        path = TextFormat("%s/%s", fileManager->currentPath, name);
+        path = TextFormat("%s/%s", currentFullPath, name);
         createdTime = time(NULL);
         newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
         // printf("%s", path);

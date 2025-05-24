@@ -5,13 +5,15 @@
 #include "raylib.h"
 #include "item.h"
 #include "component.h"
+#include "file_manager.h"
 typedef struct Toolbar
 {
     NewButtonProperty newButtonProperty;
     Rectangle currentZeroPosition;
+    FileManager *fileManager; // Pointer to the FileManager to access file operations
 } Toolbar;
 
-void createToolbar(Toolbar *navbar);
+void createToolbar(Toolbar *navbar, FileManager *fileManager);
 
 void updateToolbar(Toolbar *navbar, Rectangle currentZeroPosition);
 
