@@ -24,6 +24,7 @@ typedef struct FileManager {
   LinkedList selectedItem; // linkedlist for selected item
 } FileManager;
 
+
 // HELPER PROTOTYPE: Line 130
 
 /*  Prosedur

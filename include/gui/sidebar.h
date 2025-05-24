@@ -21,7 +21,7 @@ typedef struct Sidebar {
 
     FileManager* fileManager;
     SidebarItem* sidebarRoot;
-
+    bool isSidebarClickable;
     Rectangle currentZeroPosition;
 } Sidebar;
 
@@ -33,7 +33,7 @@ void updateSidebar(Sidebar* sidebar, Rectangle currentZeroPosition, FileManager*
 
 void drawSidebar(Sidebar* sidebar);
 
-void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
+void drawSidebarItem(Sidebar* sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
 
 int getMaxChildLabelWidth(SidebarItem* node, int depth, int textSize);
 

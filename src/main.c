@@ -52,11 +52,12 @@ int main() {
     Navbar navbar;
     createNavbar(&navbar);
 
-    Toolbar toolbar;
-    createToolbar(&toolbar, &fileManager);
-
+    
     Sidebar sidebar;
     createSidebar(&sidebar);
+
+    Toolbar toolbar;
+    createToolbar(&toolbar, &fileManager, &sidebar);
 
     Body body;
     createBody(&body);

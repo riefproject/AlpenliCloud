@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "item.h"
 #include "macro.h"
+#include "sidebar.h"
 // #include "navbar.h"
 // #include "sidebar.h"
 // #include "titlebar.h"
@@ -31,6 +32,7 @@ typedef struct NewButtonProperty {
     bool itemCreated;
 
     bool disabled;
+    Sidebar *sidebar;
 } NewButtonProperty;
 
 void GuiNewButton(NewButtonProperty* buttonProperty);

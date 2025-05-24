@@ -5,9 +5,9 @@
 #include "gui/toolbar.h"
 #include "macro.h"
 #include "raygui.h"
-#include "file_manager.h"
+#include "gui/sidebar.h"
 
-void createToolbar(Toolbar *toolbar, FileManager *fileManager) {
+void createToolbar(Toolbar *toolbar, FileManager *fileManager, Sidebar *sidebar) {
 
     toolbar->newButtonProperty = (NewButtonProperty){
         .btnRect = {50, 50, 100, 24},
@@ -23,6 +23,7 @@ void createToolbar(Toolbar *toolbar, FileManager *fileManager) {
         .itemCreated = false,
         .inputEditMode = false,
         .disabled = false,
+        .sidebar = sidebar
     };
     toolbar->currentZeroPosition = (Rectangle){0};
     toolbar->fileManager = fileManager;

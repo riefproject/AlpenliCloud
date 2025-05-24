@@ -6,6 +6,7 @@
 #include "item.h"
 #include "component.h"
 #include "file_manager.h"
+#include "sidebar.h"
 typedef struct Toolbar
 {
     NewButtonProperty newButtonProperty;
@@ -13,7 +14,7 @@ typedef struct Toolbar
     FileManager *fileManager; // Pointer to the FileManager to access file operations
 } Toolbar;
 
-void createToolbar(Toolbar *navbar, FileManager *fileManager);
+void createToolbar(Toolbar *navbar, FileManager *fileManager, Sidebar *sidebar);
 
 void updateToolbar(Toolbar *navbar, Rectangle currentZeroPosition);
 
