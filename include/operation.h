@@ -2,6 +2,7 @@
 #define OPERATION_H
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 typedef enum OperationType {
     TYPE_CREATE,
@@ -13,9 +14,10 @@ typedef enum OperationType {
 } OperationType;
 
 typedef struct Operation {
-    char *from;
-    char *to;
+    char* from;
+    char* to;
     OperationType type;
+    bool isDir;
 } Operation;
 
 Operation createOperation(char* from, char* to, OperationType type);

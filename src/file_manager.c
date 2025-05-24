@@ -174,30 +174,13 @@ void deleteFile(FileManager* fileManager) {
             continue;
         }
 
-        char* fullPath = TextFormat("%s/%s", foundTree->item.path, foundTree->item.name);
-
-        if (foundTree->item.type == ITEM_FOLDER) {
-            if (RemoveItemsRecurse(fullPath) != 0) {
-                printf("Gagal menghapus folder %s\n", foundTree->item.name);
-            }
-            else {
-                printf("Folder %s berhasil dihapus\n", foundTree->item.name);
-            }
-        }
-        else {
-            if (remove(fullPath) != 0) {
-                printf("Gagal menghapus file %s\n", foundTree->item.name);
-            }
-            else {
-                printf("File %s berhasil dihapus\n", foundTree->item.name);
-            }
-        }
-
+        // Pindah ke trash, bukan hapus permanen
+        _moveToTrash(foundTree);
         temp = temp->next;
     }
 
-    // Clear selected items setelah delete
     clearSelectedFile(fileManager);
+    printf("File berhasil dipindah ke trash\n");
 }
 
 /* Rename/Update item name
@@ -231,7 +214,50 @@ void renameFile(FileManager* fileManager, char* filePath, char* newName) {
  *  IS:
  *  FS:
 ================================================================================*/
-void recoverFile(FileManager* fileManager) {}
+void recoverFile(FileManager* fileManager) {
+    if (fileManager->selectedItem.head == NULL) {
+        printf("Tidak ada file yang dipilih untuk di-recover\n");
+        return;
+    }
+
+    Node* temp = fileManager->selectedItem.head;
+    while (temp != NULL) {
+        Item* itemToRecover = (Item*)temp->data;
+
+        // Cek apakah item ada di trash
+        char* trashPath = TextFormat(".dir/trash/%s", itemToRecover->name);
+        if (!FileExists(trashPath) && !DirectoryExists(trashPath)) {
+            printf("File %s tidak ditemukan di trash\n", itemToRecover->name);
+            temp = temp->next;
+            continue;
+        }
+
+        // Kembalikan ke lokasi asli atau current path
+        char* recoverPath = TextFormat("%s/%s", fileManager->currentPath, itemToRecover->name);
+
+        // Kalau udah ada, buat nama unik
+        if (FileExists(recoverPath) || DirectoryExists(recoverPath)) {
+            if (itemToRecover->type == ITEM_FOLDER) {
+                recoverPath = _createDuplicatedFolderName(recoverPath, "(recovered)");
+            }
+            else {
+                recoverPath = _createDuplicatedFileName(recoverPath, "(recovered)");
+            }
+        }
+
+        // Move dari trash ke lokasi recovery
+        if (rename(trashPath, recoverPath) == 0) {
+            printf("File %s berhasil di-recover\n", itemToRecover->name);
+        }
+        else {
+            printf("Gagal me-recover file %s\n", itemToRecover->name);
+        }
+
+        temp = temp->next;
+    }
+
+    clearSelectedFile(fileManager);
+}
 
 /*  Prosedur
  *  IS:
@@ -481,12 +507,39 @@ char* _getNameFromPath(char* path) {
     return path; // kembalikan pathnya kalau gak ada slash (/) (ini berarti sudah nama file)
 };
 
-/* Prosedur helper untuk delete single item (untuk cut operation)
- *  IS: Item yang akan dihapus sudah ada di dalam queue SelectedFile
- *  FS: Item yang akan dihapus sudah tidak ada di dalam queue SelectedFile
- *      dan terhapus dari direktori
+/*  Prosedur
+ *  IS:
+ *  FS:
 ================================================================================*/
-void _deleteSingleItem(char* fullPath, ItemType type, char* name) {
+void _moveToTrash(Tree itemTree) {
+    char* trashDir = ".dir/trash";
+    if (!DirectoryExists(trashDir)) {
+        MakeDirectory(trashDir);
+    }
+
+    char* srcPath = TextFormat("%s/%s", itemTree->item.path, itemTree->item.name);
+    char* trashPath = TextFormat("%s/%s", trashDir, itemTree->item.name);
+
+    // Kalau sudah ada di trash, buat nama unik
+    if (FileExists(trashPath) || DirectoryExists(trashPath)) {
+        if (itemTree->item.type == ITEM_FOLDER) {
+            trashPath = _createDuplicatedFolderName(trashPath, "(1)");
+        }
+        else {
+            trashPath = _createDuplicatedFileName(trashPath, "(1)");
+        }
+    }
+
+    // Move ke trash
+    rename(srcPath, trashPath);
+}
+
+
+/*  Prosedur untuk hapus permanen (untuk undo operations)
+ *  IS:
+ *  FS:
+================================================================================*/
+void _deletePermanently(char* fullPath, ItemType type, char* name) {
     if (type == ITEM_FOLDER) {
         if (RemoveItemsRecurse(fullPath) != 0) {
             printf("Gagal menghapus folder %s\n", name);
@@ -497,6 +550,15 @@ void _deleteSingleItem(char* fullPath, ItemType type, char* name) {
             printf("Gagal menghapus file %s\n", name);
         }
     }
+}
+
+/*  Prosedur Fungsi helper untuk cut operation (hapus permanen)
+ *  IS:
+ *  FS:
+================================================================================*/
+void _deleteSingleItem(char* fullPath, ItemType type, char* name) {
+    // Cut operation = hapus permanen (tidak ke trash)
+    _deletePermanently(fullPath, type, name);
 }
 
 /*  Prosedur

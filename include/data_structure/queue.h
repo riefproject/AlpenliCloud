@@ -10,7 +10,7 @@
 #include "linked.h"
 #include "item.h"
 
-typedef struct Queue{
+typedef struct Queue {
   Node* front;
   Node* rear;
 } Queue;
@@ -27,8 +27,5 @@ infotype dequeue(Queue* queue);
 void destroy_queue(Queue* queue);
 // Function to print the queue
 void print_queue(Queue queue);
-
-
-
 
 #endif // QUEUE_H

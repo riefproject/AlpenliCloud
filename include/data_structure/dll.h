@@ -9,15 +9,13 @@
 
 #include <stdbool.h>
 
-struct DoublyLinkedList;
-struct SingleLinkedList;
-struct DLLNode;
-struct SLLNode;
+typedef struct SingleLinkedList;
+typedef struct DLLNode;
 
 typedef struct DLLNode {
     void* data;
-    struct DLLNode* next;
-    struct DLLNode* prev;
+    DLLNode* next;
+    DLLNode* prev;
 }DLLNode;
 
 typedef struct DoublyLinkedList {
