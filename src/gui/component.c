@@ -100,7 +100,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty) {
             buttonProperty->modalRect.width - 40,
             30};
 
-        if (GuiTextBoxCustom(inputBox, "Enter name...",
+        if (GuiTextBoxCustom(inputBox, NULL, "Enter name...",
                              buttonProperty->inputBuffer,
                              MAX_STRING_LENGTH,
                              &buttonProperty->inputEditMode,
@@ -181,22 +181,38 @@ bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bo
     return pressed;
 }
 
-bool GuiTextBoxCustom(Rectangle bounds, const char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled) {
+bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled) {
     bool pressedEnter = false;
 
     if (disabled)
         GuiDisable();
 
-    if (GuiTextBox(bounds, inputText, textSize, *editMode))
-        *editMode = !*editMode;
-
-    if (*editMode && IsKeyPressed(KEY_ENTER)) {
-        pressedEnter = true;
-        *editMode = false;
+    float textOffsetX = bounds.x + TINY_PADDING;
+    if (icon != NULL && icon[0] != '\0') {
+        GuiLabel((Rectangle){bounds.x + TINY_PADDING, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, icon);
+        textOffsetX += 24;
     }
 
-    if (!*editMode && inputText[0] == '\0') {
-        GuiLabel((Rectangle){bounds.x + TINY_PADDING, bounds.y + bounds.height / 2, bounds.width}, placeholder);
+    if (*editMode) {
+        if (GuiTextBox(bounds, inputText, textSize, true)) {
+            *editMode = false;
+        }
+
+        if (IsKeyPressed(KEY_ENTER)) {
+            pressedEnter = true;
+            *editMode = false;
+        }
+    } else {
+        DrawRectangleLinesEx(bounds, 1, Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), 0.6f));
+        if (inputText[0] == '\0') {
+            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, placeholder);
+        } else {
+            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, inputText);
+        }
+
+        if (CheckCollisionPointRec(GetMousePosition(), bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            *editMode = true;
+        }
     }
 
     if (disabled)

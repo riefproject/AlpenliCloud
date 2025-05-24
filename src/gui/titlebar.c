@@ -1,5 +1,6 @@
 #include "gui/titlebar.h"
 #include "raygui.h"
+#include "macro.h"
 
 #define RESIZE_BORDER 2
 #define MIN_WIDTH 300
@@ -132,7 +133,7 @@ void drawTitleBar(TitleBar *titleBar) {
     titleBar->exitWindow = GuiWindowBox((Rectangle){0, 0, titleBar->screenWidth, titleBar->screenHeight}, "#198# PORTABLE WINDOW");
 
     GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 2, 3, 18, 18}, "#56#")) {
+    if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 2 - TINY_PADDING, 3, 18, 18}, "#198#")) {
         if (IsWindowMaximized()) {
             RestoreWindow();
         } else {

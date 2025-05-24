@@ -51,19 +51,23 @@ void drawToolbar(Toolbar *toolbar) {
 
     GuiButtonCustom((Rectangle){x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
 
-    float rightStartX = x + width;
+    int rightStartx = x + width;
 
-    rightStartX -= 24;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#22#", "RENAME", true);
+    x += toolbar->newButtonProperty.btnRect.width + 130;
+    x += 24;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#18#", "PASTE", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#16#", "COPY", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#17#", "CUT", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", true);
+
+    rightStartx -= 24;
+    GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", true);
 
     GuiNewButton(&toolbar->newButtonProperty);
 

@@ -18,7 +18,7 @@ void createBody(Body *b) {
     body.panelScroll = (Vector2){0};
 
     body.focusedIndex = -1;
-    body.showCheckbox = false;
+    body.showCheckbox = true;
     body.selectedAll = false;
     body.previousSelectedAll = false;
     for (int i = 0; i < 100; i++) {
@@ -101,15 +101,7 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
             goTo(body->fileManager, subTree);
         }
         if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FILE) {
-            int length = strlen(item.path) + strlen(item.name) + 2;
-
-            char *executeableCommand = malloc(length);
-
-            snprintf(executeableCommand, length, "%s/%s", item.path, item.name);
-
-            windowsOpenWith(executeableCommand);
-
-            free(executeableCommand);
+            windowsOpenWith(item.path);
         }
     }
 
@@ -124,8 +116,12 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
             rowY + (rowHeight - 14) / 2,
             14, 14};
 
-        GuiCheckBox(checkBox, NULL, &item.selected);
-        if (item.selected) {
+        GuiCheckBox(checkBox, NULL, &subTree->item.selected);
+        if (subTree->item.selected) {
+            // insert linkedlist
+            // nama var tree current itemnya = subTree
+            insert_last(&body->fileManager->selectedItem, subTree);
+        } else {
         }
 
         colX += checkboxWidth;
@@ -137,7 +133,16 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
     DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[1];
 
-    DrawText(TextFormat("%d", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
+    if(item.size < KB_SIZE) {
+        DrawText(TextFormat("%d B", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
+    }else if(item.size < MB_SIZE) {
+        DrawText(TextFormat("%.2f KB", ((float)item.size / KB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+    } else if(item.size < GB_SIZE) {
+        DrawText(TextFormat("%.2f MB", ((float)item.size / MB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+    } else{
+        DrawText(TextFormat("%.2f GB", ((float)item.size / GB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+    }
+
     colX += colWidths[2];
 
     struct tm *local = localtime(&item.updated_at);
@@ -163,6 +168,19 @@ void drawTableHeader(Body *body, float x, float y, float colWidths[]) {
             y + (headerHeight - 14) / 2,
             14, 14};
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
+        if (body->selectedAll) {
+            // insert linkedlist
+            // nama var tree current itemnya = subTree
+            // Tree cursor = body->fileManager->treeCursor;
+            // cursor = cursor->first_son;
+            // while (cursor != NULL) {
+            //     insert_last(&body->fileManager->selectedItem, cursor);
+            //     cursor = cursor->next_brother;
+            // }
+
+        } else {
+            
+        }
         colX += 28;
     }
 

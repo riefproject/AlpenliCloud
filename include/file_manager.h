@@ -76,6 +76,8 @@ bool isDirectory(char* path);
 
 void windowsOpenWith(char* path);
 
+Tree getCurrentRoot(FileManager *fileManager);
+
 char* getCurrentPath(Tree tree);
 
 void goBack(FileManager* fileManager);

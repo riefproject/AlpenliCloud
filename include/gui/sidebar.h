@@ -1,22 +1,40 @@
 #ifndef SIDEBAR_H
 #define SIDEBAR_H
 
+#define BASE_SIDEBAR_PANEL_CONTENT_WIDTH 150
+
+#include "file_manager.h"
 #include "raylib.h"
 
-typedef struct Sidebar
-{
-    Rectangle panelRec;         // adalah ukuran sidebar
-    Rectangle panelContentRec;  // adalah ukuran isi sidebar
-    Rectangle panelView;        // adalah ukuran yang terlihat di sidebar (tinggi - tinggi scroll bawah dll)
-    Vector2 panelScroll;        // adalah jauhnya scroll 
+typedef struct SidebarItem {
+    Tree tree;
+    bool isExpanded;
+    struct TreeViewState *first_son;
+    struct TreeViewState *next_brother;
+} SidebarItem;
+
+typedef struct Sidebar {
+    Rectangle panelRec;        // adalah ukuran sidebar
+    Rectangle panelContentRec; // adalah ukuran isi sidebar
+    Rectangle panelView;       // adalah ukuran yang terlihat di sidebar (tinggi - tinggi scroll bawah dll)
+    Vector2 panelScroll;       // adalah jauhnya scroll
+
+    FileManager *fileManager;
+    SidebarItem *sidebarRoot;
 
     Rectangle currentZeroPosition;
 } Sidebar;
 
 void createSidebar(Sidebar *sidebar);
 
-void updateSidebar(Sidebar *sidebar, Rectangle currentZeroPosition);
+SidebarItem *crateSidebarItem(Tree tree);
+
+void updateSidebar(Sidebar *sidebar, Rectangle currentZeroPosition, FileManager *fileManager);
 
 void drawSidebar(Sidebar *sidebar);
+
+void drawSidebarItem(SidebarItem *node, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
+
+int getMaxChildLabelWidth(SidebarItem *node, int depth, int textSize);
 
 #endif

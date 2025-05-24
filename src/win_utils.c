@@ -2,6 +2,8 @@
 #include "win_utils.h"
 #include <stdio.h>
 #include <windows.h>
+#include <shlwapi.h>    
+#include <shellapi.h> 
 
 int RemoveItemsRecurse(const char *folderPath) {
     WIN32_FIND_DATAA findData;
@@ -42,31 +44,4 @@ int RemoveItemsRecurse(const char *folderPath) {
     }
 
     return 1;
-}
-
-void OpenWith(const char *path) {
-    char absolutePath[MAX_PATH];
-
-    if (_fullpath(absolutePath, path, MAX_PATH) == NULL) {
-        fprintf(stderr, "Gagal mendapatkan path absolut.\n");
-        return;
-    }
-
-    // cek
-    if (!PathFileExists(absolutePath)) {
-        fprintf(stderr, "File tidak ditemukan: %s\n", absolutePath);
-        return;
-    }
-
-    HINSTANCE result = ShellExecute(
-        NULL,
-        "openas", // "openas" = dialog Open With
-        absolutePath,
-        NULL,
-        NULL,
-        SW_SHOWNORMAL);
-
-    if ((int)result <= 32) {
-        printf(stderr, "Gagal membuka file dengan 'Open With'. Error code: %ld\n", (long)result);
-    }
 }

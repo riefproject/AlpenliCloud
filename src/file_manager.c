@@ -47,7 +47,7 @@ void initFileManager(FileManager *fileManager) {
     if (fileManager->root == NULL) {
         rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0, 0, 0);
         fileManager->root = create_node_tree(rootItem);
-        fileManager->currentPath = ROOT;
+        fileManager->currentPath = "root";
 
         fileManager->treeCursor = fileManager->root;
 
@@ -99,11 +99,11 @@ Tree loadTree(Tree tree, char *path) {
         }
 
         if (S_ISDIR(statbuf.st_mode)) {
-            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
+            Item data = createItem(ep->d_name, fullPath, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
             Tree newTree = insert_node(tree, data);
             loadTree(newTree, fullPath);
         } else if (S_ISREG(statbuf.st_mode)) {
-            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
+            Item data = createItem(ep->d_name, fullPath, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
             insert_node(tree, data);
         } else {
             printf("  (Tipe lain) Ditemukan: %s\n", fullPath);
@@ -189,8 +189,11 @@ Item searchFile(FileManager *fileManager, char *path) {
     Item item = {0};
     Item itemToSearch;
     Tree foundTree;
+
     itemToSearch = createItem(_getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
-    foundTree = searchTree(fileManager->root, item);
+
+    foundTree = searchTree(fileManager->root, itemToSearch);
+
     if (foundTree == NULL) {
         printf("File tidak ditemukan\n");
         return item;
@@ -470,7 +473,32 @@ char *_createDuplicatedFileName(char *filePath, char *suffix) {
 void windowsOpenWith(char *path) {
     printf("%s\n", path);
 
-    OpenWith(path);
+    char *command = "cmd /c start \"\"";
+    int length = strlen(command) + strlen(path) + 5;
+
+    char *executeableCommand = malloc(length);
+
+    printf("%d\n", length);
+
+    snprintf(executeableCommand, length, "%s \"%s\" /OPENAS", command, path);
+
+    printf("%s\n", executeableCommand);
+
+    system(executeableCommand);
+
+    free(executeableCommand);
+}
+
+Tree getCurrentRoot(FileManager *fileManager) {
+    if (fileManager == NULL || fileManager->treeCursor == NULL) {
+        return NULL;
+    }
+
+    Tree currentRoot = fileManager->treeCursor;
+    while (currentRoot->parent != NULL) {
+        currentRoot = currentRoot->parent;
+    }
+    return currentRoot;
 }
 
 char *getCurrentPath(Tree tree) {
@@ -509,7 +537,7 @@ void goTo(FileManager *fileManager, Tree tree) {
 
     char *newPath = getCurrentPath(tree);
     if (newPath) {
-        free(fileManager->currentPath);
+        // free(fileManager->currentPath);
         fileManager->currentPath = newPath;
     }
 

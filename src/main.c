@@ -61,6 +61,8 @@ int main() {
     Body body;
     createBody(&body);
 
+    
+
     while (!titleBar.exitWindow && !WindowShouldClose()) {
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
@@ -74,7 +76,7 @@ int main() {
 
         updateToolbar(&toolbar, currentZeroPosition);
 
-        updateSidebar(&sidebar, currentZeroPosition);
+        updateSidebar(&sidebar, currentZeroPosition, &fileManager);
 
         updateBody(&body, currentZeroPosition, &fileManager);
 
