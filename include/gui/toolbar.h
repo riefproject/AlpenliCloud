@@ -3,7 +3,10 @@
 
 #include <stdbool.h>
 #include "raylib.h"
-typedef struct Toolbar {
+#include "item.h"
+typedef struct Toolbar
+{
+    NewButtonProperty newButtonProperty;
     Rectangle currentZeroPosition;
 } Toolbar;
 

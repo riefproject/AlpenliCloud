@@ -126,45 +126,55 @@ Tree loadTree(Tree tree, char *path)
     return 0;
 }
 
-void createFile(FileManager* fileManager, ItemType type, char* name) {
-  Item newItem, parentToSearch;
-  char* path;
-  Tree currentNode;
-  time_t createdTime;
-  FILE* newFile;
+void createFile(FileManager *fileManager, ItemType type, char *name)
+{
+    Item newItem, parentToSearch;
+    char *path;
+    Tree currentNode;
+    time_t createdTime;
+    FILE *newFile;
 
-  currentNode = searchTree(fileManager->root,createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath,0,ITEM_FOLDER,0,0,0));
-  // printf("%s\n", fileManager->currentPath);
-  if(currentNode != NULL){
-    path = TextFormat("%s/%s", fileManager->currentPath, name);
-    createdTime = time(NULL);
-    newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
-    // printf("%s", path);
-    if(type == ITEM_FOLDER){
-      if(DirectoryExists(path)){
-        path = _createDuplicatedFolderName(path, "(1)");
-      } 
-      if(MakeDirectory(path) != 0){
-        printf("Gagal membuat folder\n");
-        return;
-      }
-    }else if (type == ITEM_FILE){
-      if(FileExists(path)){
-        path = _createDuplicatedFileName(path, "(1)");
-      } 
-      newFile = fopen(path, "w");
-      if(newFile == NULL){
-        printf("Gagal membuat file %s\n", name);
-        return;
-      }
-      fclose(newFile);
+    currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath, 0, ITEM_FOLDER, 0, 0, 0));
+    // printf("%s\n", fileManager->currentPath);
+    if (currentNode != NULL)
+    {
+        path = TextFormat("%s/%s", fileManager->currentPath, name);
+        createdTime = time(NULL);
+        newItem = createItem(name, path, 0, type, createdTime, createdTime, -1);
+        // printf("%s", path);
+        if (type == ITEM_FOLDER)
+        {
+            if (DirectoryExists(path))
+            {
+                path = _createDuplicatedFolderName(path, "(1)");
+            }
+            if (MakeDirectory(path) != 0)
+            {
+                printf("Gagal membuat folder\n");
+                return;
+            }
+        }
+        else if (type == ITEM_FILE)
+        {
+            if (FileExists(path))
+            {
+                path = _createDuplicatedFileName(path, "(1)");
+            }
+            newFile = fopen(path, "w");
+            if (newFile == NULL)
+            {
+                printf("Gagal membuat file %s\n", name);
+                return;
+            }
+            fclose(newFile);
+        }
+
+        insert_node(currentNode, newItem);
     }
-
-    insert_node(currentNode, newItem);
-  }else{
-    printf("Direktori parent tidak ditemukan");
-  }
-
+    else
+    {
+        printf("Direktori parent tidak ditemukan");
+    }
 }
 
 void deleteFile(FileManager *fileManager) {}
@@ -414,11 +424,11 @@ char *getCurrentPath(Tree tree)
 
         if (tree->parent == NULL)
         {
-            snprintf(newPath, newLen, "%s%s", name, path); 
+            snprintf(newPath, newLen, "%s%s", name, path);
         }
         else
         {
-            snprintf(newPath, newLen, "/%s%s", name, path); 
+            snprintf(newPath, newLen, "/%s%s", name, path);
         }
         free(path);
         path = newPath;
@@ -453,4 +463,37 @@ void goBack(FileManager *fileManager)
     Tree parent = fileManager->treeCursor->parent;
     if (parent)
         goTo(fileManager, parent);
+}
+
+void sort_children(Tree *parent)
+{
+    if (!parent || !(*parent) || !(*parent)->first_son || !(*parent)->first_son->next_brother)
+        return;
+
+    Tree head = (*parent)->first_son;
+    Tree sorted = NULL;
+
+    while (head)
+    {
+        Tree current = head;
+        head = head->next_brother;
+
+        if (!sorted || current->item.type < sorted->item.type)
+        {
+            current->next_brother = sorted;
+            sorted = current;
+        }
+        else
+        {
+            Tree temp = sorted;
+            while (temp->next_brother && current->item.type >= temp->next_brother->item.type)
+            {
+                temp = temp->next_brother;
+            }
+            current->next_brother = temp->next_brother;
+            temp->next_brother = current;
+        }
+    }
+
+    (*parent)->first_son = sorted;
 }

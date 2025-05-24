@@ -22,6 +22,7 @@ void createNavbar(Navbar *navbar)
 void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager)
 {
     navbar->fileManager = fileManager;
+
     navbar->currentZeroPosition = currentZeroPosition;
 }
 
@@ -49,8 +50,8 @@ void drawNavbar(Navbar *navbar)
     if (GuiButtonCustom((Rectangle){x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize}, "#117#", "BACK", false))
         goBack(navbar->fileManager);
 
-    GuiTextBoxCustom((Rectangle){pathBoxStartX, y, pathBoxWidth, buttonSize}, "#1#", navbar->textboxPath, 1024, &navbar->textboxPatheditMode, false);
-    GuiTextBoxCustom((Rectangle){searchBoxX, y, searchBoxWidth, buttonSize}, "#42# Search Item", navbar->textboxSearch, 1024, &navbar->textboxSearcheditMode, false);
+    GuiTextBoxCustom((Rectangle){pathBoxStartX, y, pathBoxWidth, buttonSize}, "#1#", navbar->textboxPath, MAX_STRING_LENGTH, &navbar->textboxPatheditMode, false);
+    GuiTextBoxCustom((Rectangle){searchBoxX, y, searchBoxWidth, buttonSize}, "#42# Search Item", navbar->textboxSearch, MAX_STRING_LENGTH, &navbar->textboxSearcheditMode, false);
 
     GuiLine((Rectangle){x, y + buttonSize, totalWidth, 10}, NULL);
 }

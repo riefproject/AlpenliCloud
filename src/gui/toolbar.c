@@ -8,6 +8,21 @@
 
 void createToolbar(Toolbar *toolbar)
 {
+
+    toolbar->newButtonProperty = (NewButtonProperty){
+        .btnRect = {50, 50, 100, 24},
+        .dropdownRect = {50, 82, 100, 60},
+        .modalRect = {300, 200, 300, 150},
+        .placeholder = "#65# New",
+        .tooltip = "Add a file or folder",
+        .inputBuffer = "",
+        .dropdownIndex = 0,
+        .dropdownActive = false,
+        .selectedType = ITEM_FILE,
+        .showModal = false,
+        .inputEditMode = false,
+        .disabled = false,
+    };
     toolbar->currentZeroPosition = (Rectangle){0};
 }
 
@@ -15,6 +30,21 @@ void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition)
 {
     toolbar->currentZeroPosition = currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
+
+
+    toolbar->newButtonProperty.btnRect.x = toolbar->currentZeroPosition.x;
+    toolbar->newButtonProperty.btnRect.y = toolbar->currentZeroPosition.y;
+
+    toolbar->newButtonProperty.dropdownRect.x = toolbar->newButtonProperty.btnRect.x;
+    toolbar->newButtonProperty.dropdownRect.y = toolbar->newButtonProperty.btnRect.y + toolbar->newButtonProperty.btnRect.height + 2;
+
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+    int modalWidth = toolbar->newButtonProperty.modalRect.width;
+    int modalHeight = toolbar->newButtonProperty.modalRect.height;
+
+    toolbar->newButtonProperty.modalRect.x = (screenWidth - modalWidth) / 2;
+    toolbar->newButtonProperty.modalRect.y = (screenHeight - modalHeight) / 2;
 }
 
 void drawToolbar(Toolbar *toolbar)
@@ -23,26 +53,23 @@ void drawToolbar(Toolbar *toolbar)
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
 
-    
-    GuiButtonCustom((Rectangle){x, y, 84, 24}, "#65# NEW", "CREATE NEW ITEM", false);
+    GuiButtonCustom((Rectangle){x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
 
-    
-    GuiButtonCustom((Rectangle){x + 84 + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
-
-    
     float rightStartX = x + width;
 
-    rightStartX -= 24; 
+    rightStartX -= 24;
     GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#22#", "RENAME", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING; 
+    rightStartX -= 24 + DEFAULT_PADDING;
     GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#18#", "PASTE", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING; 
+    rightStartX -= 24 + DEFAULT_PADDING;
     GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#16#", "COPY", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING; 
+    rightStartX -= 24 + DEFAULT_PADDING;
     GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#17#", "CUT", true);
+
+    GuiNewButton(&toolbar->newButtonProperty);
 
     GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
 }

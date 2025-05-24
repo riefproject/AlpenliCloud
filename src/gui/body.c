@@ -53,6 +53,9 @@ void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileMana
 void drawBody(Body *body)
 {
     Tree cursor = body->fileManager->treeCursor;
+
+    sort_children(&cursor);
+    
     cursor = cursor->first_son;
 
     float headerHeight = 30;

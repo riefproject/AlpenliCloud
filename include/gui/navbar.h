@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include "raylib.h"
 #include "file_manager.h"
+#include "macro.h"
 typedef struct Navbar {
     bool textboxPatheditMode;
-    char textboxPath[1024];
+    char textboxPath[MAX_STRING_LENGTH];
 
     bool textboxSearcheditMode;
-    char textboxSearch[1024];
+    char textboxSearch[MAX_STRING_LENGTH];
 
     Rectangle currentZeroPosition;
 

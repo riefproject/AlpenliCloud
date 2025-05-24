@@ -81,4 +81,6 @@ void goBack(FileManager *fileManager);
 
 void goTo(FileManager *FileManager, Tree tree);
 
+void sort_children(Tree *parent);
+
 #endif // !FILE_MANAGER_H
