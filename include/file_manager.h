@@ -162,6 +162,7 @@ void _copyFileContent(char* srcPath, char* destPath);
 void _copyFolderRecursive(char* srcPath, char* destPath);
 void _removeFromTrash(FileManager* fileManager, char* itemName);
 void _addBackToTree(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
+void remove_node(Tree* root, Tree nodeToRemove);
 // Mengembalikan nama file dari path lengkap
 char* _getNameFromPath(char* path);
 

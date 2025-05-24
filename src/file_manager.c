@@ -179,6 +179,7 @@ void deleteFile(FileManager* fileManager) {
         }
 
         _moveToTrash(fileManager, foundTree);
+        // printf("File berhasil dipindah ke trash\n");
         temp = temp->next;
     }
 
@@ -259,7 +260,7 @@ void recoverFile(FileManager* fileManager) {
         }
 
         // Recover ke original path atau current path
-        char* recoverPath = TextFormat("%s/%s", fileManager->currentPath, foundTrashItem->item.name);
+        char* recoverPath = TextFormat("%s/%s", foundTrashItem->originalPath, foundTrashItem->item.name);
 
         // Handle nama duplikat
         if (FileExists(recoverPath) || DirectoryExists(recoverPath)) {
@@ -406,7 +407,7 @@ void pasteFile(FileManager* fileManager) {
             _copyFileContent(originPath, newPath);
         }
 
-        // Insert item baru ke tree di lokasi tujuan
+        // TAMBAHKAN: Insert item baru ke tree di lokasi tujuan
         Tree currentNode = searchTree(fileManager->root,
             createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
 
@@ -434,7 +435,6 @@ void pasteFile(FileManager* fileManager) {
     }
     printf("Paste berhasil!\n");
 }
-
 // === SELECTING ITEM
 
 /*  Prosedur
@@ -442,6 +442,18 @@ void pasteFile(FileManager* fileManager) {
  *  FS:
 ================================================================================*/
 void selectFile(FileManager* fileManager, Item item) {
+    Node* temp = fileManager->selectedItem.head;
+    while (temp != NULL) {
+        Item* existingItem = (Item*)temp->data;
+        if (strcmp(existingItem->path, item.path) == 0 &&
+            strcmp(existingItem->name, item.name) == 0) {
+            // Item sudah ada, tidak perlu ditambahkan lagi
+            return;
+        }
+        temp = temp->next;
+    }
+
+    // Item belum ada, tambahkan ke list
     if (fileManager->selectedItem.head == NULL) {
         fileManager->selectedItem.head = (Node*)malloc(sizeof(Node));
         fileManager->selectedItem.head->data = malloc(sizeof(Item));
@@ -449,7 +461,7 @@ void selectFile(FileManager* fileManager, Item item) {
         fileManager->selectedItem.head->next = NULL;
     }
     else {
-        Node* temp = fileManager->selectedItem.head;
+        temp = fileManager->selectedItem.head;
         while (temp->next != NULL) {
             temp = temp->next;
         }
@@ -728,7 +740,7 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
     trashItem->originalPath = strdup(itemTree->item.path);
     trashItem->deletedTime = time(NULL);
 
-    char* srcPath = TextFormat("%s/%s", itemTree->item.path, itemTree->item.name);
+    char* srcPath = itemTree->item.path;
     char* trashPath = TextFormat("%s/%s", trashDir, itemTree->item.name);
 
     // Handle nama duplikat di trash
@@ -744,7 +756,9 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
     trashItem->trashPath = strdup(trashPath);
 
     // Move ke trash secara fisik
-    rename(srcPath, trashPath);
+    if (rename(srcPath, trashPath) != 0) {
+        printf("Gagal memindahkan %s ke trash\ntrashPath:%s\nsrchPath:%s\n", itemTree->item.name, trashPath, srcPath);
+    }
 
     // Tambahkan ke LinkedList trash (bukan Tree)
     Node* newNode = (Node*)malloc(sizeof(Node));
@@ -752,7 +766,7 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
     newNode->next = fileManager->trash.head;
     fileManager->trash.head = newNode;
 
-    // ✅ Hapus dari tree utama
+    // Hapus dari tree utama
     remove_node(&(fileManager->root), itemTree);
 }
 

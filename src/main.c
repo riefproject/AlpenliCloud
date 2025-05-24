@@ -31,6 +31,7 @@ int main() {
 
     initFileManager(&fileManager);
 
+
     // printTree((fileManager.treeCursor), 0);
 
     // return 0;
@@ -52,11 +53,12 @@ int main() {
     Navbar navbar;
     createNavbar(&navbar);
 
-    Toolbar toolbar;
-    createToolbar(&toolbar, &fileManager);
-
+    
     Sidebar sidebar;
     createSidebar(&sidebar);
+
+    Toolbar toolbar;
+    createToolbar(&toolbar, &fileManager, &sidebar);
 
     Body body;
     createBody(&body);

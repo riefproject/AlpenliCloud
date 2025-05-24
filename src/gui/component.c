@@ -6,6 +6,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "gui/sidebar.h"
+
 
 void GuiNewButton(NewButtonProperty* buttonProperty) {
     bool itemCreated = false;
@@ -21,6 +23,7 @@ void GuiNewButton(NewButtonProperty* buttonProperty) {
     }
 
     if (buttonProperty->dropdownActive) {
+        buttonProperty->sidebar->isSidebarClickable = false;
         // Ukuran tombol (tetap seperti btnRect)
         float btnWidth = buttonProperty->btnRect.width + 50;
         float btnHeight = buttonProperty->btnRect.height;
@@ -75,6 +78,7 @@ void GuiNewButton(NewButtonProperty* buttonProperty) {
             !CheckCollisionPointRec(mouse, dropdownBg) &&
             !CheckCollisionPointRec(mouse, buttonProperty->btnRect)) {
             buttonProperty->dropdownActive = false;
+
         }
     }
 
@@ -109,6 +113,7 @@ void GuiNewButton(NewButtonProperty* buttonProperty) {
             if (strcmp(buttonProperty->inputBuffer, "") != 0) {
                 itemCreated = true;
                 buttonProperty->showModal = false;
+                buttonProperty->sidebar->isSidebarClickable = true;
                 buttonProperty->inputEditMode = false;
             }
         }
@@ -130,12 +135,14 @@ void GuiNewButton(NewButtonProperty* buttonProperty) {
             itemCreated = true;
             buttonProperty->itemCreated = true;
             buttonProperty->showModal = false;
+            buttonProperty->sidebar->isSidebarClickable = true;
             buttonProperty->inputEditMode = false;
         }
         
         if (GuiButton(btnCancel, "Cancel") || quit) {
             buttonProperty->itemCreated = false;
             buttonProperty->showModal = false;
+            buttonProperty->sidebar->isSidebarClickable = true;
             buttonProperty->inputEditMode = false;
             strcpy(buttonProperty->inputBuffer, "");
         }

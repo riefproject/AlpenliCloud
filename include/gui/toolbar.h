@@ -6,6 +6,7 @@
 #include "item.h"
 #include "component.h"
 #include "file_manager.h"
+#include "sidebar.h"
 typedef struct Toolbar {
     NewButtonProperty newButtonProperty;
     Rectangle currentZeroPosition;
@@ -16,7 +17,7 @@ typedef struct Toolbar {
     bool isButtonPasteActive;
 } Toolbar;
 
-void createToolbar(Toolbar* navbar, FileManager* fileManager);
+void createToolbar(Toolbar* navbar, FileManager* fileManager, Sidebar* sidebar);
 
 void updateToolbar(Toolbar* navbar, Rectangle currentZeroPosition);
 
