@@ -1,13 +1,12 @@
-#include <string.h>
 #include <stdbool.h>
+#include <string.h>
 
-#include "macro.h"
 #include "gui/component.h"
 #include "gui/toolbar.h"
+#include "macro.h"
 #include "raygui.h"
 
-void createToolbar(Toolbar *toolbar)
-{
+void createToolbar(Toolbar *toolbar) {
 
     toolbar->newButtonProperty = (NewButtonProperty){
         .btnRect = {50, 50, 100, 24},
@@ -26,11 +25,9 @@ void createToolbar(Toolbar *toolbar)
     toolbar->currentZeroPosition = (Rectangle){0};
 }
 
-void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition)
-{
+void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
     toolbar->currentZeroPosition = currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
-
 
     toolbar->newButtonProperty.btnRect.x = toolbar->currentZeroPosition.x;
     toolbar->newButtonProperty.btnRect.y = toolbar->currentZeroPosition.y;
@@ -47,27 +44,30 @@ void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition)
     toolbar->newButtonProperty.modalRect.y = (screenHeight - modalHeight) / 2;
 }
 
-void drawToolbar(Toolbar *toolbar)
-{
+void drawToolbar(Toolbar *toolbar) {
     float x = toolbar->currentZeroPosition.x;
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
 
     GuiButtonCustom((Rectangle){x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
 
-    float rightStartX = x + width;
+    int rightStartx = x + width;
 
-    rightStartX -= 24;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#22#", "RENAME", true);
+    x += toolbar->newButtonProperty.btnRect.width + 130;
+    x += 24;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#18#", "PASTE", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#16#", "COPY", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", true);
 
-    rightStartX -= 24 + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){rightStartX, y, 24, 24}, "#17#", "CUT", true);
+    x += 24 + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", true);
+
+    rightStartx -= 24;
+    GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", true);
 
     GuiNewButton(&toolbar->newButtonProperty);
 

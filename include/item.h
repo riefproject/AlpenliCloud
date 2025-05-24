@@ -26,9 +26,9 @@ typedef struct TrashItem{
 
 // OPERASI
 Item createItem(char *name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
+
 TrashItem createTrashItem(Item item, char* origin);
 // Getter
-
 
 // Setter
 

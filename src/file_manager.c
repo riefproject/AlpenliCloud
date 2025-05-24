@@ -1,21 +1,21 @@
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 #include <sys/stat.h>
 
 #include "file_action.h"
 #include "file_manager.h"
-#include "win_utils.h"
-#include "stack.h"
-#include "queue.h"
-#include "nbtree.h"
-#include "utils.h"
 #include "item.h"
-#include <time.h>
+#include "nbtree.h"
+#include "queue.h"
 #include "raylib.h"
+#include "stack.h"
+#include "utils.h"
+#include "win_utils.h"
 #include <string.h>
 #include "operation.h"
 
+#include <time.h>
 #define ROOT ".dir/root"
 #define TRASH ".dir/trash"
 
@@ -28,7 +28,7 @@ bool isCopy = 0;
   Queue selectedItem = ?;     ==> NULL;
   Queue currentPath  = ?;     ==> NULL;
 */
-void createFileManager(FileManager* fileManager) {
+void createFileManager(FileManager *fileManager) {
     create_tree(&(fileManager->root));
     create_tree(&(fileManager->rootTrash));
     create_stack(&(fileManager->undo));
@@ -51,7 +51,7 @@ void initFileManager(FileManager* fileManager) {
     if (fileManager->root == NULL) {
         rootItem = createItem("root", ROOT, 0, ITEM_FOLDER, 0, 0, 0);
         fileManager->root = create_node_tree(rootItem);
-        fileManager->currentPath = ROOT;
+        fileManager->currentPath = "root";
 
         fileManager->treeCursor = fileManager->root;
 
@@ -79,7 +79,7 @@ Tree loadTree(Tree tree, char* path) {
         if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
             continue;
 
-        char* fullPath = malloc(strlen(path) + strlen(ep->d_name) + 2);
+        char *fullPath = malloc(strlen(path) + strlen(ep->d_name) + 2);
         sprintf(fullPath, "%s/%s", path, ep->d_name);
 
         if (stat(fullPath, &statbuf) == -1) {
@@ -88,15 +88,13 @@ Tree loadTree(Tree tree, char* path) {
         }
 
         if (S_ISDIR(statbuf.st_mode)) {
-            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
+            Item data = createItem(ep->d_name, fullPath, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
             Tree newTree = insert_node(tree, data);
             loadTree(newTree, fullPath);
-        }
-        else if (S_ISREG(statbuf.st_mode)) {
-            Item data = createItem(ep->d_name, path, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
+        } else if (S_ISREG(statbuf.st_mode)) {
+            Item data = createItem(ep->d_name, fullPath, statbuf.st_size, ITEM_FILE, statbuf.st_ctime, statbuf.st_mtime, 0);
             insert_node(tree, data);
-        }
-        else {
+        } else {
             printf("  (Tipe lain) Ditemukan: %s\n", fullPath);
         }
 
@@ -115,10 +113,10 @@ Tree loadTree(Tree tree, char* path) {
 ================================================================================*/
 void createFile(FileManager* fileManager, ItemType type, char* name) {
     Item newItem, parentToSearch;
-    char* path;
+    char *path;
     Tree currentNode;
     time_t createdTime;
-    FILE* newFile;
+    FILE *newFile;
 
     currentNode = searchTree(fileManager->root, createItem(_getNameFromPath(fileManager->currentPath), fileManager->currentPath, 0, ITEM_FOLDER, 0, 0, 0));
     // printf("%s\n", fileManager->currentPath);
@@ -135,8 +133,7 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
                 printf("Gagal membuat folder\n");
                 return;
             }
-        }
-        else if (type == ITEM_FILE) {
+        } else if (type == ITEM_FILE) {
             if (FileExists(path)) {
                 path = _createDuplicatedFileName(path, "(1)");
             }
@@ -149,11 +146,9 @@ void createFile(FileManager* fileManager, ItemType type, char* name) {
         }
 
         insert_node(currentNode, newItem);
-    }
-    else {
+    } else {
         printf("Direktori parent tidak ditemukan");
     }
-
 }
 
 /*
@@ -279,8 +274,11 @@ Item searchFile(FileManager* fileManager, char* path) {
     Item item = { 0 };
     Item itemToSearch;
     Tree foundTree;
+
     itemToSearch = createItem(_getNameFromPath(path), path, 0, ITEM_FILE, 0, 0, 0);
-    foundTree = searchTree(fileManager->root, item);
+
+    foundTree = searchTree(fileManager->root, itemToSearch);
+
     if (foundTree == NULL) {
         printf("File tidak ditemukan\n");
         return item;
@@ -304,9 +302,9 @@ void copyFile(FileManager* fileManager) {
     // 6. tampilkan pesan sukses
     if (fileManager->copied.front)
         fileManager->copied.front = NULL;
-    Node* temp = fileManager->selectedItem.head;
+    Node *temp = fileManager->selectedItem.head;
     while (temp != NULL) {
-        Item* itemToCopy = (Item*)temp->data;
+        Item *itemToCopy = (Item *)temp->data;
         enqueue(&(fileManager->copied), itemToCopy);
         temp = temp->next;
     }
@@ -326,9 +324,9 @@ void copyFile(FileManager* fileManager) {
 void cutFile(FileManager* fileManager) {
     if (fileManager->copied.front)
         fileManager->copied.front = NULL;
-    Node* temp = fileManager->selectedItem.head;
+    Node *temp = fileManager->selectedItem.head;
     while (temp != NULL) {
-        Item* itemToCopy = (Item*)temp->data;
+        Item *itemToCopy = (Item *)temp->data;
         enqueue(&(fileManager->copied), itemToCopy);
         temp = temp->next;
     }
@@ -353,7 +351,7 @@ void pasteFile(FileManager* fileManager) {
 
     Node* temp = fileManager->temp.front;
     while (temp != NULL) {
-        Item* itemToPaste = (Item*)temp->data;
+        Item *itemToPaste = (Item *)temp->data;
         Tree foundTree = searchTree(fileManager->root, *itemToPaste);
         if (foundTree == NULL) {
             printf("File tidak ditemukan\n");
@@ -399,19 +397,18 @@ void pasteFile(FileManager* fileManager) {
 ================================================================================*/
 void selectFile(FileManager* fileManager, Item item) {
     if (fileManager->selectedItem.head == NULL) {
-        fileManager->selectedItem.head = (Node*)malloc(sizeof(Node));
+        fileManager->selectedItem.head = (Node *)malloc(sizeof(Node));
         fileManager->selectedItem.head->data = malloc(sizeof(Item));
-        *(Item*)fileManager->selectedItem.head->data = item;
+        *(Item *)fileManager->selectedItem.head->data = item;
         fileManager->selectedItem.head->next = NULL;
-    }
-    else {
-        Node* temp = fileManager->selectedItem.head;
+    } else {
+        Node *temp = fileManager->selectedItem.head;
         while (temp->next != NULL) {
             temp = temp->next;
         }
-        temp->next = (Node*)malloc(sizeof(Node));
+        temp->next = (Node *)malloc(sizeof(Node));
         temp->next->data = malloc(sizeof(Item));
-        *(Item*)temp->next->data = item;
+        *(Item *)temp->next->data = item;
         temp->next->next = NULL;
     }
 }
@@ -423,7 +420,7 @@ void selectFile(FileManager* fileManager, Item item) {
 void clearSelectedFile(FileManager* fileManager) {
     Node* temp = fileManager->selectedItem.head;
     while (temp != NULL) {
-        Node* next = temp->next;
+        Node *next = temp->next;
         free(temp->data);
         free(temp);
         temp = next;
@@ -440,12 +437,11 @@ void deselectFile(FileManager* fileManager, Item item) {
     Node* prev = NULL;
 
     while (temp != NULL) {
-        Item data = *(Item*)temp->data;
+        Item data = *(Item *)temp->data;
         if (data.path == item.path && data.name == item.name) {
             if (prev == NULL) {
                 fileManager->selectedItem.head = temp->next;
-            }
-            else {
+            } else {
                 prev->next = temp->next;
             }
             free(temp->data);
@@ -677,18 +673,17 @@ char* _createDuplicatedFolderName(char* filePath, char* suffix) {
 ================================================================================*/
 char* _createDuplicatedFileName(char* filePath, char* suffix) {
     size_t len;
-    char* extention = strrchr(filePath, '.');
+    char *extention = strrchr(filePath, '.');
     if (extention) {
         len = extention - filePath;
-    }
-    else {
+    } else {
         len = strlen(filePath);
     }
-    char* nameOnly = (char*)malloc(len + 1);
+    char *nameOnly = (char *)malloc(len + 1);
     strncpy(nameOnly, filePath, len);
     nameOnly[len] = '\0';
 
-    char* newPath = TextFormat("%s%s%s", nameOnly, suffix, extention);
+    char *newPath = TextFormat("%s%s%s", nameOnly, suffix, extention);
     if (FileExists(newPath)) {
         newPath = _createDuplicatedFileName(newPath, suffix);
     }
@@ -702,10 +697,10 @@ char* _createDuplicatedFileName(char* filePath, char* suffix) {
 void windowsOpenWith(char* path) {
     printf("%s\n", path);
 
-    char* command = "cmd /c start \"\"";
+    char *command = "cmd /c start \"\"";
     int length = strlen(command) + strlen(path) + 5;
 
-    char* executeableCommand = malloc(length);
+    char *executeableCommand = malloc(length);
 
     printf("%d\n", length);
 
@@ -722,16 +717,28 @@ void windowsOpenWith(char* path) {
  *  IS:
  *  FS:
 ================================================================================*/
-char* getCurrentPath(Tree tree) {
-    char* path = strdup("");
+Tree getCurrentRoot(FileManager *fileManager) {
+    if (fileManager == NULL || fileManager->treeCursor == NULL) {
+        return NULL;
+    }
+
+    Tree currentRoot = fileManager->treeCursor;
+    while (currentRoot->parent != NULL) {
+        currentRoot = currentRoot->parent;
+    }
+    return currentRoot;
+}
+
+char *getCurrentPath(Tree tree) {
+    char *path = strdup("");
     if (!path)
         return NULL;
 
     while (tree != NULL) {
-        char* name = tree->item.name;
+        char *name = tree->item.name;
         size_t newLen = strlen(name) + strlen(path) + 2;
 
-        char* newPath = malloc(newLen);
+        char *newPath = malloc(newLen);
         if (!newPath) {
             free(path);
             return NULL;
@@ -739,8 +746,7 @@ char* getCurrentPath(Tree tree) {
 
         if (tree->parent == NULL) {
             snprintf(newPath, newLen, "%s%s", name, path);
-        }
-        else {
+        } else {
             snprintf(newPath, newLen, "/%s%s", name, path);
         }
         free(path);
@@ -761,7 +767,7 @@ void goTo(FileManager* fileManager, Tree tree) {
 
     fileManager->treeCursor = tree;
 
-    char* newPath = getCurrentPath(tree);
+    char *newPath = getCurrentPath(tree);
     if (newPath) {
         // free(fileManager->currentPath);
         fileManager->currentPath = newPath;
@@ -795,15 +801,18 @@ void sort_children(Tree* parent) {
     Tree sorted = NULL;
 
     while (head) {
+    while (head) {
         Tree current = head;
         head = head->next_brother;
 
+        if (!sorted || current->item.type < sorted->item.type) {
         if (!sorted || current->item.type < sorted->item.type) {
             current->next_brother = sorted;
             sorted = current;
         }
         else {
             Tree temp = sorted;
+            while (temp->next_brother && current->item.type >= temp->next_brother->item.type) {
             while (temp->next_brother && current->item.type >= temp->next_brother->item.type) {
                 temp = temp->next_brother;
             }

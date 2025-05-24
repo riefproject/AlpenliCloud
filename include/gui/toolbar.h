@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "raylib.h"
 #include "item.h"
+#include "component.h"
 typedef struct Toolbar
 {
     NewButtonProperty newButtonProperty;

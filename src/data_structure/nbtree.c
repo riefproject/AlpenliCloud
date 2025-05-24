@@ -40,20 +40,28 @@ Tree insert_node(Tree parent, treeInfotype data) {
   return child;
 }
 
-Tree searchTree(Tree root, treeInfotype item) {
-  // Kalau tree kosoong, return null
-  if (root == NULL)
+Tree searchTree(Tree root, treeInfotype item)
+{
+    if(root == NULL) return NULL;
+    Tree current = root;
+
+    while (current != NULL) {
+        if (
+            strcmp(current->item.name, item.name) == 0 &&
+            strcmp(current->item.path, item.path) == 0) {
+            return current;
+        }
+        current = current->next_brother;
+    }
+
+    current = root;
+    while (current != NULL) {
+        Tree found = searchTree(current->first_son, item);
+        if (found != NULL) return found;
+        current = current->next_brother;
+    }
+
     return NULL;
-  // kalau root sama dengan item yang dicari, return root
-  if (strcmp(root->item.name, item.name) == 0 && strcmp(root->item.path, item.path) == 0)
-    return root;
-  // cari di first_son
-  Tree found = searchTree(root->first_son, item);
-  // kalau ketemu, return found
-  if (found != NULL)
-    return found;
-  // cari di next_brother
-  return searchTree(root->next_brother, item);
 }
 
 // Fungsi bantu untuk mencetak indentasi

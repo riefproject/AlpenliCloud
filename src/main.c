@@ -1,20 +1,19 @@
 #define RAYGUI_IMPLEMENTATION
 
-#include <stdio.h>
-#include <dirent.h>
-#include <sys/stat.h>
+#include "macro.h"
 #include "raygui.h"
 #include "raylib.h"
-#include "macro.h"
+#include <dirent.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
-#include "gui/titlebar.h"
-#include "gui/navbar.h"
-#include "gui/toolbar.h"
-#include "gui/sidebar.h"
-#include "gui/body.h"
 #include "file_manager.h"
+#include "gui/body.h"
+#include "gui/navbar.h"
+#include "gui/sidebar.h"
+#include "gui/titlebar.h"
+#include "gui/toolbar.h"
 // #include "nbtree.h"
-
 
 // int main(){
 //     // MakeDirectory(".dir/baru");
@@ -62,10 +61,12 @@ int main() {
     Body body;
     createBody(&body);
 
+    
+
     while (!titleBar.exitWindow && !WindowShouldClose()) {
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
+        currentZeroPosition = (Rectangle){DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
 
         // Update
         //----------------------------------------------------------------------------------
@@ -75,10 +76,9 @@ int main() {
 
         updateToolbar(&toolbar, currentZeroPosition);
 
-        updateSidebar(&sidebar, currentZeroPosition);
+        updateSidebar(&sidebar, currentZeroPosition, &fileManager);
 
         updateBody(&body, currentZeroPosition, &fileManager);
-
 
         // Draw
         //----------------------------------------------------------------------------------

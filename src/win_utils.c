@@ -1,9 +1,11 @@
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdio.h>
 #include "win_utils.h"
+#include <stdio.h>
+#include <windows.h>
+#include <shlwapi.h>    
+#include <shellapi.h> 
 
-int RemoveItemsRecurse(const char* folderPath) {
+int RemoveItemsRecurse(const char *folderPath) {
     WIN32_FIND_DATAA findData;
     char searchPath[MAX_PATH];
     char itemPath[MAX_PATH];
@@ -11,7 +13,8 @@ int RemoveItemsRecurse(const char* folderPath) {
     snprintf(searchPath, MAX_PATH, "%s\\*", folderPath);
 
     HANDLE hFind = FindFirstFileA(searchPath, &findData);
-    if (hFind == INVALID_HANDLE_VALUE) return 0;
+    if (hFind == INVALID_HANDLE_VALUE)
+        return 0;
 
     do {
         // Lewatin "." dan ".."
@@ -23,8 +26,7 @@ int RemoveItemsRecurse(const char* folderPath) {
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // Kalau folder → panggil rekursif
             RemoveItemsRecurse(itemPath);
-        }
-        else {
+        } else {
             // Kalau file → hapus
             if (!DeleteFileA(itemPath)) {
                 printf("Gagal hapus file: %s\n", itemPath);

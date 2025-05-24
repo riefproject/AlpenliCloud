@@ -1,13 +1,12 @@
 #include "gui/component.h"
-#include "raylib.h"
-#include "raygui.h"
-#include "macro.h"
 #include "item.h"
+#include "macro.h"
+#include "raygui.h"
+#include "raylib.h"
 
 #include <string.h>
 
-bool GuiNewButton(NewButtonProperty *buttonProperty)
-{
+bool GuiNewButton(NewButtonProperty *buttonProperty) {
     bool itemCreated = false;
 
     // Tombol utama
@@ -15,14 +14,12 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
             buttonProperty->btnRect,
             buttonProperty->placeholder,
             buttonProperty->tooltip,
-            buttonProperty->disabled))
-    {
+            buttonProperty->disabled)) {
         buttonProperty->dropdownActive = !buttonProperty->dropdownActive;
         buttonProperty->showModal = false;
     }
 
-    if (buttonProperty->dropdownActive)
-    {
+    if (buttonProperty->dropdownActive) {
         // Ukuran tombol (tetap seperti btnRect)
         float btnWidth = buttonProperty->btnRect.width + 50;
         float btnHeight = buttonProperty->btnRect.height;
@@ -48,8 +45,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
             btnWidth - 2 * DEFAULT_PADDING,
             btnHeight};
 
-        if (GuiButton(fileBtn, "#8# File"))
-        {
+        if (GuiButton(fileBtn, "#8# File")) {
             buttonProperty->selectedType = ITEM_FILE;
             buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
@@ -64,8 +60,7 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
             fileBtn.width,
             btnHeight};
 
-        if (GuiButton(folderBtn, "#204# Folder"))
-        {
+        if (GuiButton(folderBtn, "#204# Folder")) {
             buttonProperty->selectedType = ITEM_FOLDER;
             buttonProperty->showModal = true;
             buttonProperty->dropdownActive = false;
@@ -77,14 +72,12 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
         Vector2 mouse = GetMousePosition();
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
             !CheckCollisionPointRec(mouse, dropdownBg) &&
-            !CheckCollisionPointRec(mouse, buttonProperty->btnRect))
-        {
+            !CheckCollisionPointRec(mouse, buttonProperty->btnRect)) {
             buttonProperty->dropdownActive = false;
         }
     }
 
-    if (buttonProperty->showModal)
-    {
+    if (buttonProperty->showModal) {
         // Selalu update modal di tengah layar
         int screenW = GetScreenWidth();
         int screenH = GetScreenHeight();
@@ -107,14 +100,12 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
             buttonProperty->modalRect.width - 40,
             30};
 
-        if (GuiTextBoxCustom(inputBox, "Enter name...",
+        if (GuiTextBoxCustom(inputBox, NULL, "Enter name...",
                              buttonProperty->inputBuffer,
                              MAX_STRING_LENGTH,
                              &buttonProperty->inputEditMode,
-                             false))
-        {
-            if (strcmp(buttonProperty->inputBuffer, "") != 0)
-            {
+                             false)) {
+            if (strcmp(buttonProperty->inputBuffer, "") != 0) {
                 itemCreated = true;
                 buttonProperty->showModal = false;
                 buttonProperty->inputEditMode = false;
@@ -134,15 +125,13 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
             btnCreate.width,
             30};
 
-        if (GuiButton(btnCreate, "Create") && strcmp(buttonProperty->inputBuffer, "") != 0)
-        {
+        if (GuiButton(btnCreate, "Create") && strcmp(buttonProperty->inputBuffer, "") != 0) {
             itemCreated = true;
             buttonProperty->showModal = false;
             buttonProperty->inputEditMode = false;
         }
 
-        if (GuiButton(btnCancel, "Cancel") || quit)
-        {
+        if (GuiButton(btnCancel, "Cancel") || quit) {
             buttonProperty->showModal = false;
             buttonProperty->inputEditMode = false;
             strcpy(buttonProperty->inputBuffer, "");
@@ -152,15 +141,13 @@ bool GuiNewButton(NewButtonProperty *buttonProperty)
     return itemCreated;
 }
 
-bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled)
-{
+bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled) {
     if (disabled)
         GuiDisable();
 
     bool pressed = GuiButton(bounds, text);
 
-    if (CheckCollisionPointRec(GetMousePosition(), bounds) && !disabled)
-    {
+    if (CheckCollisionPointRec(GetMousePosition(), bounds) && !disabled) {
         int padding = 5;
         int fontSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
 
@@ -194,25 +181,38 @@ bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bo
     return pressed;
 }
 
-bool GuiTextBoxCustom(Rectangle bounds, const char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled)
-{
+bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled) {
     bool pressedEnter = false;
 
     if (disabled)
         GuiDisable();
 
-    if (GuiTextBox(bounds, inputText, textSize, *editMode))
-        *editMode = !*editMode;
-
-    if (*editMode && IsKeyPressed(KEY_ENTER))
-    {
-        pressedEnter = true;
-        *editMode = false;
+    float textOffsetX = bounds.x + TINY_PADDING;
+    if (icon != NULL && icon[0] != '\0') {
+        GuiLabel((Rectangle){bounds.x + TINY_PADDING, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, icon);
+        textOffsetX += 24;
     }
 
-    if (!*editMode && inputText[0] == '\0')
-    {
-        GuiLabel((Rectangle){bounds.x + TINY_PADDING, bounds.y + bounds.height / 2, bounds.width}, placeholder);
+    if (*editMode) {
+        if (GuiTextBox(bounds, inputText, textSize, true)) {
+            *editMode = false;
+        }
+
+        if (IsKeyPressed(KEY_ENTER)) {
+            pressedEnter = true;
+            *editMode = false;
+        }
+    } else {
+        DrawRectangleLinesEx(bounds, 1, Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), 0.6f));
+        if (inputText[0] == '\0') {
+            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, placeholder);
+        } else {
+            GuiLabel((Rectangle){textOffsetX, bounds.y + bounds.height / 2 - 10, bounds.width, 20}, inputText);
+        }
+
+        if (CheckCollisionPointRec(GetMousePosition(), bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            *editMode = true;
+        }
     }
 
     if (disabled)

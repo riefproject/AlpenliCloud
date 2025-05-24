@@ -1,0 +1,10 @@
+BasedOnStyle: Microsoft
+BreakBeforeBraces: Attach
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 0
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+NamespaceIndentation: All
+FixNamespaceComments: false
