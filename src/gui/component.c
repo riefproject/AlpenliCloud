@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include "gui/sidebar.h"
 
-
 void GuiNewButton(ButtonWithModalProperty* buttonProperty) {
     bool itemCreated = false;
 

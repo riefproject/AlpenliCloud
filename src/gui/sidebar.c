@@ -5,8 +5,11 @@
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
+#include "gui/ctx.h"
 
-void createSidebar(Sidebar *sidebar) {
+void createSidebar(Sidebar *sidebar, Context *ctx) {
+    sidebar->ctx = ctx;
+
     sidebar->panelRec = (Rectangle){0};
     sidebar->panelContentRec = (Rectangle){0, 0, 160, 340};
     sidebar->panelView = (Rectangle){0};
@@ -15,14 +18,14 @@ void createSidebar(Sidebar *sidebar) {
     sidebar->isSidebarClickable = true;
 }
 
-void updateSidebar(Sidebar *sidebar, Rectangle currentZeroPosition, FileManager *fileManager) {
-    sidebar->fileManager = fileManager;
+void updateSidebar(Sidebar *sidebar, Context *ctx) {
+    sidebar->ctx = ctx;
 
     if (sidebar->sidebarRoot == NULL) {
-        sidebar->sidebarRoot = crateSidebarItem(getCurrentRoot(sidebar->fileManager));
+        sidebar->sidebarRoot = crateSidebarItem(getCurrentRoot(sidebar->ctx->fileManager));
     }
 
-    sidebar->currentZeroPosition = currentZeroPosition;
+    sidebar->currentZeroPosition = *ctx->currentZeroPosition;
     sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
     sidebar->currentZeroPosition.height = +sidebar->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2;
 
@@ -49,7 +52,7 @@ void drawSidebar(Sidebar *sidebar) {
     float scrollWidth = sidebar->panelContentRec.width; // nilai awal
     BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
 
-    drawSidebarItem(sidebar, sidebar->sidebarRoot, sidebar->fileManager, &drawPos, 0, sidebar->panelContentRec.width, itemHeight, &scrollWidth);
+    drawSidebarItem(sidebar, sidebar->sidebarRoot, sidebar->ctx->fileManager, &drawPos, 0, sidebar->panelContentRec.width, itemHeight, &scrollWidth);
 
     EndScissorMode();
 

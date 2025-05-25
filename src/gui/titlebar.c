@@ -1,6 +1,7 @@
 #include "gui/titlebar.h"
 #include "macro.h"
 #include "raygui.h"
+#include "gui/ctx.h"
 
 #define RESIZE_BORDER 2
 #define MIN_WIDTH 300
@@ -34,9 +35,10 @@ void UpdateResizeCursor(ResizeDirection dir) {
     }
 }
 
-void createTitleBar(TitleBar *titleBar, int screenWidth, int screenHeight) {
-    titleBar->screenWidth = screenWidth;
-    titleBar->screenHeight = screenHeight;
+void createTitleBar(TitleBar *titleBar, Context *ctx) {
+    titleBar->ctx = ctx;
+    titleBar->screenWidth = ctx->width;
+    titleBar->screenHeight = ctx->height;
 
     titleBar->height = 23;
 
@@ -52,7 +54,9 @@ void createTitleBar(TitleBar *titleBar, int screenWidth, int screenHeight) {
     titleBar->isBottonMinimizeClicked = false;
 }
 
-void updateTitleBar(TitleBar *titleBar) {
+void updateTitleBar(TitleBar *titleBar, Context *ctx) {
+    titleBar->ctx = ctx;
+
     titleBar->mousePosition = GetMousePosition();
     Vector2 mouse = titleBar->mousePosition;
     Vector2 winPos = GetWindowPosition();

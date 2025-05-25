@@ -3,14 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "file_manager.h"
-#include "gui/component.h"
-#include "gui/navbar.h"
-#include "macro.h"
 #include "raygui.h"
 
-void createNavbar(Navbar *navbar) {
-    navbar->fileManager = NULL;
+#include "macro.h"
+#include "file_manager.h"
+
+#include "gui/ctx.h"
+#include "gui/component.h"
+#include "gui/navbar.h"
+
+void createNavbar(Navbar *navbar, Context *ctx) {
+    navbar->ctx = ctx;
 
     navbar->isUndoButtonClicked = false;
     navbar->isRedoButtonClicked = false;
@@ -27,20 +30,20 @@ void createNavbar(Navbar *navbar) {
     navbar->currentZeroPosition = (Rectangle){0};
 }
 
-void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager) {
-    navbar->fileManager = fileManager;
-    navbar->currentZeroPosition = currentZeroPosition;
+void updateNavbar(Navbar *navbar, Context *ctx) {
+    navbar->ctx = ctx;
+    navbar->currentZeroPosition = *ctx->currentZeroPosition;
 
     // Sinkronkan path saat textbox tidak diedit
     if (!navbar->textboxPatheditMode) {
-        strncpy(navbar->textboxPath, fileManager->currentPath, MAX_STRING_LENGTH);
+        strncpy(navbar->textboxPath, ctx->fileManager->currentPath, MAX_STRING_LENGTH);
     }
 
     // Handle navigasi manual ke path
     if (navbar->shouldGoToPath) {
         navbar->shouldGoToPath = false; // reset flag
 
-        Tree root = getCurrentRoot(navbar->fileManager);
+        Tree root = getCurrentRoot(ctx->fileManager);
         if (!root) {
             printf("Root tidak ditemukan\n");
             return;
@@ -53,7 +56,7 @@ void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fi
 
         Tree result = searchTree(root, itemToSearch);
         if (result) {
-            goTo(navbar->fileManager, result);
+            goTo(ctx->fileManager, result);
         } else {
             printf("File tidak ditemukan\n");
         }
@@ -68,23 +71,23 @@ void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fi
     // Handle undo button
     if (navbar->isUndoButtonClicked) {
         navbar->isUndoButtonClicked = false;
-        // if (navbar->fileManager) {
-        //     // undo(navbar->fileManager);
+        // if (&navbar->ctx.fileManager) {
+        //     // undo(&navbar->ctx.fileManager);
         // }
     }
 
     // Handle redo button
     if (navbar->isRedoButtonClicked) {
         navbar->isRedoButtonClicked = false;
-        // if (navbar->fileManager) {
-        //     redo(navbar->fileManager);
+        // if (&navbar->ctx.fileManager) {
+        //     redo(&navbar->ctx.fileManager);
         // }
     }
 
     // Handle go back button
     if (navbar->isGoBackButtonClicked) {
         navbar->isGoBackButtonClicked = false;
-        goBack(navbar->fileManager);
+        goBack(ctx->fileManager);
     }
 }
 

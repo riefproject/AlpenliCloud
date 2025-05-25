@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "file_manager.h"
 
+typedef struct Context Context;
 typedef struct Body {
     Rectangle panelRec;
     Rectangle panelContentRec;
@@ -11,8 +12,6 @@ typedef struct Body {
     Vector2 panelScroll;
     Rectangle currentZeroPosition;
 
-    
-    
     bool showCheckbox;
     
     bool selectedAll;
@@ -21,13 +20,13 @@ typedef struct Body {
     int focusedIndex;
     bool selected[100];
 
-    FileManager *fileManager;
+    Context *ctx;
 } Body;
 
 
-void createBody(Body *body);
+void createBody(Body *body, Context *ctx);
 
-void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileManager);
+void updateBody(Body *body, Context *ctx);
 
 void drawBody(Body *body);
 

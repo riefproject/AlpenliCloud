@@ -8,12 +8,14 @@
 #include <sys/stat.h>
 
 #include "file_manager.h"
-#include "utils.h"
 #include "gui/body.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
 #include "gui/titlebar.h"
 #include "gui/toolbar.h"
+#include "utils.h"
+
+#include "ctx.h"
 // #include "nbtree.h"
 
 // int main(){
@@ -41,13 +43,11 @@ int main() {
     // getchar();
     // redo(&fileManager);
 
-
     // return 0;
 
-    TitleBar titleBar;
-    createTitleBar(&titleBar, screenWidth, screenHeight);
+    Context ctx;
+    createContext(&ctx, &fileManager, screenWidth, screenHeight);
 
-    Rectangle currentZeroPosition = { DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
 
@@ -57,40 +57,39 @@ int main() {
 
     // initialization
     // ----------------------------------------------------------------------------------------
+    TitleBar titleBar;
+    createTitleBar(&titleBar, &ctx);
 
     Navbar navbar;
-    createNavbar(&navbar);
-
+    createNavbar(&navbar, &ctx);
 
     Sidebar sidebar;
-    createSidebar(&sidebar);
+    createSidebar(&sidebar, &ctx);
 
     Toolbar toolbar;
-    createToolbar(&toolbar, &fileManager, &sidebar);
+    createToolbar(&toolbar, &ctx);
 
     Body body;
-    createBody(&body);
-
-
+    createBody(&body, &ctx);
 
     while (!titleBar.exitWindow && !WindowShouldClose()) {
-        screenWidth = GetScreenWidth();
-        screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
 
         // Update
         //----------------------------------------------------------------------------------
-        updateTitleBar(&titleBar);
+        updateContext(&ctx, &fileManager);
 
-        updateNavbar(&navbar, currentZeroPosition, &fileManager);
+        updateTitleBar(&titleBar, &ctx);
 
-        updateToolbar(&toolbar, currentZeroPosition);
+        updateNavbar(&navbar, &ctx);
 
-        updateSidebar(&sidebar, currentZeroPosition, &fileManager);
+        updateToolbar(&toolbar, &ctx);
 
-        updateBody(&body, currentZeroPosition, &fileManager);
+        updateSidebar(&sidebar, &ctx);
+
+        updateBody(&body, &ctx);
 
         ShortcutKeys(&toolbar, &navbar, &body);
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -109,8 +108,6 @@ int main() {
 
         EndDrawing();
     }
-
-    exit(1);
 
     CloseWindow();
     return 0;

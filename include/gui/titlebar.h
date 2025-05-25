@@ -5,6 +5,8 @@
 #include "raylib.h"
 #include <stdbool.h>
 
+typedef struct Context Context;
+
 typedef enum ResizeDirection {
     RESIZE_NONE,
     RESIZE_LEFT,
@@ -33,10 +35,12 @@ typedef struct TitleBar {
     bool isBottonMinimizeClicked;
 
     ResizeDirection resizeDir;
+
+    Context *ctx;
 } TitleBar;
 
-void createTitleBar(TitleBar *titleBar, int screenWidth, int screenHeight);
-void updateTitleBar(TitleBar *titleBar);
+void createTitleBar(TitleBar *titleBar, Context *ctx);
+void updateTitleBar(TitleBar *titleBar, Context *ctx);
 void drawTitleBar(TitleBar *titleBar);
 
 #endif

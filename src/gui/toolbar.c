@@ -4,11 +4,14 @@
 #include "gui/component.h"
 #include "gui/sidebar.h"
 #include "gui/toolbar.h"
+#include "gui/ctx.h"
+
 #include "macro.h"
 #include "raygui.h"
 
-void createToolbar(Toolbar *toolbar, FileManager *fileManager, Sidebar *sidebar) {
 
+void createToolbar(Toolbar *toolbar, Context *ctx) {
+    toolbar->ctx = ctx;
     toolbar->newButtonProperty = (ButtonWithModalProperty){
         .btnRect = {50, 50, 100, 24},
         .dropdownRect = {50, 82, 100, 60},
@@ -23,17 +26,19 @@ void createToolbar(Toolbar *toolbar, FileManager *fileManager, Sidebar *sidebar)
         .itemCreated = false,
         .inputEditMode = false,
         .disabled = false,
-        .sidebar = sidebar};
+        .sidebar = NULL
+    };
     toolbar->currentZeroPosition = (Rectangle){0};
-    toolbar->fileManager = fileManager;
+    toolbar->fileManager = ctx->fileManager;
     toolbar->isButtonCopyActive = false;
     toolbar->isButtonCutActive = false;
     toolbar->isButtonDeleteActive = false;
     toolbar->isButtonPasteActive = false;
 }
 
-void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
-    toolbar->currentZeroPosition = currentZeroPosition;
+void updateToolbar(Toolbar *toolbar, Context *ctx) {
+    toolbar->ctx = ctx;
+    toolbar->currentZeroPosition = *ctx->currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
 
     toolbar->newButtonProperty.btnRect.x = toolbar->currentZeroPosition.x;

@@ -5,6 +5,9 @@
 
 #include "file_manager.h"
 #include "raylib.h"
+
+typedef struct Context Context;
+
 typedef struct SidebarItem SidebarItem;
 typedef struct SidebarItem {
     Tree tree;
@@ -19,17 +22,18 @@ typedef struct Sidebar {
     Rectangle panelView;       // adalah ukuran yang terlihat di sidebar (tinggi - tinggi scroll bawah dll)
     Vector2 panelScroll;       // adalah jauhnya scroll
 
-    FileManager* fileManager;
     SidebarItem* sidebarRoot;
     bool isSidebarClickable;
     Rectangle currentZeroPosition;
+
+    Context *ctx;
 } Sidebar;
 
-void createSidebar(Sidebar* sidebar);
+void createSidebar(Sidebar* sidebar, Context *ctx);
 
 SidebarItem* crateSidebarItem(Tree tree);
 
-void updateSidebar(Sidebar* sidebar, Rectangle currentZeroPosition, FileManager* fileManager);
+void updateSidebar(Sidebar* sidebar, Context *ctx);
 
 void drawSidebar(Sidebar* sidebar);
 
