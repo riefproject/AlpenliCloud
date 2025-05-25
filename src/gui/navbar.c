@@ -5,11 +5,11 @@
 
 #include "raygui.h"
 
-#include "macro.h"
 #include "file_manager.h"
+#include "macro.h"
 
-#include "gui/ctx.h"
 #include "gui/component.h"
+#include "gui/ctx.h"
 #include "gui/navbar.h"
 
 void createNavbar(Navbar *navbar, Context *ctx) {
@@ -18,11 +18,11 @@ void createNavbar(Navbar *navbar, Context *ctx) {
     navbar->isUndoButtonClicked = false;
     navbar->isRedoButtonClicked = false;
     navbar->isGoBackButtonClicked = false;
-    
+
     navbar->shouldGoToPath = false;
     navbar->textboxPatheditMode = false;
     strcpy(navbar->textboxPath, "");
-    
+
     navbar->shouldSearch = false;
     navbar->textboxSearcheditMode = false;
     strcpy(navbar->textboxSearch, "");
@@ -34,14 +34,13 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
     navbar->ctx = ctx;
     navbar->currentZeroPosition = *ctx->currentZeroPosition;
 
-    // Sinkronkan path saat textbox tidak diedit
-    if (!navbar->textboxPatheditMode) {
-        strncpy(navbar->textboxPath, ctx->fileManager->currentPath, MAX_STRING_LENGTH);
-    }
-
     // Handle navigasi manual ke path
     if (navbar->shouldGoToPath) {
-        navbar->shouldGoToPath = false; // reset flag
+        navbar->shouldGoToPath = false;
+
+        char trimmedPath[MAX_STRING_LENGTH];
+        strncpy(trimmedPath, navbar->textboxPath, MAX_STRING_LENGTH);
+        trimTrailingSlash(trimmedPath);
 
         Tree root = getCurrentRoot(ctx->fileManager);
         if (!root) {
@@ -50,8 +49,8 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
         }
 
         Item itemToSearch = createItem(
-            _getNameFromPath(navbar->textboxPath),
-            TextFormat("%s/%s", ".dir", navbar->textboxPath),
+            _getNameFromPath(trimmedPath),
+            TextFormat("%s/%s", ".dir", trimmedPath),
             0, ITEM_FILE, 0, 0, 0);
 
         Tree result = searchTree(root, itemToSearch);
@@ -88,6 +87,11 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
     if (navbar->isGoBackButtonClicked) {
         navbar->isGoBackButtonClicked = false;
         goBack(ctx->fileManager);
+    }
+
+    // Sinkronkan path saat textbox tidak diedit
+    if (!navbar->textboxPatheditMode) {
+        strncpy(navbar->textboxPath, ctx->fileManager->currentPath, MAX_STRING_LENGTH);
     }
 }
 
