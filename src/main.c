@@ -89,7 +89,7 @@ int main() {
 
         updateBody(&body, &ctx);
 
-        ShortcutKeys(&toolbar, &navbar, &body);
+        ShortcutKeys(&ctx);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();

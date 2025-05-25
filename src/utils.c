@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gui/ctx.h"
+
 #define CONTROL_KEY_PRESSED IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)
 #define SHIFT_KEY_PRESSED IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)
 #define ALT_KEY_PRESSED IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)
@@ -39,82 +41,83 @@ void trimTrailingSlash(char *path) {
     }
 }
 
-void ShortcutKeys(Toolbar *toolbar, Navbar *navbar, Body *body) {
+void ShortcutKeys(Context *ctx) {
+
 
     // COPY (Ctrl + C)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_C)) {
-        copyFile(toolbar->fileManager);
+        copyFile(ctx->fileManager);
     }
 
     // PASTE (Ctrl + V)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_V)) {
-        pasteFile(toolbar->fileManager);
+        pasteFile(ctx->fileManager);
     }
 
     // CUT (Ctrl + X)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_X)) {
-        cutFile(toolbar->fileManager);
+        cutFile(ctx->fileManager);
     }
 
     // UNDO (Ctrl + Z)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_Z)) {
-        if (toolbar->fileManager != NULL) {
-            undo(toolbar->fileManager);
+        if (ctx->fileManager != NULL) {
+            undo(ctx->fileManager);
             printf("[LOG] Undo shortcut activated\n");
         }
     }
 
     // REDO (Ctrl + Y)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_Y)) {
-        if (toolbar->fileManager != NULL) {
-            redo(toolbar->fileManager);
+        if (ctx->fileManager != NULL) {
+            redo(ctx->fileManager);
             printf("[LOG] Redo shortcut activated\n");
         }
     }
 
     // DELETE (Delete key atau Ctrl + Delete)
     if (IsKeyPressed(KEY_DELETE) || ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_DELETE))) {
-        toolbar->isButtonDeleteActive = true;
+        ctx->toolbar->isButtonDeleteActive = true;
         printf("[LOG] Delete shortcut activated\n");
     }
 
     // RENAME (F2)
     if (IsKeyPressed(KEY_F2)) {
-        if (toolbar->fileManager != NULL && toolbar->fileManager->selectedItem.head != NULL) {
-            Item *selectedItem = (Item *)toolbar->fileManager->selectedItem.head->data;
+        if (ctx->fileManager != NULL && ctx->fileManager->selectedItem.head != NULL) {
+            Item *selectedItem = (Item *)ctx->fileManager->selectedItem.head->data;
             if (selectedItem != NULL) {
                 printf("[LOG] Rename shortcut activated for: %s\n", selectedItem->name);
-                // renameFile(toolbar->fileManager, selectedItem->path, "new_name"); // Implement proper rename UI
+                // renameFile(ctx->fileManager, selectedItem->path, "new_name"); // Implement proper rename UI
             }
         }
     }
 
     // REFRESH (F5 atau Ctrl + R)
     if (IsKeyPressed(KEY_F5) || ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_R))) {
-        refreshFileManager(toolbar->fileManager);
+        refreshFileManager(ctx->fileManager);
     }
 
     // GO BACK (Backspace atau Alt + Left Arrow)
-    if (!toolbar->newButtonProperty.showModal &&
-        !navbar->textboxPatheditMode &&
-        !navbar->textboxSearcheditMode &&
+    if (!ctx->toolbar->newButtonProperty.showModal &&
+        !ctx->navbar->textboxPatheditMode &&
+        !ctx->navbar->textboxSearcheditMode &&
         (IsKeyPressed(KEY_BACKSPACE) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_LEFT)))) {
-        if (toolbar->fileManager != NULL &&
-            toolbar->fileManager->treeCursor != NULL &&
-            toolbar->fileManager->treeCursor->parent != NULL) {
-            goBack(toolbar->fileManager);
+        if (ctx->fileManager != NULL &&
+            ctx->fileManager->treeCursor != NULL &&
+            ctx->fileManager->treeCursor->parent != NULL) {
+            goBack(ctx->fileManager);
         }
     }
 
     // SELECT ALL (Ctrl + A)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_A)) {
-        if (toolbar->fileManager != NULL && toolbar->fileManager->treeCursor != NULL) {
-            if (!body->selectedAll) {
-                selectAll(toolbar->fileManager);
-                body->selectedAll = true;
+        if (ctx->fileManager != NULL && ctx->fileManager->treeCursor != NULL) {
+            if (!ctx->body->selectedAll) {
+                selectAll(ctx->fileManager);
+                ctx->body->selectedAll = true;
             } else {
-                clearSelectedFile(toolbar->fileManager);
-                body->selectedAll = false;
+                clearSelectedFile(ctx->fileManager);
+                ctx->body->selectedAll = false;
             }
             printf("[LOG] Select all shortcut activated\n");
         }
@@ -122,125 +125,123 @@ void ShortcutKeys(Toolbar *toolbar, Navbar *navbar, Body *body) {
 
     // NEW FOLDER (Ctrl + Shift + N)
     if ((CONTROL_KEY_PRESSED) && (SHIFT_KEY_PRESSED) && IsKeyPressed(KEY_N)) {
-        toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
-        toolbar->newButtonProperty.showModal = true;
-        if (!toolbar->newButtonProperty.showModal) {
-            char *name = toolbar->newButtonProperty.inputBuffer;
-            char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-            createFile(toolbar->fileManager, ITEM_FOLDER, dirPath, name);
+        ctx->toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
+        ctx->toolbar->newButtonProperty.showModal = true;
+        if (!ctx->toolbar->newButtonProperty.showModal) {
+            char *name = ctx->toolbar->newButtonProperty.inputBuffer;
+            char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+            createFile(ctx->fileManager, ITEM_FOLDER, dirPath, name);
         }
     }
 
     // NEW FILE (Ctrl + N)
-    if (!toolbar->newButtonProperty.showModal &&
+    if (!ctx->toolbar->newButtonProperty.showModal &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_N) && !(SHIFT_KEY_PRESSED)) {
-        navbar->textboxPatheditMode = false;
-        navbar->textboxSearcheditMode = false;
-        if (toolbar->fileManager != NULL) {
-            toolbar->newButtonProperty.selectedType = ITEM_FILE;
-            toolbar->newButtonProperty.showModal = true;
-            if (!toolbar->newButtonProperty.showModal) {
-                char *name = toolbar->newButtonProperty.inputBuffer;
-                char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-                createFile(toolbar->fileManager, ITEM_FILE, dirPath, name);
+        ctx->navbar->textboxPatheditMode = false;
+        ctx->navbar->textboxSearcheditMode = false;
+        if (ctx->fileManager != NULL) {
+            ctx->toolbar->newButtonProperty.selectedType = ITEM_FILE;
+            ctx->toolbar->newButtonProperty.showModal = true;
+            if (!ctx->toolbar->newButtonProperty.showModal) {
+                char *name = ctx->toolbar->newButtonProperty.inputBuffer;
+                char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+                createFile(ctx->fileManager, ITEM_FILE, dirPath, name);
             }
         }
     }
 
     // CTRL+F / FIND
-    if (!toolbar->newButtonProperty.showModal &&
+    if (!ctx->toolbar->newButtonProperty.showModal &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_F)) {
-        navbar->textboxPatheditMode = false;
-        toolbar->newButtonProperty.showModal = false;
-        if (navbar->textboxSearcheditMode) {
-            navbar->textboxSearcheditMode = false;
+        ctx->navbar->textboxPatheditMode = false;
+        ctx->toolbar->newButtonProperty.showModal = false;
+        if (ctx->navbar->textboxSearcheditMode) {
+            ctx->navbar->textboxSearcheditMode = false;
             printf("[LOG] Search mode deactivated\n");
-        }
-        else {
-            navbar->textboxSearcheditMode = true;
+        } else {
+            ctx->navbar->textboxSearcheditMode = true;
             printf("[LOG] Search mode activated\n");
         }
     }
 
     // CTRL+L / ADDRESS/PATH
-    if (!toolbar->newButtonProperty.showModal &&
+    if (!ctx->toolbar->newButtonProperty.showModal &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_L)) {
-        navbar->textboxSearcheditMode = false;
-        toolbar->newButtonProperty.showModal = false;
-        if (navbar->textboxPatheditMode) {
-            navbar->textboxPatheditMode = false;
+        ctx->navbar->textboxSearcheditMode = false;
+        ctx->toolbar->newButtonProperty.showModal = false;
+        if (ctx->navbar->textboxPatheditMode) {
+            ctx->navbar->textboxPatheditMode = false;
             printf("[LOG] Path edit mode deactivated\n");
-        }
-        else {
-            navbar->textboxPatheditMode = true;
+        } else {
+            ctx->navbar->textboxPatheditMode = true;
             printf("[LOG] Path edit mode activated\n");
         }
     }
 
     // ARROW KEYS NAVIGATION (only when not in edit mode)
-    if (!navbar->textboxPatheditMode && !navbar->textboxSearcheditMode && !toolbar->newButtonProperty.showModal) {
+    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->toolbar->newButtonProperty.showModal) {
         if (IsKeyPressed(KEY_UP)) {
             // Move selection up
-            if (body->focusedIndex > 0) {
-                body->focusedIndex--;
+            if (ctx->body->focusedIndex > 0) {
+                ctx->body->focusedIndex--;
 
                 // Clear all selections and select the focused item
-                clearSelectedFile(toolbar->fileManager);
+                clearSelectedFile(ctx->fileManager);
 
                 // Find the item at focusedIndex and select it
-                Tree cursor = toolbar->fileManager->treeCursor->first_son;
+                Tree cursor = ctx->fileManager->treeCursor->first_son;
                 int currentIndex = 0;
-                while (cursor != NULL && currentIndex < body->focusedIndex) {
+                while (cursor != NULL && currentIndex < ctx->body->focusedIndex) {
                     cursor = cursor->next_brother;
                     currentIndex++;
                 }
                 if (cursor != NULL) {
                     cursor->item.selected = true;
-                    selectFile(toolbar->fileManager, &cursor->item);
+                    selectFile(ctx->fileManager, &cursor->item);
                 }
 
-                printf("[LOG] Arrow up navigation - index: %d\n", body->focusedIndex);
+                printf("[LOG] Arrow up navigation - index: %d\n", ctx->body->focusedIndex);
             }
         }
 
         if (IsKeyPressed(KEY_DOWN)) {
             // Count total items
-            Tree cursor = toolbar->fileManager->treeCursor->first_son;
+            Tree cursor = ctx->fileManager->treeCursor->first_son;
             int totalItems = 0;
             while (cursor != NULL) {
                 totalItems++;
                 cursor = cursor->next_brother;
             }
 
-            if (body->focusedIndex < totalItems - 1) {
-                body->focusedIndex++;
+            if (ctx->body->focusedIndex < totalItems - 1) {
+                ctx->body->focusedIndex++;
 
-                clearSelectedFile(toolbar->fileManager);
+                clearSelectedFile(ctx->fileManager);
 
-                cursor = toolbar->fileManager->treeCursor->first_son;
+                cursor = ctx->fileManager->treeCursor->first_son;
                 int currentIndex = 0;
-                while (cursor != NULL && currentIndex < body->focusedIndex) {
+                while (cursor != NULL && currentIndex < ctx->body->focusedIndex) {
                     cursor = cursor->next_brother;
                     currentIndex++;
                 }
                 if (cursor != NULL) {
                     cursor->item.selected = true;
-                    selectFile(toolbar->fileManager, &cursor->item);
+                    selectFile(ctx->fileManager, &cursor->item);
                 }
 
-                printf("[LOG] Arrow down navigation - index: %d\n", body->focusedIndex);
+                printf("[LOG] Arrow down navigation - index: %d\n", ctx->body->focusedIndex);
             }
         }
     }
 
     // ENTER KEY (open file/folder)
-    if (!navbar->textboxPatheditMode && !navbar->textboxSearcheditMode && !toolbar->newButtonProperty.showModal) {
+    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->toolbar->newButtonProperty.showModal) {
         if (IsKeyPressed(KEY_ENTER)) {
-            if (body->focusedIndex >= 0) {
-                Tree cursor = toolbar->fileManager->treeCursor->first_son;
+            if (ctx->body->focusedIndex >= 0) {
+                Tree cursor = ctx->fileManager->treeCursor->first_son;
                 int currentIndex = 0;
 
-                while (cursor != NULL && currentIndex < body->focusedIndex) {
+                while (cursor != NULL && currentIndex < ctx->body->focusedIndex) {
                     cursor = cursor->next_brother;
                     currentIndex++;
                 }
@@ -249,11 +250,10 @@ void ShortcutKeys(Toolbar *toolbar, Navbar *navbar, Body *body) {
                     Item item = cursor->item;
 
                     if (item.type == ITEM_FOLDER) {
-                        goTo(toolbar->fileManager, cursor);
-                        body->focusedIndex = 0;
+                        goTo(ctx->fileManager, cursor);
+                        ctx->body->focusedIndex = 0;
                         printf("[LOG] Keyboard action - enter folder: %s\n", item.name);
-                    }
-                    else if (item.type == ITEM_FILE) {
+                    } else if (item.type == ITEM_FILE) {
                         windowsOpenWith(item.path);
                         printf("[LOG] Keyboard action - open file: %s\n", item.name);
                     }
