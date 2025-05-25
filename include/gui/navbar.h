@@ -12,16 +12,21 @@ typedef struct Navbar {
     bool textboxSearcheditMode;
     char textboxSearch[MAX_STRING_LENGTH];
 
+    bool shouldGoToPath;  
+    bool shouldSearch;    
+
+    bool isUndoButtonClicked;
+    bool isRedoButtonClicked;
+    bool isGoBackButtonClicked;
+
     Rectangle currentZeroPosition;
 
     FileManager *fileManager;
 } Navbar;
 
+
 void createNavbar(Navbar *navbar);
-
-// void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *filemanager);
 void updateNavbar(Navbar *navbar, Rectangle currentZeroPosition, FileManager *fileManager);
-
 void drawNavbar(Navbar *navbar);
 
 #endif
