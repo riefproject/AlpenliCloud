@@ -23,7 +23,7 @@ CFLAGS="$WNO
         -Iinclude/data_structure
         -Ilib/raylib/include"
 LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
-object_files=()
+OBJECT_FILES=()
 
 # Biar CLI nya cakep
 RED='\e[31m'
@@ -31,6 +31,13 @@ GREEN='\e[32m'
 YELLOW='\e[33m'
 BLUE='\e[34m'
 RESET='\e[0m' # No Color
+BOLD='\e[1m'
+ITALIC='\e[3m'
+UNDERLINE='\e[4m'
+
+# =====================================================================================
+# . . . FUNCTIONS . . .
+# =====================================================================================
 
 clean() {
     echo "🧹 Cleaning build directories..."
@@ -54,7 +61,7 @@ compile_if_needed() {
         echo -e "${GREEN}✅ Skipping $src_file (up to date) ${RESET}"
     fi
 
-    object_files+=("$out_file")
+    OBJECT_FILES+=("$out_file")
 }
 
 compile_sources() {
@@ -88,7 +95,7 @@ link_if_needed() {
     if [ ! -f "$EXE_PATH" ] || [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
         need_link=true
     else
-        for obj in "${object_files[@]}"; do
+        for obj in "${OBJECT_FILES[@]}"; do
             if [ "$obj" -nt "$EXE_PATH" ]; then
                 need_link=true
                 break
@@ -98,7 +105,7 @@ link_if_needed() {
 
     if $need_link; then
         echo "🔧 Linking..."
-        gcc "${object_files[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS
+        gcc "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1
@@ -123,13 +130,70 @@ build() {
     fi
 }
 
-case "$1" in
+parse_args() {
+    DEBUG=0
+    HELP=0
+    POSITIONAL=()
+
+    for arg in "$@"; do
+        if [ "$arg" == "--debug" ]; then
+            DEBUG=1
+        elif [ "$arg" == "--help" ]; then
+            HELP=1
+        else
+            POSITIONAL+=("$arg")
+        fi
+    done
+
+    if [ $HELP -eq 1 ]; then
+        if [ ${#POSITIONAL[@]} -ne 0 ] || [ $DEBUG -eq 1 ]; then
+            echo "❌ Error: --help harus dipanggil tanpa parameter lain."
+            show_help
+            exit 1
+        fi
+        show_help
+        exit 0
+    fi
+
+    # Set global variabel untuk dipakai di main
+    DEBUG_FLAG=$DEBUG
+    set -- "${POSITIONAL[@]}"
+    POSITIONAL_ARGS=("$@")
+}
+
+show_help() {
+    echo -e "\n${BOLD}${BLUE}AlpenliCloud${RESET}${BOLD} Build Script${RESET}"
+    echo -e "============================================================\n"
+    
+    echo -e "Usage: $0 [--debug] [clean|build|rebuild] [--help]\n"
+    echo -e "${UNDERLINE}Commands:${RESET}"
+    echo -e "  ${BOLD}clean    ${RESET}  : Bersihkan hasil build"
+    echo -e "  ${BOLD}build    ${RESET}  : Compile dan link (incremental)"
+    echo -e "  ${BOLD}rebuild  ${RESET}  : Bersihkan lalu build ulang"
+    echo -e "  ${BOLD}--debug  ${RESET}  : Aktifkan mode debug (set -x)"
+    echo -e "  ${BOLD}--help   ${RESET}  : Tampilkan pesan ini\n"
+    echo -e "${UNDERLINE}Notes:${RESET}"
+    echo -e "  --help harus dipanggil sendiri, tanpa param lain."
+}
+
+# =====================================================================================
+# . . . MAIN SCRIPT . . .
+# =====================================================================================
+
+parse_args "$@"
+
+if [ "$DEBUG_FLAG" -eq 1 ]; then
+    set -x
+fi
+
+# Lanjut dengan main case pakai "${POSITIONAL_ARGS[0]}"
+case "${POSITIONAL_ARGS[0]}" in
     "clean") clean ;;
     "rebuild") clean; build ;;
-    ""|"build") build ;;
+    ""|"build"|"run") build ;;
     *)
-        echo -e "${RED}❌ Unknown parameter: $1 ${RESET}"
-        echo "Usage: $0 [clean|rebuild|build]"
+        echo -e "${RED}❌ Unknown parameter: ${POSITIONAL_ARGS[0]} ${RESET}"
+        show_help
         exit 1
         ;;
 esac
