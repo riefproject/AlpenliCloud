@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 void createBody(Body* b) {
     Body body = { 0 };
     body.panelRec = (Rectangle){ 0 };
@@ -30,7 +29,6 @@ void createBody(Body* b) {
 
 void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileManager) {
     body->currentZeroPosition = currentZeroPosition;
-
     body->fileManager = fileManager;
 
     body->panelRec = (Rectangle){
@@ -39,9 +37,27 @@ void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileMana
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING,
         body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2 };
 
-    if (body->selectedAll) {
-        for (int i = 0; i < 100; i++) {
-            body->selected[i] = body->selectedAll;
+    if (fileManager && fileManager->treeCursor) {
+        Tree cursor = fileManager->treeCursor->first_son;
+        int totalItems = 0;
+        int selectedItems = 0;
+
+        while (cursor != NULL) {
+            totalItems++;
+            if (cursor->item.selected) {
+                selectedItems++;
+            }
+            cursor = cursor->next_brother;
+        }
+
+        if (totalItems == 0) {
+            body->selectedAll = false;
+        }
+        else if (selectedItems == totalItems) {
+            body->selectedAll = true;
+        }
+        else {
+            body->selectedAll = false;
         }
     }
 }
@@ -124,11 +140,11 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
         if (subTree->item.selected != previousSelected) {
             if (subTree->item.selected) {
                 // Tambahkan ke selected list
-                selectFile(body->fileManager, subTree->item);
+                selectFile(body->fileManager, &subTree->item);
             }
             else {
                 // Hapus dari selected list
-                deselectFile(body->fileManager, subTree->item);
+                deselectFile(body->fileManager, &subTree->item);
             }
         }
 
@@ -178,21 +194,19 @@ void drawTableHeader(Body* body, float x, float y, float colWidths[]) {
             colX + 7,
             y + (headerHeight - 14) / 2,
             14, 14 };
+
+        bool previousSelectedAll = body->selectedAll;
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
-        if (body->selectedAll) {
-            // insert linkedlist
-            // nama var tree current itemnya = subTree
-            // Tree cursor = body->fileManager->treeCursor;
-            // cursor = cursor->first_son;
-            // while (cursor != NULL) {
-            //     insert_last(&body->fileManager->selectedItem, cursor);
-            //     cursor = cursor->next_brother;
-            // }
 
+        if (body->selectedAll != previousSelectedAll) {
+            if (body->selectedAll) {
+                selectAll(body->fileManager);
+            }
+            else {
+                clearSelectedFile(body->fileManager);
+            }
         }
-        else {
 
-        }
         colX += 28;
     }
 

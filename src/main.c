@@ -32,7 +32,7 @@ int main() {
 
     initFileManager(&fileManager);
 
-    createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
+    // createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
     // printTree((fileManager.treeCursor), 0);
     // printf("Enter to Undo...");
     // getchar();
@@ -90,7 +90,7 @@ int main() {
 
         updateBody(&body, currentZeroPosition, &fileManager);
 
-        ShortcutKeys(&toolbar);
+        ShortcutKeys(&toolbar, &navbar);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();

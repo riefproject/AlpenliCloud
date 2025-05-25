@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include "raylib.h"
 #include "toolbar.h"
+#include "navbar.h"
+#include "body.h"
 #include "file_manager.h"
 
 #define CONTROL_KEY_PRESSED IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)
@@ -28,7 +31,7 @@ void inputString(char** s) {
     *s = temp;
 }
 
-void ShortcutKeys(Toolbar* toolbar) {
+void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
 
     // COPY (Ctrl + C)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_C)) {
@@ -80,17 +83,14 @@ void ShortcutKeys(Toolbar* toolbar) {
 
     // REFRESH (F5 atau Ctrl + R)
     if (IsKeyPressed(KEY_F5) || ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_R))) {
-        if (toolbar->fileManager != NULL && toolbar->fileManager->treeCursor != NULL) {
-            Tree currentRoot = getCurrentRoot(toolbar->fileManager);
-            if (currentRoot != NULL) {
-                printf("Refreshing directory: %s\n", currentRoot->item.path);
-                // Implement refresh logic here
-            }
-        }
+        refreshFileManager(toolbar->fileManager);
     }
 
     // GO BACK (Backspace atau Alt + Left Arrow)
-    if (IsKeyPressed(KEY_BACKSPACE) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_LEFT))) {
+    if (!toolbar->newButtonProperty.showModal &&
+        !navbar->textboxPatheditMode &&
+        !navbar->textboxSearcheditMode &&
+        (IsKeyPressed(KEY_BACKSPACE) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_LEFT)))) {
         if (toolbar->fileManager != NULL &&
             toolbar->fileManager->treeCursor != NULL &&
             toolbar->fileManager->treeCursor->parent != NULL) {
@@ -101,12 +101,13 @@ void ShortcutKeys(Toolbar* toolbar) {
     // SELECT ALL (Ctrl + A)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_A)) {
         if (toolbar->fileManager != NULL && toolbar->fileManager->treeCursor != NULL) {
-            clearSelectedFile(toolbar->fileManager);
-
-            Tree child = toolbar->fileManager->treeCursor->first_son;
-            while (child != NULL) {
-                selectFile(toolbar->fileManager, child->item);
-                child = child->next_brother;
+            if (!body->selectedAll) {
+                selectAll(toolbar->fileManager);
+                body->selectedAll = true;
+            }
+            else {
+                clearSelectedFile(toolbar->fileManager);
+                body->selectedAll = false;
             }
             printf("Select all shortcut activated\n");
         }
@@ -116,9 +117,11 @@ void ShortcutKeys(Toolbar* toolbar) {
     if ((CONTROL_KEY_PRESSED) && (SHIFT_KEY_PRESSED) && IsKeyPressed(KEY_N)) {
         toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
         toolbar->newButtonProperty.showModal = true;
-        char* name = toolbar->newButtonProperty.inputBuffer;
-        char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-        createFile(toolbar->fileManager, ITEM_FOLDER, dirPath, name);
+        if (!toolbar->newButtonProperty.showModal) {
+            char* name = toolbar->newButtonProperty.inputBuffer;
+            char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+            createFile(toolbar->fileManager, ITEM_FOLDER, dirPath, name);
+        }
     }
 
     // NEW FILE (Ctrl + N)
@@ -126,9 +129,11 @@ void ShortcutKeys(Toolbar* toolbar) {
         if (toolbar->fileManager != NULL) {
             toolbar->newButtonProperty.selectedType = ITEM_FILE;
             toolbar->newButtonProperty.showModal = true;
-            char* name = toolbar->newButtonProperty.inputBuffer;
-            char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-            createFile(toolbar->fileManager, ITEM_FILE, dirPath, name);
+            if (!toolbar->newButtonProperty.showModal) {
+                char* name = toolbar->newButtonProperty.inputBuffer;
+                char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+                createFile(toolbar->fileManager, ITEM_FILE, dirPath, name);
+            }
         }
     }
 }
