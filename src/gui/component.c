@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-void GuiNewButton(NewButtonProperty* buttonProperty) {
+void GuiNewButton(ButtonWithModalProperty* buttonProperty) {
     bool itemCreated = false;
 
     // Tombol utama

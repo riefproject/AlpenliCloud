@@ -112,8 +112,8 @@ void insert_first(LinkedList* list, infotype data){
   }
 }
 
-void insert_last(LinkedList* list, infotype data){
-  Node  *new_node, *curr;
+void insert_last(LinkedList* list, infotype data) {
+  Node *new_node, *curr;
   new_node = create_node(data);
   if(new_node == NULL) return;
 

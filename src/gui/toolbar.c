@@ -8,7 +8,7 @@
 
 void createToolbar(Toolbar *toolbar) {
 
-    toolbar->newButtonProperty = (NewButtonProperty){
+    toolbar->newButtonProperty = (ButtonWithModalProperty){
         .btnRect = {50, 50, 100, 24},
         .dropdownRect = {50, 82, 100, 60},
         .modalRect = {300, 200, 300, 150},
@@ -23,6 +23,7 @@ void createToolbar(Toolbar *toolbar) {
         .inputEditMode = false,
         .disabled = false,
     };
+
     toolbar->currentZeroPosition = (Rectangle){0};
 }
 
@@ -54,12 +55,9 @@ void drawToolbar(Toolbar *toolbar) {
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
 
-    GuiButtonCustom((Rectangle){x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24}, "#112# PILIH BANYAK", "MULTI SELECT", true);
-
     int rightStartx = x + width;
 
-    x += toolbar->newButtonProperty.btnRect.width + 130;
-    x += 24;
+    x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
     GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", true);
 
     x += 24 + DEFAULT_PADDING;

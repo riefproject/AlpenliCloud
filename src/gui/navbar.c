@@ -53,6 +53,7 @@ void drawNavbar(Navbar* navbar) {
 
     if (GuiTextBoxCustom((Rectangle) { pathBoxStartX, y, pathBoxWidth, buttonSize }, "#1#", NULL, navbar->textboxPath, MAX_STRING_LENGTH, & navbar->textboxPatheditMode, false)) {
         printf("\n\nSearch value: %s\n", navbar->textboxPath);
+        printf("Current Path value: %s\n", navbar->fileManager->currentPath);
 
         Tree currentRoot = getCurrentRoot(navbar->fileManager);
         if (currentRoot == NULL) {
@@ -61,18 +62,7 @@ void drawNavbar(Navbar* navbar) {
         }
         printf("Root name: %s\n", currentRoot->item.name);
 
-        int length = strlen(".dir") + strlen(navbar->textboxPath) + 2;
-        char* fullPath = malloc(length);
-        if (fullPath == NULL) {
-            printf("Gagal alokasi memori\n");
-            exit(1);
-        }
-
-        snprintf(fullPath, length, "%s/%s", ".dir", navbar->textboxPath);
-
-        printf("Full path: %s\n", fullPath);
-
-        Item itemToSearch = createItem(_getNameFromPath(navbar->textboxPath), fullPath, 0, ITEM_FILE, 0, 0, 0);
+        Item itemToSearch = createItem(_getNameFromPath(navbar->textboxPath), TextFormat("%s/%s", ".dir", navbar->textboxPath), 0, ITEM_FILE, 0, 0, 0);
         printf("Item name: %s\n", itemToSearch.name);
 
         Tree foundTree = searchTree(currentRoot, itemToSearch);

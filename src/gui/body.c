@@ -38,12 +38,6 @@ void updateBody(Body *body, Rectangle currentZeroPosition, FileManager *fileMana
         body->currentZeroPosition.y + DEFAULT_PADDING * 2 + 24 * 2,
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING,
         body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2};
-
-    if (body->selectedAll) {
-        for (int i = 0; i < 100; i++) {
-            body->selected[i] = body->selectedAll;
-        }
-    }
 }
 
 void drawBody(Body *body) {
@@ -118,10 +112,28 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
 
         GuiCheckBox(checkBox, NULL, &subTree->item.selected);
         if (subTree->item.selected) {
-            // insert linkedlist
-            // nama var tree current itemnya = subTree
+            // Masukkan node yang dipilih ke linked list selectedItem
             insert_last(&body->fileManager->selectedItem, subTree);
+
+            // // Cek apakah semua anak dari treeCursor terpilih
+            // Tree cursor = body->fileManager->treeCursor;
+            // cursor = cursor->first_son;
+
+            // body->selectedAll = true; // anggap semua terpilih, loop untuk buktikan sebaliknya
+            // while (cursor != NULL) {
+            //     if (!cursor->item.selected) {
+            //         body->selectedAll = false;
+            //         break;
+            //     }
+            //     cursor = cursor->next_brother;
+            // }
+
         } else {
+            // Hapus dari daftar jika item tidak lagi dipilih
+            // delete_last(&body->fileManager->selectedItem, subTree);
+
+            // Karena ada satu yang tidak dipilih, otomatis selectedAll harus false
+            body->selectedAll = false;
         }
 
         colX += checkboxWidth;
@@ -133,13 +145,13 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
     DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, DARKGRAY);
     colX += colWidths[1];
 
-    if(item.size < KB_SIZE) {
+    if (item.size < KB_SIZE) {
         DrawText(TextFormat("%d B", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
-    }else if(item.size < MB_SIZE) {
+    } else if (item.size < MB_SIZE) {
         DrawText(TextFormat("%.2f KB", ((float)item.size / KB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
-    } else if(item.size < GB_SIZE) {
+    } else if (item.size < GB_SIZE) {
         DrawText(TextFormat("%.2f MB", ((float)item.size / MB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
-    } else{
+    } else {
         DrawText(TextFormat("%.2f GB", ((float)item.size / GB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
     }
 
@@ -169,17 +181,19 @@ void drawTableHeader(Body *body, float x, float y, float colWidths[]) {
             14, 14};
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
         if (body->selectedAll) {
-            // insert linkedlist
-            // nama var tree current itemnya = subTree
-            // Tree cursor = body->fileManager->treeCursor;
-            // cursor = cursor->first_son;
-            // while (cursor != NULL) {
-            //     insert_last(&body->fileManager->selectedItem, cursor);
-            //     cursor = cursor->next_brother;
-            // }
-
+            Tree cursor = body->fileManager->treeCursor;
+            cursor = cursor->first_son;
+            while (cursor != NULL) {
+                insert_last(&body->fileManager->selectedItem, cursor);
+                cursor = cursor->next_brother;
+            }
         } else {
-            
+            Tree cursor = body->fileManager->treeCursor;
+            cursor = cursor->first_son;
+            while (cursor != NULL) {
+                delete_last(&body->fileManager->selectedItem, cursor);
+                cursor = cursor->next_brother;
+            }
         }
         colX += 28;
     }

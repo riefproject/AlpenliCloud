@@ -7,8 +7,10 @@
 #include "component.h"
 typedef struct Toolbar
 {
-    NewButtonProperty newButtonProperty;
+    ButtonWithModalProperty newButtonProperty;
     Rectangle currentZeroPosition;
+
+    // bool IsBtnCpyClicked
 } Toolbar;
 
 void createToolbar(Toolbar *navbar);
