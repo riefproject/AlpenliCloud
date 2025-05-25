@@ -90,7 +90,7 @@ int main() {
 
         updateBody(&body, currentZeroPosition, &fileManager);
 
-        ShortcutKeys(&toolbar, &navbar);
+        ShortcutKeys(&toolbar, &navbar, &body);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
