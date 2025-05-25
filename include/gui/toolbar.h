@@ -8,7 +8,7 @@
 #include "file_manager.h"
 #include "sidebar.h"
 typedef struct Toolbar {
-    NewButtonProperty newButtonProperty;
+    ButtonWithModalProperty newButtonProperty;
     Rectangle currentZeroPosition;
     FileManager* fileManager; // Pointer to the FileManager to access file operations
     bool isButtonCopyActive;

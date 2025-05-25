@@ -32,7 +32,7 @@ typedef struct ButtonWithModalProperty {
 
     bool disabled;
     Sidebar *sidebar;
-} NewButtonProperty;
+} ButtonWithModalProperty;
 
 void GuiNewButton(ButtonWithModalProperty *buttonProperty);
 

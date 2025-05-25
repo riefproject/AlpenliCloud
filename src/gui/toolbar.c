@@ -2,12 +2,12 @@
 #include <string.h>
 
 #include "gui/component.h"
+#include "gui/sidebar.h"
 #include "gui/toolbar.h"
 #include "macro.h"
 #include "raygui.h"
-#include "gui/sidebar.h"
 
-void createToolbar(Toolbar* toolbar, FileManager* fileManager, Sidebar* sidebar) {
+void createToolbar(Toolbar *toolbar, FileManager *fileManager, Sidebar *sidebar) {
 
     toolbar->newButtonProperty = (ButtonWithModalProperty){
         .btnRect = {50, 50, 100, 24},
@@ -23,9 +23,8 @@ void createToolbar(Toolbar* toolbar, FileManager* fileManager, Sidebar* sidebar)
         .itemCreated = false,
         .inputEditMode = false,
         .disabled = false,
-        .sidebar = sidebar
-    };
-    toolbar->currentZeroPosition = (Rectangle){ 0 };
+        .sidebar = sidebar};
+    toolbar->currentZeroPosition = (Rectangle){0};
     toolbar->fileManager = fileManager;
     toolbar->isButtonCopyActive = false;
     toolbar->isButtonCutActive = false;
@@ -33,7 +32,7 @@ void createToolbar(Toolbar* toolbar, FileManager* fileManager, Sidebar* sidebar)
     toolbar->isButtonPasteActive = false;
 }
 
-void updateToolbar(Toolbar* toolbar, Rectangle currentZeroPosition) {
+void updateToolbar(Toolbar *toolbar, Rectangle currentZeroPosition) {
     toolbar->currentZeroPosition = currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
 
@@ -52,8 +51,8 @@ void updateToolbar(Toolbar* toolbar, Rectangle currentZeroPosition) {
     toolbar->newButtonProperty.modalRect.y = (screenHeight - modalHeight) / 2;
 
     if (toolbar->newButtonProperty.itemCreated) {
-        char* name = toolbar->newButtonProperty.inputBuffer;
-        char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+        char *name = toolbar->newButtonProperty.inputBuffer;
+        char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
         createFile(toolbar->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name);
         toolbar->newButtonProperty.itemCreated = false;
     }
@@ -73,35 +72,31 @@ void updateToolbar(Toolbar* toolbar, Rectangle currentZeroPosition) {
         pasteFile(toolbar->fileManager);
         toolbar->isButtonPasteActive = false;
     }
-
 }
 
-void drawToolbar(Toolbar* toolbar) {
+void drawToolbar(Toolbar *toolbar) {
     float x = toolbar->currentZeroPosition.x;
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
 
-    GuiButtonCustom((Rectangle) { x + toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING, y, 130, 24 }, "#112# PILIH BANYAK", "MULTI SELECT", true);
-
     int rightStartx = x + width;
 
-    x += toolbar->newButtonProperty.btnRect.width + 130;
-    x += 24;
-    GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#22#", "RENAME", false);
+    x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", false);
+    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", false);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#16#", "COPY", false);
+    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", false);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#17#", "CUT", false);
+    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", false);
 
     rightStartx -= 24;
-    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle) { rightStartx, y, 24, 24 }, "#143#", "DELETE", false);
+    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", false);
 
     GuiNewButton(&toolbar->newButtonProperty);
 
-    GuiLine((Rectangle) { toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10 }, NULL);
+    GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
 }

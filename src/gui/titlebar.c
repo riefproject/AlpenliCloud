@@ -48,6 +48,8 @@ void createTitleBar(TitleBar *titleBar, int screenWidth, int screenHeight) {
     titleBar->resizeDir = RESIZE_NONE;
     titleBar->resizing = false;
     titleBar->resizeOrigin = (Vector2){0, 0};
+    titleBar->isBottonMaximizeClicked = false;
+    titleBar->isBottonMinimizeClicked = false;
 }
 
 void updateTitleBar(TitleBar *titleBar) {
@@ -125,6 +127,19 @@ void updateTitleBar(TitleBar *titleBar) {
         }
     }
 
+    if (titleBar->isBottonMaximizeClicked) {
+        if (IsWindowMaximized())
+            RestoreWindow();
+        else
+            MaximizeWindow();
+        titleBar->isBottonMaximizeClicked = false;
+    }
+
+    if (titleBar->isBottonMinimizeClicked) {
+        MinimizeWindow();
+        titleBar->isBottonMinimizeClicked = false;
+    }
+
     titleBar->screenWidth = GetScreenWidth();
     titleBar->screenHeight = GetScreenHeight();
 }
@@ -134,14 +149,10 @@ void drawTitleBar(TitleBar *titleBar) {
 
     GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
     if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 2 - TINY_PADDING, 3, 18, 18}, "#198#")) {
-        if (IsWindowMaximized()) {
-            RestoreWindow();
-        } else {
-            MaximizeWindow();
-        }
+        titleBar->isBottonMaximizeClicked = true;
     }
     if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 3 - TINY_PADDING * 2, 3, 18, 18}, "#35#")) {
-        MinimizeWindow();
+        titleBar->isBottonMinimizeClicked = true;
     }
     GuiSetStyle(BUTTON, BORDER_WIDTH, 2);
 
