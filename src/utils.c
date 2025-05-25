@@ -11,6 +11,7 @@
 
 #define CONTROL_KEY_PRESSED IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)
 #define SHIFT_KEY_PRESSED IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)
+#define ALT_KEY_PRESSED IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)
 
 void inputString(char** s) {
     char* temp = malloc(1);
@@ -134,6 +135,30 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
                 char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
                 createFile(toolbar->fileManager, ITEM_FILE, dirPath, name);
             }
+        }
+    }
+
+    // CTRL+F / FIND
+    if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_F)) {
+        if (navbar->textboxSearcheditMode) {
+            navbar->textboxSearcheditMode = false;
+            printf("Search mode deactivated\n");
+        }
+        else {
+            navbar->textboxSearcheditMode = true;
+            printf("Search mode activated\n");
+        }
+    }
+
+    // CTRL+L / ADDRESS/PATH
+    if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_L)) {
+        if (navbar->textboxPatheditMode) {
+            navbar->textboxPatheditMode = false;
+            printf("Path edit mode deactivated\n");
+        }
+        else {
+            navbar->textboxPatheditMode = true;
+            printf("Path edit mode activated\n");
         }
     }
 }

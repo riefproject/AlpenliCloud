@@ -113,11 +113,39 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
 
     if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         body->focusedIndex = index;
-        if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FOLDER) {
-            goTo(body->fileManager, subTree);
+
+        // Handle double tap untuk navigation/open
+        if (GetGestureDetected() == GESTURE_DOUBLETAP) {
+            if (item.type == ITEM_FOLDER) {
+                goTo(body->fileManager, subTree);
+            }
+            else if (item.type == ITEM_FILE) {
+                windowsOpenWith(item.path);
+            }
         }
-        if (GetGestureDetected() == GESTURE_DOUBLETAP && item.type == ITEM_FILE) {
-            windowsOpenWith(item.path);
+        // Handle single tap
+        else if (GetGestureDetected() == GESTURE_TAP || GetGestureDetected() == GESTURE_NONE) {
+            // Ctrl + Click untuk selection
+            if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
+                // Toggle selection status
+                subTree->item.selected = !subTree->item.selected;
+
+                if (subTree->item.selected) {
+                    selectFile(body->fileManager, &subTree->item);
+                }
+                else {
+                    deselectFile(body->fileManager, &subTree->item);
+                }
+            }
+            // Single click tanpa Ctrl = clear selection dan focus item ini
+            else {
+                // Clear semua selection dulu
+                clearSelectedFile(body->fileManager);
+
+                // Select item yang diklik
+                subTree->item.selected = true;
+                selectFile(body->fileManager, &subTree->item);
+            }
         }
     }
 
