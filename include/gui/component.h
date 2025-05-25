@@ -3,7 +3,7 @@
 
 #include "item.h"
 #include "macro.h"
-#include "raylib.h"
+#include "sidebar.h"
 // #include "navbar.h"
 // #include "sidebar.h"
 // #include "titlebar.h"
@@ -17,21 +17,22 @@ typedef struct ButtonWithModalProperty {
     Rectangle dropdownRect; // Rectangle yang mendefinisikan posisi dan ukuran menu dropdown
     Rectangle modalRect;    // Rectangle yang mendefinisikan posisi dan ukuran dialog modal
 
-    char *placeholder;                   // Teks placeholder yang ditampilkan ketika tidak ada input
-    char *tooltip;                       // Teks tooltip yang ditampilkan saat hover
-    char inputBuffer[MAX_STRING_LENGTH]; // Buffer untuk menyimpan teks input pengguna
-    ItemType selectedType;               // Tipe item yang sedang dipilih dari dropdown
+    char* placeholder;
+    char* tooltip;
+    char inputBuffer[MAX_STRING_LENGTH];
 
-    int dropdownIndex;   // Indeks item yang sedang dipilih pada dropdown
-    bool dropdownActive; // Penanda apakah menu dropdown sedang terbuka
+    int dropdownIndex;
+    bool dropdownActive;
 
-    bool showModal;     // Penanda untuk menampilkan/menyembunyikan dialog modal
-    bool inputEditMode; // Penanda apakah field input sedang dalam mode edit
+    ItemType selectedType;
+    bool showModal;
+    bool inputEditMode;
 
-    bool itemCreated; // Penanda apakah item baru telah dibuat
+    bool itemCreated;
 
-    bool disabled; // Penanda untuk mengaktifkan/menonaktifkan komponen tombol
-} ButtonWithModalProperty;
+    bool disabled;
+    Sidebar *sidebar;
+} NewButtonProperty;
 
 void GuiNewButton(ButtonWithModalProperty *buttonProperty);
 

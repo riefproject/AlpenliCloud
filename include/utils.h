@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H 
-
-void inputString(char **s);
-
+typedef struct Toolbar Toolbar;
+typedef struct Navbar Navbar;
+typedef struct Body Body;
+void inputString(char** s);
+void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body);
 #endif

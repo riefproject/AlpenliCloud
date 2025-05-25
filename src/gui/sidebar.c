@@ -12,6 +12,7 @@ void createSidebar(Sidebar *sidebar) {
     sidebar->panelView = (Rectangle){0};
     sidebar->panelScroll = (Vector2){0};
     sidebar->sidebarRoot = NULL;
+    sidebar->isSidebarClickable = true;
 }
 
 void updateSidebar(Sidebar *sidebar, Rectangle currentZeroPosition, FileManager *fileManager) {
@@ -48,7 +49,7 @@ void drawSidebar(Sidebar *sidebar) {
     float scrollWidth = sidebar->panelContentRec.width; // nilai awal
     BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
 
-    drawSidebarItem(sidebar->sidebarRoot, sidebar->fileManager, &drawPos, 0, sidebar->panelContentRec.width, itemHeight, &scrollWidth);
+    drawSidebarItem(sidebar, sidebar->sidebarRoot, sidebar->fileManager, &drawPos, 0, sidebar->panelContentRec.width, itemHeight, &scrollWidth);
 
     EndScissorMode();
 
@@ -73,7 +74,7 @@ SidebarItem *crateSidebarItem(Tree tree) {
     return sidebarItem;
 }
 
-void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
+void drawSidebarItem(Sidebar* sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
     while (node) {
         Tree itemNode = node->tree;
 
@@ -92,15 +93,16 @@ void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, 
             }
 
             // Toggle expand/collapse
-            if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){pos->x + indent, pos->y, iconWidth, height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                if (itemNode->first_son != NULL) {
-                    node->isExpanded = !node->isExpanded;
+            if(sidebar->isSidebarClickable){
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle) { pos->x + indent, pos->y, iconWidth, height }) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                    if (itemNode->first_son != NULL) {
+                        node->isExpanded = !node->isExpanded;
+                    }
                 }
-            }
-
-            if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){pos->x + indent + iconWidth, pos->y, *scrollWidth, height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                goTo(fileManager, itemNode);
-                printf("Navigating to: %s\n", itemNode->item.name);
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle) {pos->x + indent + iconWidth, pos->y, labelWidth - indent - iconWidth, height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                    goTo(fileManager, itemNode);
+                    printf("Navigating to: %s\n", itemNode->item.name);
+                }
             }
             
             if (itemNode == fileManager->treeCursor) {
@@ -111,7 +113,7 @@ void drawSidebarItem(SidebarItem *node, FileManager *fileManager, Vector2 *pos, 
             pos->y += height;
 
             if (node->isExpanded && node->first_son) {
-                drawSidebarItem(node->first_son, fileManager, pos, depth + 1, width, height, scrollWidth);
+                drawSidebarItem(sidebar, node->first_son, fileManager, pos, depth + 1, width, height, scrollWidth);
             }
         }
 

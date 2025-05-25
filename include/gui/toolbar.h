@@ -5,18 +5,22 @@
 #include "raylib.h"
 #include "item.h"
 #include "component.h"
-typedef struct Toolbar
-{
-    ButtonWithModalProperty newButtonProperty;
+#include "file_manager.h"
+#include "sidebar.h"
+typedef struct Toolbar {
+    NewButtonProperty newButtonProperty;
     Rectangle currentZeroPosition;
-
-    // bool IsBtnCpyClicked
+    FileManager* fileManager; // Pointer to the FileManager to access file operations
+    bool isButtonCopyActive;
+    bool isButtonCutActive;
+    bool isButtonDeleteActive;
+    bool isButtonPasteActive;
 } Toolbar;
 
-void createToolbar(Toolbar *navbar);
+void createToolbar(Toolbar* navbar, FileManager* fileManager, Sidebar* sidebar);
 
-void updateToolbar(Toolbar *navbar, Rectangle currentZeroPosition);
+void updateToolbar(Toolbar* navbar, Rectangle currentZeroPosition);
 
-void drawToolbar(Toolbar *navbar);
+void drawToolbar(Toolbar* navbar);
 
 #endif

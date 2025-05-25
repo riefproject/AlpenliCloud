@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "file_manager.h"
+#include "utils.h"
 #include "gui/body.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
@@ -31,7 +32,15 @@ int main() {
 
     initFileManager(&fileManager);
 
+    // createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
     // printTree((fileManager.treeCursor), 0);
+    // printf("Enter to Undo...");
+    // getchar();
+    // undo(&fileManager);
+    // printf("Enter to redo...");
+    // getchar();
+    // redo(&fileManager);
+
 
     // return 0;
 
@@ -52,21 +61,22 @@ int main() {
     Navbar navbar;
     createNavbar(&navbar);
 
-    Toolbar toolbar;
-    createToolbar(&toolbar);
 
     Sidebar sidebar;
     createSidebar(&sidebar);
 
+    Toolbar toolbar;
+    createToolbar(&toolbar, &fileManager, &sidebar);
+
     Body body;
     createBody(&body);
 
-    
+
 
     while (!titleBar.exitWindow && !WindowShouldClose()) {
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2};
+        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
 
         // Update
         //----------------------------------------------------------------------------------
@@ -80,6 +90,7 @@ int main() {
 
         updateBody(&body, currentZeroPosition, &fileManager);
 
+        ShortcutKeys(&toolbar, &navbar);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
