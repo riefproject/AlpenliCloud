@@ -8,52 +8,54 @@
 #include "queue.h"
 #include "linked.h"
 
-void create_queue(Queue* queue){
+void create_queue(Queue* queue) {
   queue->front = NULL;
   queue->rear = NULL;
 }
 
-bool is_queue_empty(Queue queue){
-  if(queue.front == NULL && queue.rear == NULL){
+bool is_queue_empty(Queue queue) {
+  if (queue.front == NULL && queue.rear == NULL) {
     return true;
   }
   return false;
 }
 
 
-void enqueue(Queue* queue, infotype data){
+void enqueue(Queue* queue, infotype data) {
   LinkedList temp_list;
 
   temp_list.head = queue->front;
   insert_last(&temp_list, data);
 
   queue->front = temp_list.head;
-  if(queue->rear == NULL){
+  if (queue->rear == NULL) {
     queue->rear = queue->front;
-  }else{
+  }
+  else {
     queue->rear = queue->rear->next;
   }
 
 }
 
-infotype dequeue(Queue* queue){
+infotype dequeue(Queue* queue) {
   LinkedList temp_list;
   infotype data;
-    temp_list.head = queue->front;
-    delete_first(&temp_list, data);
-    queue->front = temp_list.head;
-    if(queue->front == NULL){
-      queue->rear = NULL;
-    }
+  temp_list.head = queue->front;
+  delete_first(&temp_list, data);
+  queue->front = temp_list.head;
+  if (queue->front == NULL) {
+    queue->rear = NULL;
+  }
   return data;
 }
 
 void print_queue(Queue queue) {
   LinkedList temp_list;
   temp_list.head = queue.front;
-  if(is_queue_empty(queue)){
-    printf("Queue is empty\n");
-  }else{
+  if (is_queue_empty(queue)) {
+    printf("[LOG] Queue is empty\n");
+  }
+  else {
     print_list(temp_list);
   }
 }

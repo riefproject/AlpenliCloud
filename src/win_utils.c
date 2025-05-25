@@ -5,7 +5,7 @@
 #include <shlwapi.h>    
 #include <shellapi.h> 
 
-int RemoveItemsRecurse(const char *folderPath) {
+int RemoveItemsRecurse(const char* folderPath) {
     WIN32_FIND_DATAA findData;
     char searchPath[MAX_PATH];
     char itemPath[MAX_PATH];
@@ -26,10 +26,11 @@ int RemoveItemsRecurse(const char *folderPath) {
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // Kalau folder → panggil rekursif
             RemoveItemsRecurse(itemPath);
-        } else {
+        }
+        else {
             // Kalau file → hapus
             if (!DeleteFileA(itemPath)) {
-                printf("Gagal hapus file: %s\n", itemPath);
+                printf("[LOG] Gagal hapus file: %s\n", itemPath);
             }
         }
 
@@ -39,7 +40,7 @@ int RemoveItemsRecurse(const char *folderPath) {
 
     // Setelah semua isi dihapus, hapus foldernya sendiri
     if (!RemoveDirectoryA(folderPath)) {
-        printf("Gagal hapus folder: %s\n", folderPath);
+        printf("[LOG] Gagal hapus folder: %s\n", folderPath);
         return 0;
     }
 

@@ -21,7 +21,7 @@
 DoublyLinkedList* createDoublyLinkedList() {
     DoublyLinkedList* list = new(DoublyLinkedList);
     if (list == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed for DoublyLinkedList\n");
+        fprintf(stderr, "[LOG] Error: Memory allocation failed for DoublyLinkedList\n");
         return NULL;
     }
     list->head = NULL;
@@ -33,7 +33,7 @@ DoublyLinkedList* createDoublyLinkedList() {
 DLLNode* createDLLNode(void* data) {
     DLLNode* node = new(DLLNode);
     if (node == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed for DLLNode\n");
+        fprintf(stderr, "[LOG] Error: Memory allocation failed for DLLNode\n");
         return NULL;
     }
     node->data = data;
@@ -47,7 +47,7 @@ DLLNode* createDLLNode(void* data) {
 
 void* DLL_getNodeData(DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return NULL;
     }
     return node->data;
@@ -55,7 +55,7 @@ void* DLL_getNodeData(DLLNode* node) {
 
 DLLNode* DLL_getNextNode(DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return NULL;
     }
     return node->next;
@@ -63,7 +63,7 @@ DLLNode* DLL_getNextNode(DLLNode* node) {
 
 DLLNode* DLL_getPrevNode(DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return NULL;
     }
     return node->prev;
@@ -74,7 +74,7 @@ DLLNode* DLL_getPrevNode(DLLNode* node) {
 
 void DLL_setNodeData(DLLNode* node, void* data) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     node->data = data;
@@ -82,7 +82,7 @@ void DLL_setNodeData(DLLNode* node, void* data) {
 
 void DLL_setNextNode(DLLNode* node, DLLNode* next) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     node->next = next;
@@ -90,7 +90,7 @@ void DLL_setNextNode(DLLNode* node, DLLNode* next) {
 
 void DLL_setPrevNode(DLLNode* node, DLLNode* prev) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     node->prev = prev;
@@ -102,7 +102,7 @@ void DLL_setPrevNode(DLLNode* node, DLLNode* prev) {
 void DLL_insertFront(DoublyLinkedList* list, void* data) {
     DLLNode* newNode = createDLLNode(data);
     if (newNode == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed for new node\n");
+        fprintf(stderr, "[LOG] Error: Memory allocation failed for new node\n");
         return;
     }
     if (list->head == NULL) {
@@ -120,7 +120,7 @@ void DLL_insertFront(DoublyLinkedList* list, void* data) {
 void DLL_insertBack(DoublyLinkedList* list, void* data) {
     DLLNode* newNode = createDLLNode(data);
     if (newNode == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed for new node\n");
+        fprintf(stderr, "[LOG] Error: Memory allocation failed for new node\n");
         return;
     }
     if (list->tail == NULL) {
@@ -137,7 +137,7 @@ void DLL_insertBack(DoublyLinkedList* list, void* data) {
 
 void DLL_insertNode(DoublyLinkedList* list, void* data, int pos) {
     if (pos < 0 || pos > list->size) {
-        fprintf(stderr, "Error: Invalid position for insertion\n");
+        fprintf(stderr, "[LOG] Error: Invalid position for insertion\n");
         return;
     }
     if (pos == 0) {
@@ -150,7 +150,7 @@ void DLL_insertNode(DoublyLinkedList* list, void* data, int pos) {
     }
     DLLNode* newNode = createDLLNode(data);
     if (newNode == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed for new node\n");
+        fprintf(stderr, "[LOG] Error: Memory allocation failed for new node\n");
         return;
     }
     DLLNode* current = list->head;
@@ -171,7 +171,7 @@ void DLL_insertNode(DoublyLinkedList* list, void* data, int pos) {
 
 void DLL_removeFront(DoublyLinkedList* list, DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     if (list->head == node) {
@@ -195,7 +195,7 @@ void DLL_removeFront(DoublyLinkedList* list, DLLNode* node) {
 
 void DLL_removeBack(DoublyLinkedList* list, DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     if (list->tail == node) {
@@ -219,11 +219,11 @@ void DLL_removeBack(DoublyLinkedList* list, DLLNode* node) {
 
 void DLL_removeNode(DoublyLinkedList* list, DLLNode* node, int pos) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     if (pos < 0 || pos >= list->size) {
-        fprintf(stderr, "Error: Invalid position for removal\n");
+        fprintf(stderr, "[LOG] Error: Invalid position for removal\n");
         return;
     }
     if (pos == 0) {
@@ -249,7 +249,7 @@ void DLL_removeNode(DoublyLinkedList* list, DLLNode* node, int pos) {
 
 void* DLL_getFront(DoublyLinkedList* list) {
     if (list->head == NULL) {
-        fprintf(stderr, "Error: List is empty\n");
+        fprintf(stderr, "[LOG] Error: List is empty\n");
         return NULL;
     }
     return list->head->data;
@@ -257,7 +257,7 @@ void* DLL_getFront(DoublyLinkedList* list) {
 
 void* DLL_getBack(DoublyLinkedList* list) {
     if (list->tail == NULL) {
-        fprintf(stderr, "Error: List is empty\n");
+        fprintf(stderr, "[LOG] Error: List is empty\n");
         return NULL;
     }
     return list->tail->data;
@@ -265,7 +265,7 @@ void* DLL_getBack(DoublyLinkedList* list) {
 
 void* DLL_getNode(DoublyLinkedList* list, int pos) {
     if (pos < 0 || pos >= list->size) {
-        fprintf(stderr, "Error: Invalid position for retrieval\n");
+        fprintf(stderr, "[LOG] Error: Invalid position for retrieval\n");
         return NULL;
     }
     DLLNode* current = list->head;
@@ -292,7 +292,7 @@ void DLL_clearList(DoublyLinkedList* list) {
 
 void DLL_freeList(DoublyLinkedList* list) {
     if (list == NULL) {
-        fprintf(stderr, "Error: List is NULL\n");
+        fprintf(stderr, "[LOG] Error: List is NULL\n");
         return;
     }
     DLL_clearList(list);
@@ -302,7 +302,7 @@ void DLL_freeList(DoublyLinkedList* list) {
 
 void DLL_freeNode(DLLNode* node) {
     if (node == NULL) {
-        fprintf(stderr, "Error: DLLNode is NULL\n");
+        fprintf(stderr, "[LOG] Error: DLLNode is NULL\n");
         return;
     }
     delete(node->data);
@@ -315,7 +315,7 @@ void DLL_freeNode(DLLNode* node) {
 
 void DLL_printList(DoublyLinkedList* list, void (*printFunc)(void*)) {
     if (list == NULL) {
-        fprintf(stderr, "Error: List is NULL\n");
+        fprintf(stderr, "[LOG] Error: List is NULL\n");
         return;
     }
     DLLNode* current = list->head;
@@ -328,7 +328,7 @@ void DLL_printList(DoublyLinkedList* list, void (*printFunc)(void*)) {
 
 void DLL_printListReverse(DoublyLinkedList* list, void (*printFunc)(void*)) {
     if (list == NULL) {
-        fprintf(stderr, "Error: List is NULL\n");
+        fprintf(stderr, "[LOG] Error: List is NULL\n");
         return;
     }
     DLLNode* current = list->tail;
