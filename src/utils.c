@@ -22,7 +22,7 @@ void inputString(char** s) {
         temp[i] = c;
 
         if (temp == NULL) {
-            printf("Memory allocation failed\n");
+            printf("[LOG] Memory allocation failed\n");
             break;
         }
 
@@ -53,7 +53,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_Z)) {
         if (toolbar->fileManager != NULL) {
             undo(toolbar->fileManager);
-            printf("Undo shortcut activated\n");
+            printf("[LOG] Undo shortcut activated\n");
         }
     }
 
@@ -61,14 +61,14 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_Y)) {
         if (toolbar->fileManager != NULL) {
             redo(toolbar->fileManager);
-            printf("Redo shortcut activated\n");
+            printf("[LOG] Redo shortcut activated\n");
         }
     }
 
     // DELETE (Delete key atau Ctrl + Delete)
     if (IsKeyPressed(KEY_DELETE) || ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_DELETE))) {
         toolbar->isButtonDeleteActive = true;
-        printf("Delete shortcut activated\n");
+        printf("[LOG] Delete shortcut activated\n");
     }
 
     // RENAME (F2)
@@ -76,7 +76,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
         if (toolbar->fileManager != NULL && toolbar->fileManager->selectedItem.head != NULL) {
             Item* selectedItem = (Item*)toolbar->fileManager->selectedItem.head->data;
             if (selectedItem != NULL) {
-                printf("Rename shortcut activated for: %s\n", selectedItem->name);
+                printf("[LOG] Rename shortcut activated for: %s\n", selectedItem->name);
                 // renameFile(toolbar->fileManager, selectedItem->path, "new_name"); // Implement proper rename UI
             }
         }
@@ -110,7 +110,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
                 clearSelectedFile(toolbar->fileManager);
                 body->selectedAll = false;
             }
-            printf("Select all shortcut activated\n");
+            printf("[LOG] Select all shortcut activated\n");
         }
     }
 
@@ -153,11 +153,11 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
         toolbar->newButtonProperty.showModal = false;
         if (navbar->textboxSearcheditMode) {
             navbar->textboxSearcheditMode = false;
-            printf("Search mode deactivated\n");
+            printf("[LOG] Search mode deactivated\n");
         }
         else {
             navbar->textboxSearcheditMode = true;
-            printf("Search mode activated\n");
+            printf("[LOG] Search mode activated\n");
         }
     }
 
@@ -168,11 +168,11 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
         toolbar->newButtonProperty.showModal = false;
         if (navbar->textboxPatheditMode) {
             navbar->textboxPatheditMode = false;
-            printf("Path edit mode deactivated\n");
+            printf("[LOG] Path edit mode deactivated\n");
         }
         else {
             navbar->textboxPatheditMode = true;
-            printf("Path edit mode activated\n");
+            printf("[LOG] Path edit mode activated\n");
         }
     }
 
@@ -198,7 +198,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
                     selectFile(toolbar->fileManager, &cursor->item);
                 }
 
-                printf("Arrow up navigation - index: %d\n", body->focusedIndex);
+                printf("[LOG] Arrow up navigation - index: %d\n", body->focusedIndex);
             }
         }
 
@@ -227,7 +227,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
                     selectFile(toolbar->fileManager, &cursor->item);
                 }
 
-                printf("Arrow down navigation - index: %d\n", body->focusedIndex);
+                printf("[LOG] Arrow down navigation - index: %d\n", body->focusedIndex);
             }
         }
     }
@@ -250,11 +250,11 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
                     if (item.type == ITEM_FOLDER) {
                         goTo(toolbar->fileManager, cursor);
                         body->focusedIndex = 0;
-                        printf("Keyboard action - enter folder: %s\n", item.name);
+                        printf("[LOG] Keyboard action - enter folder: %s\n", item.name);
                     }
                     else if (item.type == ITEM_FILE) {
                         windowsOpenWith(item.path);
-                        printf("Keyboard action - open file: %s\n", item.name);
+                        printf("[LOG] Keyboard action - open file: %s\n", item.name);
                     }
                 }
             }

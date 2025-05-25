@@ -17,35 +17,35 @@ Item createItem(char* name, char* path, long size, ItemType type, time_t created
   };
 }
 
-TrashItem searchTrashItem(LinkedList trash, char* originalPath){
-  TrashItem *trashItemToFind;
+TrashItem searchTrashItem(LinkedList trash, char* originalPath) {
+  TrashItem* trashItemToFind;
   Node* current;
-  if(trash.head == NULL){
-    printf("Sampah kosong\n");
-    return (TrashItem){
+  if (trash.head == NULL) {
+    printf("[LOG] Sampah kosong\n");
+    return (TrashItem) {
       .deletedTime = 0,
-      .item = {0},
-      .originalPath = NULL,
-      .trashPath =  NULL
+        .item = { 0 },
+        .originalPath = NULL,
+        .trashPath = NULL
     };
   }
   current = trash.head;
-  if(current != NULL){
-    trashItemToFind = (TrashItem*) current->data;
-    if(strcmp(originalPath,trashItemToFind->originalPath) == 0){
+  if (current != NULL) {
+    trashItemToFind = (TrashItem*)current->data;
+    if (strcmp(originalPath, trashItemToFind->originalPath) == 0) {
       return  *trashItemToFind;
     }
     current = current->next;
   }
 
-  printf("Item sampah tidak ditemukan\n");
+  printf("[LOG] Item sampah tidak ditemukan\n");
 
-  return (TrashItem){
-      .deletedTime = 0,
-      .item = {0},
+  return (TrashItem) {
+    .deletedTime = 0,
+      .item = { 0 },
       .originalPath = NULL,
-      .trashPath =  NULL
-    };
+      .trashPath = NULL
+  };
 }
 
 // TrashItem createTrashItem(Item item, char* origin) {
