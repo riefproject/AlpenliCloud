@@ -52,7 +52,7 @@ int main() {
     SetTargetFPS(60);
 
     InitWindow(screenWidth, screenHeight, "AlpenliCloud");
-    SetWindowIcon(LoadImage("resources/icon.png"));
+    SetWindowIcon(LoadImage("assets/icon.png"));
     // ----------------------------------------------------------------------------------------
 
     // initialization
@@ -109,8 +109,6 @@ int main() {
 
         EndDrawing();
     }
-
-    exit(1);
 
     CloseWindow();
     return 0;

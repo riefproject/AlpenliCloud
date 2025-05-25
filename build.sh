@@ -25,6 +25,13 @@ CFLAGS="$WNO
 LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
 object_files=()
 
+# Biar CLI nya cakep
+RED='\e[31m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+BLUE='\e[34m'
+RESET='\e[0m' # No Color
+
 clean() {
     echo "🧹 Cleaning build directories..."
     rm -rf "$BUILD_DIR" "$BIN_DIR" "$RESOURCE_RES"
@@ -40,11 +47,11 @@ compile_if_needed() {
         echo "🔨 Compiling $src_file..."
         gcc $CFLAGS -c "$src_file" -o "$out_file"
         if [ $? -ne 0 ]; then
-            echo "❌ Compilation failed: $src_file"
+            echo -e "${RED}❌ Compilation failed: $src_file ${RESET}"
             exit 1
         fi
     else
-        echo "✅ Skipping $src_file (up to date)"
+        echo -e "${GREEN}✅ Skipping $src_file (up to date) ${RESET}"
     fi
 
     object_files+=("$out_file")
@@ -66,11 +73,11 @@ compile_resource_if_needed() {
         echo "🎨 Compiling resource file..."
         windres "$RESOURCE_RC" -O coff -o "$RESOURCE_RES"
         if [ $? -ne 0 ]; then
-            echo "❌ Resource compilation failed!"
+            echo -e "${RED}❌ Resource compilation failed! ${RESET}"
             exit 1
         fi
     else
-        echo "✅ Skipping resource compilation (up to date)"
+        echo -e "${GREEN}✅ Skipping resource compilation (up to date) ${RESET}"
     fi
 }
 
@@ -93,11 +100,11 @@ link_if_needed() {
         echo "🔧 Linking..."
         gcc "${object_files[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS
         if [ $? -ne 0 ]; then
-            echo "❌ Linking failed!"
+            echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1
         fi
     else
-        echo "✅ Skipping linking (up to date)"
+        echo -e "${GREEN}✅ Skipping linking (up to date) ${RESET}"
     fi
 }
 
@@ -106,9 +113,14 @@ build() {
     mkdir -p "$BIN_DIR"
     compile_sources
     link_if_needed
-    echo "🚀 Running AlpenliCloud..."
+
+    echo -e "\n🚀 Running ${BLUE}AlpenliCloud...${RESET}"
     sleep 1
-    "./$EXE_PATH" || echo "❌ AlpenliCloud failed to start! Check for errors."
+    "./$EXE_PATH" || echo -e "${RED}❌ AlpenliCloud failed to start! Check for errors. ${RESET}"
+    if [ $? -eq 0 ]; then
+        clear
+        echo -e "\n\nMantap! Trims sudah pakai ${BLUE}AlpenliCloud${RESET}\n\n"
+    fi
 }
 
 case "$1" in
@@ -116,7 +128,7 @@ case "$1" in
     "rebuild") clean; build ;;
     ""|"build") build ;;
     *)
-        echo "❌ Unknown parameter: $1"
+        echo -e "${RED}❌ Unknown parameter: $1 ${RESET}"
         echo "Usage: $0 [clean|rebuild|build]"
         exit 1
         ;;
