@@ -1,20 +1,20 @@
 #include "utils.h"
+#include "body.h"
+#include "file_manager.h"
+#include "navbar.h"
+#include "raylib.h"
+#include "toolbar.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include "raylib.h"
-#include "toolbar.h"
-#include "navbar.h"
-#include "body.h"
-#include "file_manager.h"
 
 #define CONTROL_KEY_PRESSED IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)
 #define SHIFT_KEY_PRESSED IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)
 #define ALT_KEY_PRESSED IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)
 
-void inputString(char** s) {
-    char* temp = malloc(1);
+void inputString(char **s) {
+    char *temp = malloc(1);
     char c;
     int i = 0;
     while ((c = getchar()) != '\n') {
@@ -32,7 +32,14 @@ void inputString(char** s) {
     *s = temp;
 }
 
-void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
+void trimTrailingSlash(char *path) {
+    int len = strlen(path);
+    while (len > 0 && path[len - 1] == '/') {
+        path[--len] = '\0';
+    }
+}
+
+void ShortcutKeys(Toolbar *toolbar, Navbar *navbar, Body *body) {
 
     // COPY (Ctrl + C)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_C)) {
@@ -74,7 +81,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
     // RENAME (F2)
     if (IsKeyPressed(KEY_F2)) {
         if (toolbar->fileManager != NULL && toolbar->fileManager->selectedItem.head != NULL) {
-            Item* selectedItem = (Item*)toolbar->fileManager->selectedItem.head->data;
+            Item *selectedItem = (Item *)toolbar->fileManager->selectedItem.head->data;
             if (selectedItem != NULL) {
                 printf("[LOG] Rename shortcut activated for: %s\n", selectedItem->name);
                 // renameFile(toolbar->fileManager, selectedItem->path, "new_name"); // Implement proper rename UI
@@ -105,8 +112,7 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
             if (!body->selectedAll) {
                 selectAll(toolbar->fileManager);
                 body->selectedAll = true;
-            }
-            else {
+            } else {
                 clearSelectedFile(toolbar->fileManager);
                 body->selectedAll = false;
             }
@@ -115,18 +121,13 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
     }
 
     // NEW FOLDER (Ctrl + Shift + N)
-    if (!toolbar->newButtonProperty.showModal &&
-        (CONTROL_KEY_PRESSED) && (SHIFT_KEY_PRESSED) && IsKeyPressed(KEY_N)) {
-        navbar->textboxPatheditMode = false;
-        navbar->textboxSearcheditMode = false;
-        if (toolbar->fileManager != NULL) {
-            toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
-            toolbar->newButtonProperty.showModal = true;
-            if (!toolbar->newButtonProperty.showModal) {
-                char* name = toolbar->newButtonProperty.inputBuffer;
-                char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-                createFile(toolbar->fileManager, ITEM_FOLDER, dirPath, name);
-            }
+    if ((CONTROL_KEY_PRESSED) && (SHIFT_KEY_PRESSED) && IsKeyPressed(KEY_N)) {
+        toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
+        toolbar->newButtonProperty.showModal = true;
+        if (!toolbar->newButtonProperty.showModal) {
+            char *name = toolbar->newButtonProperty.inputBuffer;
+            char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+            createFile(toolbar->fileManager, ITEM_FOLDER, dirPath, name);
         }
     }
 
@@ -139,8 +140,8 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
             toolbar->newButtonProperty.selectedType = ITEM_FILE;
             toolbar->newButtonProperty.showModal = true;
             if (!toolbar->newButtonProperty.showModal) {
-                char* name = toolbar->newButtonProperty.inputBuffer;
-                char* dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
+                char *name = toolbar->newButtonProperty.inputBuffer;
+                char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
                 createFile(toolbar->fileManager, ITEM_FILE, dirPath, name);
             }
         }

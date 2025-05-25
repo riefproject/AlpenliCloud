@@ -2,10 +2,10 @@
 #include <stdlib.h>
 
 #include "file_manager.h"
+#include "gui/ctx.h"
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
-#include "gui/ctx.h"
 
 void createSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->ctx = ctx;
@@ -15,11 +15,11 @@ void createSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->panelView = (Rectangle){0};
     sidebar->panelScroll = (Vector2){0};
     sidebar->sidebarRoot = NULL;
-    sidebar->isSidebarClickable = true;
 }
 
 void updateSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->ctx = ctx;
+    ctx->sidebar = sidebar;
 
     if (sidebar->sidebarRoot == NULL) {
         sidebar->sidebarRoot = crateSidebarItem(getCurrentRoot(sidebar->ctx->fileManager));
@@ -36,32 +36,38 @@ void drawSidebar(Sidebar *sidebar) {
     if (sidebar->sidebarRoot == NULL)
         return;
 
-    float maxWidth = sidebar->panelRec.width;
     float itemHeight = 24;
-
     Vector2 scroll = sidebar->panelScroll;
 
+    if (sidebar->ctx->disableGroundClick)
+        GuiDisable();
     GuiScrollPanel(sidebar->panelRec, NULL, sidebar->panelContentRec, &scroll, &sidebar->panelView);
+    GuiEnable();
+
     sidebar->panelScroll = scroll;
 
-    // Hitung posisi awal gambar
     Vector2 drawPos = {
         sidebar->panelRec.x + DEFAULT_PADDING + scroll.x,
         sidebar->panelRec.y + DEFAULT_PADDING + scroll.y};
 
-    float scrollWidth = sidebar->panelContentRec.width; // nilai awal
+    float scrollWidth = sidebar->panelContentRec.width; // Initial width
+
     BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
 
-    drawSidebarItem(sidebar, sidebar->sidebarRoot, sidebar->ctx->fileManager, &drawPos, 0, sidebar->panelContentRec.width, itemHeight, &scrollWidth);
+    drawSidebarItem(
+        sidebar,
+        sidebar->sidebarRoot,
+        sidebar->ctx->fileManager,
+        &drawPos,
+        0,
+        sidebar->panelContentRec.width,
+        itemHeight,
+        &scrollWidth);
 
     EndScissorMode();
 
-    // Update panel content width jika lebih panjang dari sebelumnya
-    if (scrollWidth > sidebar->panelContentRec.width) {
-        sidebar->panelContentRec.width = scrollWidth + DEFAULT_PADDING;
-    }
-
-    // Update height juga kalau perlu
+    // Update width and height
+    sidebar->panelContentRec.width = scrollWidth;
     sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
 }
 
@@ -77,7 +83,7 @@ SidebarItem *crateSidebarItem(Tree tree) {
     return sidebarItem;
 }
 
-void drawSidebarItem(Sidebar* sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
+void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
     while (node) {
         Tree itemNode = node->tree;
 
@@ -86,33 +92,35 @@ void drawSidebarItem(Sidebar* sidebar, SidebarItem *node, FileManager *fileManag
             const char *arrow = (itemNode->first_son != NULL) ? (node->isExpanded ? "#116#" : "#115#") : "   ";
             const char *label = TextFormat("%s %s", arrow, itemNode->item.name);
 
-            // Hitung panjang label jika ditampilkan
-            int iconWidth = MeasureText(arrow, GuiGetStyle(DEFAULT, TEXT_SIZE));
-            int labelWidth = MeasureText(label, GuiGetStyle(DEFAULT, TEXT_SIZE)) + indent + DEFAULT_PADDING;
+            int labelTextWidth = MeasureText(label, GuiGetStyle(DEFAULT, TEXT_SIZE));
+            float totalWidth = indent + labelTextWidth + DEFAULT_PADDING;
 
-            // Selalu update scrollWidth dengan label node ini
-            if (labelWidth > *scrollWidth) {
-                *scrollWidth = labelWidth + DEFAULT_PADDING;
+            if (totalWidth > *scrollWidth) {
+                *scrollWidth = totalWidth;
             }
 
-            // Toggle expand/collapse
-            if(sidebar->isSidebarClickable){
-                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle) { pos->x + indent, pos->y, iconWidth, height }) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    if (itemNode->first_son != NULL) {
-                        node->isExpanded = !node->isExpanded;
+            Rectangle labelBounds = {pos->x + indent, pos->y, labelTextWidth, height};
+
+            // Interaction
+            if (!sidebar->ctx->disableGroundClick) {
+                Vector2 mouse = GetMousePosition();
+                if (CheckCollisionPointRec(mouse, labelBounds)) {
+                    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                        if (CheckCollisionPointRec(mouse, (Rectangle){labelBounds.x, labelBounds.y, 20, height}) && itemNode->first_son) {
+                            node->isExpanded = !node->isExpanded;
+                        } else {
+                            goTo(fileManager, itemNode);
+                            printf("Navigating to: %s\n", itemNode->item.name);
+                        }
                     }
                 }
-                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle) {pos->x + indent + iconWidth, pos->y, labelWidth - indent - iconWidth, height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    goTo(fileManager, itemNode);
-                    printf("Navigating to: %s\n", itemNode->item.name);
-                }
             }
-            
+
             if (itemNode == fileManager->treeCursor) {
                 DrawRectangleRec((Rectangle){pos->x + indent, pos->y, *scrollWidth, height}, Fade(BLUE, 0.2f));
             }
 
-            GuiLabel((Rectangle){pos->x + indent, pos->y, labelWidth - indent, height}, label);
+            GuiLabel(labelBounds, label);
             pos->y += height;
 
             if (node->isExpanded && node->first_son) {

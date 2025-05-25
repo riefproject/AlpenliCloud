@@ -14,6 +14,7 @@
 #include "gui/titlebar.h"
 #include "gui/toolbar.h"
 #include "utils.h"
+#include "gui/component.h"
 
 #include "ctx.h"
 // #include "nbtree.h"
@@ -93,6 +94,8 @@ int main() {
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
+      
+
         ClearBackground(RAYWHITE);
 
         drawTitleBar(&titleBar);
@@ -104,6 +107,8 @@ int main() {
         drawToolbar(&toolbar);
 
         drawNavbar(&navbar);
+
+        DrawCreateModal(&ctx);
 
         EndDrawing();
     }

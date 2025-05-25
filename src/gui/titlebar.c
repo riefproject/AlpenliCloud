@@ -37,6 +37,8 @@ void UpdateResizeCursor(ResizeDirection dir) {
 
 void createTitleBar(TitleBar *titleBar, Context *ctx) {
     titleBar->ctx = ctx;
+    ctx->titleBar = titleBar;
+
     titleBar->screenWidth = ctx->width;
     titleBar->screenHeight = ctx->height;
 

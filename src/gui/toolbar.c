@@ -25,11 +25,9 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .showModal = false,
         .itemCreated = false,
         .inputEditMode = false,
-        .disabled = false,
-        .sidebar = NULL
+        .disabled = false
     };
     toolbar->currentZeroPosition = (Rectangle){0};
-    toolbar->fileManager = ctx->fileManager;
     toolbar->isButtonCopyActive = false;
     toolbar->isButtonCutActive = false;
     toolbar->isButtonDeleteActive = false;
@@ -38,6 +36,8 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
 
 void updateToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->ctx = ctx;
+    ctx->toolbar = toolbar;
+
     toolbar->currentZeroPosition = *ctx->currentZeroPosition;
     toolbar->currentZeroPosition.y += 24 + DEFAULT_PADDING;
 
@@ -57,24 +57,24 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
 
     if (toolbar->newButtonProperty.itemCreated) {
         char *name = toolbar->newButtonProperty.inputBuffer;
-        char *dirPath = TextFormat(".dir/%s", toolbar->fileManager->currentPath);
-        createFile(toolbar->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name);
+        char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+        createFile(ctx->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name);
         toolbar->newButtonProperty.itemCreated = false;
     }
     if (toolbar->isButtonCopyActive) {
-        copyFile(toolbar->fileManager);
+        copyFile(ctx->fileManager);
         toolbar->isButtonCopyActive = false;
     }
     if (toolbar->isButtonCutActive) {
-        cutFile(toolbar->fileManager);
+        cutFile(ctx->fileManager);
         toolbar->isButtonCutActive = false;
     }
     if (toolbar->isButtonDeleteActive) {
-        deleteFile(toolbar->fileManager);
+        deleteFile(ctx->fileManager);
         toolbar->isButtonDeleteActive = false;
     }
     if (toolbar->isButtonPasteActive) {
-        pasteFile(toolbar->fileManager);
+        pasteFile(ctx->fileManager);
         toolbar->isButtonPasteActive = false;
     }
 }
@@ -87,21 +87,21 @@ void drawToolbar(Toolbar *toolbar) {
     int rightStartx = x + width;
 
     x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false);
+    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", false);
+    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", false, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", false);
+    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", false, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", false);
+    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", false, toolbar->ctx->disableGroundClick);
 
     rightStartx -= 24;
-    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", false);
+    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", false, toolbar->ctx->disableGroundClick);
 
-    GuiNewButton(&toolbar->newButtonProperty);
+    GuiNewButton(&toolbar->newButtonProperty, toolbar->ctx);
 
     GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
 }

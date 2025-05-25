@@ -29,6 +29,8 @@ void createBody(Body *b, Context *ctx) {
 
 void updateBody(Body *body, Context *ctx) {
     body->ctx = ctx;
+    ctx->body = body;
+
     body->currentZeroPosition = *body->ctx->currentZeroPosition;
 
     body->panelRec = (Rectangle){
@@ -76,7 +78,11 @@ void drawBody(Body *body) {
 
     body->panelContentRec.width = totalContentWidth;
 
+    if (body->ctx->disableGroundClick)
+        GuiDisable();
+
     GuiScrollPanel(body->panelRec, NULL, body->panelContentRec, &body->panelScroll, &body->panelView);
+    GuiEnable();
 
     BeginScissorMode(body->panelView.x, body->panelView.y, body->panelView.width, body->panelView.height);
 
@@ -109,7 +115,7 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
 
     Rectangle rowRec = {rowX, rowY, totalContentWidth, rowHeight};
 
-    if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !body->ctx->currentZeroPosition) {
         body->focusedIndex = index;
 
         // Handle double tap untuk navigation/open
@@ -161,7 +167,7 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
         GuiCheckBox(checkBox, NULL, &subTree->item.selected);
 
         // PERBAIKAN: Hanya update jika ada perubahan status
-        if (subTree->item.selected != previousSelected) {
+        if (subTree->item.selected != previousSelected && body->ctx->currentZeroPosition) {
             if (subTree->item.selected) {
                 // Tambahkan ke selected list
                 selectFile(body->ctx->fileManager, &subTree->item);
@@ -169,6 +175,10 @@ void drawTableItem(Body *body, Tree subTree, int index, float startX, float star
                 // Hapus dari selected list
                 deselectFile(body->ctx->fileManager, &subTree->item);
             }
+        }
+
+        if (body->ctx->currentZeroPosition) {
+            subTree->item.selected = false;
         }
 
         colX += checkboxWidth;
@@ -218,12 +228,16 @@ void drawTableHeader(Body *body, float x, float y, float colWidths[]) {
         bool previousSelectedAll = body->selectedAll;
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
 
-        if (body->selectedAll != previousSelectedAll) {
+        if (body->selectedAll != previousSelectedAll && !body->ctx->currentZeroPosition) {
             if (body->selectedAll) {
                 selectAll(body->ctx->fileManager);
             } else {
                 clearSelectedFile(body->ctx->fileManager);
             }
+        }
+
+        if (body->ctx->currentZeroPosition) {
+            body->selectedAll = false;
         }
 
         colX += 28;
