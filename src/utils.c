@@ -161,4 +161,111 @@ void ShortcutKeys(Toolbar* toolbar, Navbar* navbar, Body* body) {
             printf("Path edit mode activated\n");
         }
     }
+
+    // ARROW KEYS NAVIGATION (only when not in edit mode)
+    if (!navbar->textboxPatheditMode && !navbar->textboxSearcheditMode && !toolbar->newButtonProperty.showModal) {
+        if (IsKeyPressed(KEY_UP)) {
+            // Move selection up
+            if (body->focusedIndex > 0) {
+                body->focusedIndex--;
+
+                // Clear all selections and select the focused item
+                clearSelectedFile(toolbar->fileManager);
+
+                // Find the item at focusedIndex and select it
+                Tree cursor = toolbar->fileManager->treeCursor->first_son;
+                int currentIndex = 0;
+                while (cursor != NULL && currentIndex < body->focusedIndex) {
+                    cursor = cursor->next_brother;
+                    currentIndex++;
+                }
+                if (cursor != NULL) {
+                    cursor->item.selected = true;
+                    selectFile(toolbar->fileManager, &cursor->item);
+                }
+
+                printf("Arrow up navigation - index: %d\n", body->focusedIndex);
+            }
+        }
+
+        if (IsKeyPressed(KEY_DOWN)) {
+            // Count total items
+            Tree cursor = toolbar->fileManager->treeCursor->first_son;
+            int totalItems = 0;
+            while (cursor != NULL) {
+                totalItems++;
+                cursor = cursor->next_brother;
+            }
+
+            // Move selection down
+            if (body->focusedIndex < totalItems - 1) {
+                body->focusedIndex++;
+
+                // Clear all selections and select the focused item
+                clearSelectedFile(toolbar->fileManager);
+
+                // Find the item at focusedIndex and select it
+                cursor = toolbar->fileManager->treeCursor->first_son;
+                int currentIndex = 0;
+                while (cursor != NULL && currentIndex < body->focusedIndex) {
+                    cursor = cursor->next_brother;
+                    currentIndex++;
+                }
+                if (cursor != NULL) {
+                    cursor->item.selected = true;
+                    selectFile(toolbar->fileManager, &cursor->item);
+                }
+
+                printf("Arrow down navigation - index: %d\n", body->focusedIndex);
+            }
+        }
+    }
+
+    // ENTER KEY (double-tap behavior for folder/file opening)
+    static bool enterPressed = false;
+    static double lastEnterTime = 0.0;
+
+    if (!navbar->textboxPatheditMode && !navbar->textboxSearcheditMode && !toolbar->newButtonProperty.showModal) {
+        if (IsKeyPressed(KEY_ENTER)) {
+            double currentTime = GetTime();
+
+            if (enterPressed && (currentTime - lastEnterTime) < 0.5) { // 500ms for double-tap
+                // Double-tap detected - execute action on focused item
+                if (body->focusedIndex >= 0) {
+                    Tree cursor = toolbar->fileManager->treeCursor->first_son;
+                    int currentIndex = 0;
+
+                    while (cursor != NULL && currentIndex < body->focusedIndex) {
+                        cursor = cursor->next_brother;
+                        currentIndex++;
+                    }
+
+                    if (cursor != NULL) {
+                        Item item = cursor->item;
+
+                        if (item.type == ITEM_FOLDER) {
+                            goTo(toolbar->fileManager, cursor);
+                            body->focusedIndex = 0; // Reset to first item
+                            printf("Keyboard action - enter folder: %s\n", item.name);
+                        }
+                        else if (item.type == ITEM_FILE) {
+                            windowsOpenWith(item.path);
+                            printf("Keyboard action - open file: %s\n", item.name);
+                        }
+                    }
+                }
+                enterPressed = false;
+            }
+            else {
+                // Single tap
+                enterPressed = true;
+                lastEnterTime = currentTime;
+                printf("Single Enter press\n");
+            }
+        }
+
+        if (enterPressed && (GetTime() - lastEnterTime) > 0.5) {
+            enterPressed = false;
+        }
+    }
 }
