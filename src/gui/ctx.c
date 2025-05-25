@@ -15,6 +15,7 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
     ctx->fileManager = fileManager;
     ctx->width = screenWidth;
     ctx->height = screenHeight;
+    ctx->disableGroundClick = false;
 
     // Alokasi currentZeroPosition
     ctx->currentZeroPosition = (Rectangle *)malloc(sizeof(Rectangle));

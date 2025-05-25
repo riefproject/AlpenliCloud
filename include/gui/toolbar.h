@@ -13,7 +13,6 @@ typedef struct Context Context;
 typedef struct Toolbar {
     ButtonWithModalProperty newButtonProperty;
     Rectangle currentZeroPosition;
-    FileManager* fileManager; // Pointer to the FileManager to access file operations
 
     bool isButtonCopyActive;
     bool isButtonCutActive;

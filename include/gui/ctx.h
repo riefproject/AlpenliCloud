@@ -23,6 +23,8 @@ typedef struct Context {
 
     int height;
     int width;
+
+    bool disableGroundClick;
 } Context;
 
 void createContext(Context* ctx, FileManager *fileManager, int screenWidth, int screenHeight);

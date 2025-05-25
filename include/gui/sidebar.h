@@ -23,7 +23,6 @@ typedef struct Sidebar {
     Vector2 panelScroll;       // adalah jauhnya scroll
 
     SidebarItem* sidebarRoot;
-    bool isSidebarClickable;
     Rectangle currentZeroPosition;
 
     Context *ctx;
