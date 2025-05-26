@@ -13,25 +13,20 @@ typedef struct Body {
     Rectangle currentZeroPosition;
 
     bool showCheckbox;
-    
+
     bool selectedAll;
-    bool previousSelectedAll;  
-    
+    bool previousSelectedAll;
+
     int focusedIndex;
     bool selected[100];
 
-    Context *ctx;
+    Context* ctx;
 } Body;
 
 
-void createBody(Body *body, Context *ctx);
-
-void updateBody(Body *body, Context *ctx);
-
-void drawBody(Body *body);
-
-void drawTableItem(Body *body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]);
-
-void drawTableHeader(Body *body, float x, float y, float colWidths[]);
-
+void createBody(Context* ctx, Body* b);
+void updateBody(Context* ctx, Body* body);
+void drawBody(Context* ctx, Body* body);
+void drawTableItem(Context* ctx, Body* body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]);
+void drawTableHeader(Context* ctx, Body* body, float x, float y, float colWidths[]);
 #endif

@@ -58,55 +58,35 @@ int main() {
 
     // initialization
     // ----------------------------------------------------------------------------------------
-    TitleBar titleBar;
-    createTitleBar(&titleBar, &ctx);
+    createTitleBar(ctx.titleBar, &ctx);
+    createNavbar(ctx.navbar, &ctx);
+    createSidebar(ctx.sidebar, &ctx);
+    createToolbar(ctx.toolbar, &ctx);
+    createBody(&ctx, ctx.body);
 
-    Navbar navbar;
-    createNavbar(&navbar, &ctx);
-
-    Sidebar sidebar;
-    createSidebar(&sidebar, &ctx);
-
-    Toolbar toolbar;
-    createToolbar(&toolbar, &ctx);
-
-    Body body;
-    createBody(&body, &ctx);
-
-    while (!titleBar.exitWindow && !WindowShouldClose()) {
+    while (!ctx.titleBar->exitWindow && !WindowShouldClose()) {
 
         // Update
         //----------------------------------------------------------------------------------
         updateContext(&ctx, &fileManager);
-
-        updateTitleBar(&titleBar, &ctx);
-
-        updateNavbar(&navbar, &ctx);
-
-        updateToolbar(&toolbar, &ctx);
-
-        updateSidebar(&sidebar, &ctx);
-
-        updateBody(&body, &ctx);
 
         ShortcutKeys(&ctx);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
-      
 
         ClearBackground(RAYWHITE);
 
-        drawTitleBar(&titleBar);
+        drawTitleBar(ctx.titleBar);
 
-        drawBody(&body);
+        drawBody(&ctx, ctx.body);
 
-        drawSidebar(&sidebar);
+        drawSidebar(ctx.sidebar);
 
-        drawToolbar(&toolbar);
+        drawToolbar(ctx.toolbar);
 
-        drawNavbar(&navbar);
+        drawNavbar(ctx.navbar);
 
         DrawCreateModal(&ctx);
 
