@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "queue.h"
+
 typedef enum ActionType {
     ACTION_CREATE,
     ACTION_DELETE,
@@ -17,7 +19,10 @@ typedef struct Operation {
     char* to;
     ActionType type;
     bool isDir;
+    Queue itemTemp;
 } Operation;
+
+
 
 Operation createOperation(char* from, char* to, ActionType type);
 
