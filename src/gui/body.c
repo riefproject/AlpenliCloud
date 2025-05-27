@@ -1,5 +1,6 @@
-#include "body.h"
+#include "gui/body.h"
 #include "file_manager.h"
+#include "gui/ctx.h"
 #include "item.h"
 #include "macro.h"
 
@@ -9,8 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-void createBody(Body* b) {
+
+void createBody(Context* ctx, Body* b) {
     Body body = { 0 };
+    body.ctx = ctx;
     body.panelRec = (Rectangle){ 0 };
     body.panelContentRec = (Rectangle){ 0, 0, 170, 340 };
     body.panelView = (Rectangle){ 0 };
@@ -20,16 +23,13 @@ void createBody(Body* b) {
     body.showCheckbox = true;
     body.selectedAll = false;
     body.previousSelectedAll = false;
-    for (int i = 0; i < 100; i++) {
-        body.selected[i] = false;
-    }
 
     *b = body;
 }
 
-void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileManager) {
-    body->currentZeroPosition = currentZeroPosition;
-    body->fileManager = fileManager;
+void updateBody(Context* ctx, Body* body) {
+
+    body->currentZeroPosition = *ctx->currentZeroPosition;
 
     body->panelRec = (Rectangle){
         body->currentZeroPosition.x + 170 + DEFAULT_PADDING,
@@ -37,8 +37,8 @@ void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileMana
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING,
         body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2 };
 
-    if (fileManager && fileManager->treeCursor) {
-        Tree cursor = fileManager->treeCursor->first_son;
+    if (ctx->fileManager->treeCursor) {
+        Tree cursor = ctx->fileManager->treeCursor->first_son;
         int totalItems = 0;
         int selectedItems = 0;
 
@@ -62,8 +62,8 @@ void updateBody(Body* body, Rectangle currentZeroPosition, FileManager* fileMana
     }
 }
 
-void drawBody(Body* body) {
-    Tree cursor = body->fileManager->treeCursor;
+void drawBody(Context* ctx, Body* body) {
+    Tree cursor = ctx->fileManager->treeCursor;
 
     sort_children(&cursor);
 
@@ -78,7 +78,11 @@ void drawBody(Body* body) {
 
     body->panelContentRec.width = totalContentWidth;
 
+    if (ctx->disableGroundClick)
+        GuiDisable();
+
     GuiScrollPanel(body->panelRec, NULL, body->panelContentRec, &body->panelScroll, &body->panelView);
+    GuiEnable();
 
     BeginScissorMode(body->panelView.x, body->panelView.y, body->panelView.width, body->panelView.height);
 
@@ -87,7 +91,7 @@ void drawBody(Body* body) {
 
     int i = 0;
     while (cursor != NULL) {
-        drawTableItem(body, cursor, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
+        drawTableItem(ctx, body, cursor, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
 
         if ((i + 1) * rowHeight + headerHeight > body->panelContentRec.height)
             body->panelContentRec.height = (i + 1) * rowHeight + headerHeight;
@@ -96,12 +100,12 @@ void drawBody(Body* body) {
     }
 
     float headerX = body->panelRec.x + body->panelScroll.x;
-    drawTableHeader(body, headerX, body->panelRec.y, colWidths);
+    drawTableHeader(ctx, body, headerX, body->panelRec.y, colWidths);
 
     EndScissorMode();
 }
 
-void drawTableItem(Body* body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]) {
+void drawTableItem(Context* ctx, Body* body, Tree subTree, int index, float startX, float startY, float rowHeight, float colWidths[5]) {
     Item item = subTree->item;
     float checkboxWidth = body->showCheckbox ? 28 : 0;
     float totalContentWidth = checkboxWidth + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
@@ -111,13 +115,13 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
 
     Rectangle rowRec = { rowX, rowY, totalContentWidth, rowHeight };
 
-    if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (CheckCollisionPointRec(GetMousePosition(), rowRec) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !ctx->disableGroundClick) {
         body->focusedIndex = index;
 
         // Handle double tap untuk navigation/open
         if (GetGestureDetected() == GESTURE_DOUBLETAP) {
             if (item.type == ITEM_FOLDER) {
-                goTo(body->fileManager, subTree);
+                goTo(ctx->fileManager, subTree);
             }
             else if (item.type == ITEM_FILE) {
                 windowsOpenWith(item.path);
@@ -131,25 +135,39 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
                 subTree->item.selected = !subTree->item.selected;
 
                 if (subTree->item.selected) {
-                    selectFile(body->fileManager, &subTree->item);
+                    selectFile(ctx->fileManager, &subTree->item);
                 }
                 else {
-                    deselectFile(body->fileManager, &subTree->item);
+                    deselectFile(ctx->fileManager, &subTree->item);
                 }
             }
             // Single click tanpa Ctrl = clear selection dan focus item ini
             else {
                 // Clear semua selection dulu
-                clearSelectedFile(body->fileManager);
+                clearSelectedFile(ctx->fileManager);
 
                 // Select item yang diklik
                 subTree->item.selected = true;
-                selectFile(body->fileManager, &subTree->item);
+                selectFile(ctx->fileManager, &subTree->item);
             }
         }
     }
 
-    Color bgColor = (body->focusedIndex == index) ? Fade(BLUE, 0.2f) : ((index % 2 == 0) ? WHITE : (Color) { 245, 245, 245, 255 });
+    Color bgColor;
+    // Tolong cek warnanya dong. layar monitorku ga akurat warnanya
+    if (subTree->item.selected) {
+        // Item yang di-select: biru terang (seperti Windows Explorer)
+        bgColor = Fade(BLUE, 0.3f);
+    }
+    else if (body->focusedIndex == index) {
+        // Item yang di-focus tapi tidak selected: biru lebih gelap
+        bgColor = Fade(BLUE, 0.15f);
+    }
+    else {
+        // Alternating row colors untuk yang tidak selected/focused
+        bgColor = (index % 2 == 0) ? WHITE : (Color) { 245, 245, 245, 255 };
+    }
+
     DrawRectangleRec(rowRec, bgColor);
 
     float colX = rowX;
@@ -164,38 +182,41 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
         bool previousSelected = subTree->item.selected;
         GuiCheckBox(checkBox, NULL, &subTree->item.selected);
 
-        // PERBAIKAN: Hanya update jika ada perubahan status
-        if (subTree->item.selected != previousSelected) {
+        // PERBAIKAN: Update hanya jika ada perubahan status dan bukan dalam mode disabled
+        if (subTree->item.selected != previousSelected && !ctx->disableGroundClick) {
             if (subTree->item.selected) {
                 // Tambahkan ke selected list
-                selectFile(body->fileManager, &subTree->item);
+                selectFile(ctx->fileManager, &subTree->item);
             }
             else {
                 // Hapus dari selected list
-                deselectFile(body->fileManager, &subTree->item);
+                deselectFile(ctx->fileManager, &subTree->item);
             }
         }
 
         colX += checkboxWidth;
     }
 
-    DrawText(TextFormat("%s", item.name), colX + 8, rowY + 6, 10, DARKGRAY);
+    // PERBAIKAN: Warna text berdasarkan status selection
+    Color textColor = DARKGRAY;
+
+    DrawText(TextFormat("%s", item.name), colX + 8, rowY + 6, 10, textColor);
     colX += colWidths[0];
 
-    DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, DARKGRAY);
+    DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, textColor);
     colX += colWidths[1];
 
     if (item.size < KB_SIZE) {
-        DrawText(TextFormat("%d B", item.size), colX + 8, rowY + 6, 10, DARKGRAY);
+        DrawText(TextFormat("%d B", item.size), colX + 8, rowY + 6, 10, textColor);
     }
     else if (item.size < MB_SIZE) {
-        DrawText(TextFormat("%.2f KB", ((float)item.size / KB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+        DrawText(TextFormat("%.2f KB", ((float)item.size / KB_SIZE)), colX + 8, rowY + 6, 10, textColor);
     }
     else if (item.size < GB_SIZE) {
-        DrawText(TextFormat("%.2f MB", ((float)item.size / MB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+        DrawText(TextFormat("%.2f MB", ((float)item.size / MB_SIZE)), colX + 8, rowY + 6, 10, textColor);
     }
     else {
-        DrawText(TextFormat("%.2f GB", ((float)item.size / GB_SIZE)), colX + 8, rowY + 6, 10, DARKGRAY);
+        DrawText(TextFormat("%.2f GB", ((float)item.size / GB_SIZE)), colX + 8, rowY + 6, 10, textColor);
     }
 
     colX += colWidths[2];
@@ -205,10 +226,10 @@ void drawTableItem(Body* body, Tree subTree, int index, float startX, float star
     char buffer[100];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", local);
 
-    DrawText(TextFormat("%s", buffer), colX + 8, rowY + 6, 10, DARKGRAY);
+    DrawText(TextFormat("%s", buffer), colX + 8, rowY + 6, 10, textColor);
 }
 
-void drawTableHeader(Body* body, float x, float y, float colWidths[]) {
+void drawTableHeader(Context* ctx, Body* body, float x, float y, float colWidths[]) {
     int fontSize = 10;
     int headerHeight = 30;
 
@@ -226,12 +247,13 @@ void drawTableHeader(Body* body, float x, float y, float colWidths[]) {
         bool previousSelectedAll = body->selectedAll;
         GuiCheckBox(checkRect, NULL, &body->selectedAll);
 
-        if (body->selectedAll != previousSelectedAll) {
+        // PERBAIKAN: Update hanya jika ada perubahan dan bukan dalam mode disabled
+        if (body->selectedAll != previousSelectedAll && !ctx->disableGroundClick) {
             if (body->selectedAll) {
-                selectAll(body->fileManager);
+                selectAll(ctx->fileManager);
             }
             else {
-                clearSelectedFile(body->fileManager);
+                clearSelectedFile(ctx->fileManager);
             }
         }
 

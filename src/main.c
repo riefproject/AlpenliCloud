@@ -8,12 +8,15 @@
 #include <sys/stat.h>
 
 #include "file_manager.h"
-#include "utils.h"
 #include "gui/body.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
 #include "gui/titlebar.h"
 #include "gui/toolbar.h"
+#include "utils.h"
+#include "gui/component.h"
+
+#include "ctx.h"
 // #include "nbtree.h"
 
 // int main(){
@@ -41,76 +44,54 @@ int main() {
     // getchar();
     // redo(&fileManager);
 
-
     // return 0;
 
-    TitleBar titleBar;
-    createTitleBar(&titleBar, screenWidth, screenHeight);
+    Context ctx;
+    createContext(&ctx, &fileManager, screenWidth, screenHeight);
 
-    Rectangle currentZeroPosition = { DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
 
     InitWindow(screenWidth, screenHeight, "AlpenliCloud");
-    SetWindowIcon(LoadImage("resources/icon.png"));
+    SetWindowIcon(LoadImage("assets/icon.png"));
     // ----------------------------------------------------------------------------------------
 
     // initialization
     // ----------------------------------------------------------------------------------------
+    createTitleBar(ctx.titleBar, &ctx);
+    createNavbar(ctx.navbar, &ctx);
+    createSidebar(ctx.sidebar, &ctx);
+    createToolbar(ctx.toolbar, &ctx);
+    createBody(&ctx, ctx.body);
 
-    Navbar navbar;
-    createNavbar(&navbar);
-
-
-    Sidebar sidebar;
-    createSidebar(&sidebar);
-
-    Toolbar toolbar;
-    createToolbar(&toolbar, &fileManager, &sidebar);
-
-    Body body;
-    createBody(&body);
-
-
-
-    while (!titleBar.exitWindow && !WindowShouldClose()) {
-        screenWidth = GetScreenWidth();
-        screenHeight = GetScreenHeight();
-        currentZeroPosition = (Rectangle){ DEFAULT_PADDING, titleBar.height + DEFAULT_PADDING, screenWidth - DEFAULT_PADDING * 2, screenHeight - titleBar.height - DEFAULT_PADDING * 2 };
+    while (!ctx.titleBar->exitWindow && !WindowShouldClose()) {
 
         // Update
         //----------------------------------------------------------------------------------
-        updateTitleBar(&titleBar);
+        updateContext(&ctx, &fileManager);
 
-        updateNavbar(&navbar, currentZeroPosition, &fileManager);
-
-        updateToolbar(&toolbar, currentZeroPosition);
-
-        updateSidebar(&sidebar, currentZeroPosition, &fileManager);
-
-        updateBody(&body, currentZeroPosition, &fileManager);
-
-        ShortcutKeys(&toolbar, &navbar, &body);
+        ShortcutKeys(&ctx);
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
+
         ClearBackground(RAYWHITE);
 
-        drawTitleBar(&titleBar);
+        drawTitleBar(ctx.titleBar);
 
-        drawBody(&body);
+        drawBody(&ctx, ctx.body);
 
-        drawSidebar(&sidebar);
+        drawSidebar(ctx.sidebar);
 
-        drawToolbar(&toolbar);
+        drawToolbar(ctx.toolbar);
 
-        drawNavbar(&navbar);
+        drawNavbar(ctx.navbar);
+
+        DrawCreateModal(&ctx);
 
         EndDrawing();
     }
-
-    exit(1);
 
     CloseWindow();
     return 0;

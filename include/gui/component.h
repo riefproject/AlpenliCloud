@@ -1,7 +1,6 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
-#include "raylib.h"
 #include "item.h"
 #include "macro.h"
 #include "sidebar.h"
@@ -13,13 +12,14 @@
 
 // } Component;
 
-typedef struct NewButtonProperty {
-    Rectangle btnRect;
-    Rectangle dropdownRect;
-    Rectangle modalRect;
+typedef Context Context;
+typedef struct ButtonWithModalProperty {
+    Rectangle btnRect;      // Rectangle yang mendefinisikan posisi dan ukuran tombol utama
+    Rectangle dropdownRect; // Rectangle yang mendefinisikan posisi dan ukuran menu dropdown
+    Rectangle modalRect;    // Rectangle yang mendefinisikan posisi dan ukuran dialog modal
 
-    char* placeholder;
-    char* tooltip;
+    char *placeholder;
+    char *tooltip;
     char inputBuffer[MAX_STRING_LENGTH];
 
     int dropdownIndex;
@@ -32,13 +32,11 @@ typedef struct NewButtonProperty {
     bool itemCreated;
 
     bool disabled;
-    Sidebar *sidebar;
-} NewButtonProperty;
+} ButtonWithModalProperty;
 
-void GuiNewButton(NewButtonProperty* buttonProperty);
+void GuiNewButton(ButtonWithModalProperty *buttonProperty, Context *ctx);
+void DrawCreateModal(Context *ctx);
 
-bool GuiTextBoxCustom(Rectangle bounds, char* icon, char* placeholder, char* inputText, int textSize, bool* editMode, bool disabled);
-
-bool GuiButtonCustom(Rectangle bounds, const char* text, const char* tooltip, bool disabled);
-
+bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled, bool notClickable);
+bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled, bool notClickable);
 #endif // COMPONENT_H

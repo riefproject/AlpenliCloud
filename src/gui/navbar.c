@@ -1,31 +1,102 @@
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "file_manager.h"
-#include "gui/component.h"
-#include "gui/navbar.h"
-#include "macro.h"
 #include "raygui.h"
 
-void createNavbar(Navbar* navbar) {
+#include "file_manager.h"
+#include "macro.h"
+
+#include "gui/component.h"
+#include "gui/ctx.h"
+#include "gui/navbar.h"
+void trimTrailingSlash(char* path);
+
+void createNavbar(Navbar* navbar, Context* ctx) {
+    navbar->ctx = ctx;
+
+    navbar->isUndoButtonClicked = false;
+    navbar->isRedoButtonClicked = false;
+    navbar->isGoBackButtonClicked = false;
+
+    navbar->shouldGoToPath = false;
     navbar->textboxPatheditMode = false;
     strcpy(navbar->textboxPath, "");
 
+    navbar->shouldSearch = false;
     navbar->textboxSearcheditMode = false;
     strcpy(navbar->textboxSearch, "");
 
     navbar->currentZeroPosition = (Rectangle){ 0 };
 }
 
-void updateNavbar(Navbar* navbar, Rectangle currentZeroPosition, FileManager* fileManager) {
-    navbar->fileManager = fileManager;
-    if (navbar->textboxPatheditMode == false) {
-        strcpy(navbar->textboxPath, fileManager->currentPath);
+void updateNavbar(Navbar* navbar, Context* ctx) {
+    navbar->ctx = ctx;
+    ctx->navbar = navbar;
+
+    navbar->currentZeroPosition = *ctx->currentZeroPosition;
+
+    // Handle navigasi manual ke path
+    if (navbar->shouldGoToPath) {
+        navbar->shouldGoToPath = false;
+
+        char trimmedPath[MAX_STRING_LENGTH];
+        strncpy(trimmedPath, navbar->textboxPath, MAX_STRING_LENGTH);
+        trimTrailingSlash(trimmedPath);
+
+        Tree root = getCurrentRoot(ctx->fileManager);
+        if (!root) {
+            printf("Root tidak ditemukan\n");
+            return;
+        }
+
+        Item itemToSearch = createItem(
+            _getNameFromPath(trimmedPath),
+            TextFormat("%s/%s", ".dir", trimmedPath),
+            0, ITEM_FILE, 0, 0, 0);
+
+        Tree result = searchTree(root, itemToSearch);
+        if (result) {
+            goTo(ctx->fileManager, result);
+        }
+        else {
+            printf("File tidak ditemukan\n");
+        }
     }
 
-    navbar->currentZeroPosition = currentZeroPosition;
+    if (navbar->shouldSearch) {
+        navbar->shouldSearch = false;
+        printf("Search string: %s\n", navbar->textboxSearch);
+        // Handle fungsi pencarian
+    }
+
+    // Handle undo button
+    if (navbar->isUndoButtonClicked) {
+        navbar->isUndoButtonClicked = false;
+        // if (&navbar->ctx.fileManager) {
+        //     // undo(&navbar->ctx.fileManager);
+        // }
+    }
+
+    // Handle redo button
+    if (navbar->isRedoButtonClicked) {
+        navbar->isRedoButtonClicked = false;
+        // if (&navbar->ctx.fileManager) {
+        //     redo(&navbar->ctx.fileManager);
+        // }
+    }
+
+    // Handle go back button
+    if (navbar->isGoBackButtonClicked) {
+        navbar->isGoBackButtonClicked = false;
+        goBack(ctx->fileManager);
+    }
+
+    // Sinkronkan path saat textbox tidak diedit
+    if (!navbar->textboxPatheditMode) {
+        strncpy(navbar->textboxPath, ctx->fileManager->currentPath, MAX_STRING_LENGTH);
+    }
 }
 
 void drawNavbar(Navbar* navbar) {
@@ -33,60 +104,38 @@ void drawNavbar(Navbar* navbar) {
     float y = navbar->currentZeroPosition.y;
     float totalWidth = navbar->currentZeroPosition.width;
 
-    float buttonSize = 24;
-    float spacing = DEFAULT_PADDING;
-    float searchBoxWidth = 170;
-    float searchBoxX = x + totalWidth - searchBoxWidth;
+    const float buttonSize = 24;
+    const float spacing = DEFAULT_PADDING;
+    const float searchBoxWidth = 170;
 
     float buttonsTotalWidth = buttonSize * 3 + spacing * 2;
-
     float pathBoxStartX = x + buttonsTotalWidth + spacing;
+    float searchBoxX = x + totalWidth - searchBoxWidth;
+
     float pathBoxMaxWidth = searchBoxX - pathBoxStartX - spacing;
     float pathBoxWidth = (pathBoxMaxWidth >= 170) ? pathBoxMaxWidth : 170;
 
-    searchBoxX = searchBoxX < pathBoxStartX + pathBoxWidth + spacing ? pathBoxStartX + pathBoxWidth + spacing : searchBoxX;
+    if (searchBoxX < pathBoxStartX + pathBoxWidth + spacing) {
+        searchBoxX = pathBoxStartX + pathBoxWidth + spacing;
+    }
 
-    GuiButtonCustom((Rectangle) { x, y, buttonSize, buttonSize }, "#56#", "UNDO", false);
-    GuiButtonCustom((Rectangle) { x + buttonSize + spacing, y, buttonSize, buttonSize }, "#57#", "REDO", false);
-    if (GuiButtonCustom((Rectangle) { x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize }, "#117#", "BACK", false))
-        goBack(navbar->fileManager);
+    navbar->isUndoButtonClicked = GuiButtonCustom((Rectangle) { x, y, buttonSize, buttonSize }, "#56#", "UNDO", false, navbar->ctx->disableGroundClick);
+    navbar->isRedoButtonClicked = GuiButtonCustom((Rectangle) { x + buttonSize + spacing, y, buttonSize, buttonSize }, "#57#", "REDO", false, navbar->ctx->disableGroundClick);
+    navbar->isGoBackButtonClicked = GuiButtonCustom((Rectangle) { x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize }, "#117#", "BACK", false, navbar->ctx->disableGroundClick);
 
-    if (GuiTextBoxCustom((Rectangle) { pathBoxStartX, y, pathBoxWidth, buttonSize }, "#1#", NULL, navbar->textboxPath, MAX_STRING_LENGTH, & navbar->textboxPatheditMode, false)) {
-        printf("\n\nSearch value: %s\n", navbar->textboxPath);
+    navbar->shouldGoToPath = GuiTextBoxCustom(
+        (Rectangle) {
+        pathBoxStartX, y, pathBoxWidth, buttonSize
+    },
+        "#1#", NULL, navbar->textboxPath,
+        MAX_STRING_LENGTH, & navbar->textboxPatheditMode, false, navbar->ctx->disableGroundClick);
 
-        Tree currentRoot = getCurrentRoot(navbar->fileManager);
-        if (currentRoot == NULL) {
-            printf("Tidak ada root yang ditemukan\n");
-            return;
-        }
-        printf("Root name: %s\n", currentRoot->item.name);
-
-        int length = strlen(".dir") + strlen(navbar->textboxPath) + 2;
-        char* fullPath = malloc(length);
-        if (fullPath == NULL) {
-            printf("Gagal alokasi memori\n");
-            exit(1);
-        }
-
-        snprintf(fullPath, length, "%s/%s", ".dir", navbar->textboxPath);
-
-        printf("Full path: %s\n", fullPath);
-
-        Item itemToSearch = createItem(_getNameFromPath(navbar->textboxPath), fullPath, 0, ITEM_FILE, 0, 0, 0);
-        printf("Item name: %s\n", itemToSearch.name);
-
-        Tree foundTree = searchTree(currentRoot, itemToSearch);
-        if (foundTree == NULL) {
-            printf("File tidak ditemukan\n");
-            return;
-        }
-        printf("Found item: %s\n", foundTree->item.name);
-        goTo(navbar->fileManager, foundTree);
-    };
-
-    if (GuiTextBoxCustom((Rectangle) { searchBoxX, y, searchBoxWidth, buttonSize }, "#42#", "Search Item", navbar->textboxSearch, MAX_STRING_LENGTH, & navbar->textboxSearcheditMode, false)) {
-        printf("%s\n", navbar->textboxSearch);
-    };
+    navbar->shouldSearch = GuiTextBoxCustom(
+        (Rectangle) {
+        searchBoxX, y, searchBoxWidth, buttonSize
+    },
+        "#42#", "Search Item", navbar->textboxSearch,
+        MAX_STRING_LENGTH, & navbar->textboxSearcheditMode, false, navbar->ctx->disableGroundClick);
 
     GuiLine((Rectangle) { x, y + buttonSize, totalWidth, 10 }, NULL);
 }

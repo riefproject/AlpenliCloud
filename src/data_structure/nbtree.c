@@ -40,28 +40,27 @@ Tree insert_node(Tree parent, treeInfotype data) {
   return child;
 }
 
-Tree searchTree(Tree root, treeInfotype item)
-{
-    if(root == NULL) return NULL;
-    Tree current = root;
+Tree searchTree(Tree root, treeInfotype item) {
+  if (root == NULL) return NULL;
+  Tree current = root;
 
-    while (current != NULL) {
-        if (
-            strcmp(current->item.name, item.name) == 0 &&
-            strcmp(current->item.path, item.path) == 0) {
-            return current;
-        }
-        current = current->next_brother;
+  while (current != NULL) {
+    if (
+      strcmp(current->item.name, item.name) == 0 &&
+      strcmp(current->item.path, item.path) == 0) {
+      return current;
     }
+    current = current->next_brother;
+  }
 
-    current = root;
-    while (current != NULL) {
-        Tree found = searchTree(current->first_son, item);
-        if (found != NULL) return found;
-        current = current->next_brother;
-    }
+  current = root;
+  while (current != NULL) {
+    Tree found = searchTree(current->first_son, item);
+    if (found != NULL) return found;
+    current = current->next_brother;
+  }
 
-    return NULL;
+  return NULL;
 }
 
 // Fungsi bantu untuk mencetak indentasi
@@ -84,18 +83,25 @@ void printTree(Tree node, int depth) {
   char updated_at_str[20];
   strftime(updated_at_str, sizeof(updated_at_str), "%Y-%m-%d", localtime(&node->item.updated_at));
 
+  printf("[LOG] ");
   printIndent(depth);
   printf("==================================\n");
+  printf("[LOG] ");
   printIndent(depth);
   printf("item name: %s\n", node->item.name);
+  printf("[LOG] ");
   printIndent(depth);
   printf("first son name: %s\n", node->first_son == NULL ? "NULL" : node->first_son->item.name);
+  printf("[LOG] ");
   printIndent(depth);
   printf("brother name: %s\n", node->next_brother == NULL ? "NULL" : node->next_brother->item.name);
+  printf("[LOG] ");
   printIndent(depth);
   printf("parent name: %s\n", node->parent == NULL ? "NULL" : node->parent->item.name);
+  printf("[LOG] ");
   printIndent(depth);
   printf("size: %d\n", node->item.size);
+  printf("[LOG] ");
   printIndent(depth);
   printf("path: %s\n", node->item.path);
 
