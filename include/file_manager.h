@@ -22,6 +22,7 @@ typedef struct FileManager {
   Queue cut;               // queue for cut items
   Queue temp;              // temporary queue for operations
   LinkedList selectedItem; // linkedlist for selected item
+  bool needsRefresh;
 } FileManager;
 
 // HELPER PROTOTYPE: Line 130

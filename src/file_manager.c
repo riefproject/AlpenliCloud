@@ -385,6 +385,7 @@ void cutFile(FileManager* fileManager) {
     printf("[LOG] File berhasil disalin ke clipboard\n");
 }
 
+
 /*  Prosedur
  *  IS:
  *  FS:
@@ -401,11 +402,13 @@ void pasteFile(FileManager* fileManager) {
 
         // Path untuk file/folder baru di lokasi tujuan
         char* destinationFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
+        printf("\n%s\n", fileManager->currentPath);
         char* newPath = TextFormat("%s/%s", destinationFullPath, itemToPaste->name);
         char* originPath = itemToPaste->path; // Gunakan path dari item yang disimpan
 
         printf("[LOG] Mencoba paste: %s -> %s\n", originPath, newPath);
         printf("[LOG] Is Copy: %s\n", isCopy ? "true" : "false");
+        printf("[LOG] Item type: %d (ITEM_FOLDER=%d, ITEM_FILE=%d)\n", itemToPaste->type, ITEM_FOLDER, ITEM_FILE);
 
         // COPY operation
         if (isCopy) {
@@ -416,6 +419,7 @@ void pasteFile(FileManager* fileManager) {
                 continue;
             }
             originPath = foundTree->item.path; // Update dengan path dari tree
+            printf("[LOG] Origin path updated to: %s\n", originPath);
         }
 
         // Cek apakah source file/folder masih ada (untuk copy dan cut)
@@ -425,14 +429,21 @@ void pasteFile(FileManager* fileManager) {
             continue;
         }
 
+        printf("[LOG] Source exists, proceeding with copy/cut\n");
+
         // COPY/CUT sama-sama butuh copy content dulu
         if (itemToPaste->type == ITEM_FOLDER) {
+            printf("[LOG] Processing folder: %s\n", itemToPaste->name);
+
             if (DirectoryExists(newPath)) {
+                printf("[LOG] Destination exists, creating duplicate name\n");
                 newPath = _createDuplicatedFolderName(newPath, "(1)");
+                printf("[LOG] New path after duplicate check: %s\n", newPath);
             }
 
             // Untuk CUT, pindah langsung. Untuk COPY, buat folder baru lalu copy
             if (!isCopy) {
+                printf("[LOG] CUT operation - moving folder\n");
                 // CUT operation - rename/move folder
                 if (rename(originPath, newPath) != 0) {
                     printf("[LOG] Gagal memindahkan folder %s\n", itemToPaste->name);
@@ -441,19 +452,39 @@ void pasteFile(FileManager* fileManager) {
                 }
             }
             else {
+                printf("[LOG] COPY operation - copying folder\n");
                 // COPY operation - buat folder baru lalu copy isi
+                printf("[LOG] Membuat folder destination: %s\n", newPath);
                 if (MakeDirectory(newPath) != 0) {
                     printf("[LOG] Gagal membuat folder\n");
                     temp = temp->next;
                     continue;
                 }
+                printf("[LOG] Folder destination created successfully\n");
+                printf("[LOG] Mulai copy recursive dari %s ke %s\n", originPath, newPath);
                 _copyFolderRecursive(originPath, newPath);
+                printf("[LOG] Selesai copy recursive\n");
             }
 
-            // Tambahkan ke tree struktur
-            _reconstructTreeStructure(fileManager, NULL, newPath, destinationFullPath);
+            // Tambahkan ke tree struktur - gunakan refresh untuk update tree
+            Tree currentNode = fileManager->treeCursor;
+            if (currentNode != NULL) {
+                Item newItem = createItem(
+                    _getNameFromPath(newPath),
+                    newPath,
+                    itemToPaste->size,
+                    ITEM_FOLDER,
+                    itemToPaste->created_at,
+                    time(NULL),
+                    0
+                );
+                insert_node(currentNode, newItem);
+                printf("[LOG] Folder %s berhasil ditambahkan ke tree\n", newItem.name);
+            }
         }
         else if (itemToPaste->type == ITEM_FILE) {
+            printf("[LOG] Processing file: %s\n", itemToPaste->name);
+
             if (FileExists(newPath)) {
                 newPath = _createDuplicatedFileName(newPath, "(1)");
             }
@@ -472,8 +503,7 @@ void pasteFile(FileManager* fileManager) {
             }
 
             // Tambahkan item baru ke tree di lokasi tujuan
-            Tree currentNode = searchTree(fileManager->root,
-                createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+            Tree currentNode = fileManager->treeCursor;
 
             if (currentNode != NULL) {
                 Item newItem = createItem(
@@ -488,6 +518,9 @@ void pasteFile(FileManager* fileManager) {
                 insert_node(currentNode, newItem);
                 printf("[LOG] Item %s berhasil ditambahkan ke tree\n", newItem.name);
             }
+        }
+        else {
+            printf("[LOG] Unknown item type: %d\n", itemToPaste->type);
         }
 
         // Kalau cut, hapus dari tree (tapi jangan hapus fisik karena sudah di-rename)
@@ -513,9 +546,8 @@ void pasteFile(FileManager* fileManager) {
 
 // Update fungsi _reconstructTreeStructure untuk handle kasus cut
 void _reconstructTreeStructure(FileManager* fileManager, Tree sourceTree, char* newBasePath, char* destinationPath) {
-    // Cari parent node di tree tujuan
-    Tree parentNode = searchTree(fileManager->root,
-        createItem(_getNameFromPath(destinationPath), destinationPath, 0, ITEM_FOLDER, 0, 0, 0));
+    // Fix: Use treeCursor directly instead of searching
+    Tree parentNode = fileManager->treeCursor;
 
     if (parentNode == NULL) {
         printf("[LOG] Parent node tidak ditemukan\n");
@@ -971,31 +1003,55 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
 ================================================================================*/
 void _copyFolderRecursive(char* srcPath, char* destPath) {
     DIR* dp = opendir(srcPath);
-    if (!dp)
+    if (!dp) {
+        printf("[LOG] Gagal membuka direktori source: %s\n", srcPath);
         return;
+    }
 
     struct dirent* ep;
     struct stat statbuf;
+
+    printf("[LOG] Copying dari %s ke %s\n", srcPath, destPath);
 
     while ((ep = readdir(dp)) != NULL) {
         if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
             continue;
 
-        char* srcItem = TextFormat("%s/%s", srcPath, ep->d_name);
-        char* destItem = TextFormat("%s/%s", destPath, ep->d_name);
+        // Fix: Use manual string construction instead of TextFormat
+        char* srcItem = malloc(strlen(srcPath) + strlen(ep->d_name) + 2);
+        char* destItem = malloc(strlen(destPath) + strlen(ep->d_name) + 2);
 
-        if (stat(srcItem, &statbuf) == -1)
+        sprintf(srcItem, "%s/%s", srcPath, ep->d_name);
+        sprintf(destItem, "%s/%s", destPath, ep->d_name);
+
+        printf("[LOG] Processing: %s -> %s\n", srcItem, destItem);
+
+        if (stat(srcItem, &statbuf) == -1) {
+            printf("[LOG] Gagal stat file: %s\n", srcItem);
+            free(srcItem);
+            free(destItem);
             continue;
+        }
 
         if (S_ISDIR(statbuf.st_mode)) {
             // Buat folder dan copy rekursif
-            MakeDirectory(destItem);
+            printf("[LOG] Membuat direktori: %s\n", destItem);
+            if (MakeDirectory(destItem) != 0) {
+                printf("[LOG] Gagal membuat direktori: %s\n", destItem);
+                free(srcItem);
+                free(destItem);
+                continue;
+            }
             _copyFolderRecursive(srcItem, destItem);
         }
-        else {
+        else if (S_ISREG(statbuf.st_mode)) {
             // Copy file content
+            printf("[LOG] Copying file: %s -> %s\n", srcItem, destItem);
             _copyFileContent(srcItem, destItem);
         }
+
+        free(srcItem);
+        free(destItem);
     }
     closedir(dp);
 }

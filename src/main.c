@@ -1,27 +1,61 @@
 #define RAYGUI_IMPLEMENTATION
 
-#include "macro.h"
-#include "raygui.h"
-#include "raylib.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 
+#include "macro.h"
+#include "raygui.h"
+#include "raylib.h"
 #include "file_manager.h"
-#include "gui/body.h"
-#include "gui/navbar.h"
-#include "gui/sidebar.h"
-#include "gui/titlebar.h"
-#include "gui/toolbar.h"
+#include "body.h"
+#include "navbar.h"
+#include "sidebar.h"
+#include "titlebar.h"
+#include "toolbar.h"
 #include "utils.h"
-#include "gui/component.h"
+#include "component.h"
 
 #include "ctx.h"
-// #include "nbtree.h"
 
-// int main(){
-//     // MakeDirectory(".dir/baru");
-// }
+// Fungsi untuk membaca isi direktori
+void readDirectory(const char* path, FileManager* fileManager) {
+    DIR* dir = opendir(path);
+    if (dir == NULL) {
+        printf("Error: Unable to open directory %s\n", path);
+        return;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            printf("Found: %s\n", entry->d_name);
+            // Tambahkan logika untuk memperbarui fileManager atau struktur data sidebar
+        }
+    }
+
+    closedir(dir);
+}
+
+// Fungsi untuk memeriksa perubahan direktori
+int checkDirectoryChanges(const char* path, FileManager* fileManager) {
+    static time_t lastModified = 0;
+    struct stat dirStat;
+
+    if (stat(path, &dirStat) == -1) {
+        printf("Error: Unable to stat directory %s\n", path);
+        return 0;
+    }
+
+    if (dirStat.st_mtime != lastModified) {
+        lastModified = dirStat.st_mtime;
+        readDirectory(path, fileManager);
+        return 1; // Ada perubahan
+    }
+
+    return 0; // Tidak ada perubahan
+}
 
 int main() {
     // Windows config
