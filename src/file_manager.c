@@ -64,6 +64,7 @@ void initFileManager(FileManager* fileManager) {
 /*
  * IS:
  * FS:
+ * Author
 ================================================================================*/
 Tree loadTree(Tree tree, char* path) {
     DIR* dp;
