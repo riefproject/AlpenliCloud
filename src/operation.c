@@ -5,5 +5,10 @@ Operation createOperation(char *from, char *to, ActionType type) {
     return (Operation){
         .from = strdup(from),
         .to = strdup(to),
-        .type = type};
+        .type = type,
+        .itemTemp = (Queue){
+            .front = NULL,
+            .rear = NULL
+        }
+    };
 }

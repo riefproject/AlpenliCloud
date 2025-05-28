@@ -197,6 +197,7 @@ void deleteFile(FileManager* fileManager) {
     }
 
     Node* temp = fileManager->selectedItem.head;
+
     while (temp != NULL) {
         Item* itemToDelete = (Item*)temp->data;
         Tree foundTree = searchTree(fileManager->root, *itemToDelete);
@@ -210,7 +211,7 @@ void deleteFile(FileManager* fileManager) {
         // printf("[LOG] File berhasil dipindah ke trash\n");
         temp = temp->next;
     }
-
+    
     clearSelectedFile(fileManager);
     printf("[LOG] File berhasil dipindah ke trash\n");
 }
@@ -706,14 +707,23 @@ void selectAll(FileManager* fileManager) {
 ================================================================================*/
 void undo(FileManager* fileManager) {
     Operation* operationToUndo;
+    Operation* operationToRedo;
     Tree foundTree;
-    TrashItem trashTemp;
+    TrashItem *trashItem;
     if (fileManager->undo == NULL) {
         printf("[LOG] No actions to undo.\n");
         return;
     }
     operationToUndo = alloc(Operation);
+    operationToRedo = alloc (Operation);
     operationToUndo = (Operation*)pop(&(fileManager->undo));
+    *operationToRedo = (Operation){
+        .from = strdup(operationToUndo->from),
+        .isDir = operationToUndo->isDir,
+        .to = strdup(operationToUndo->to),
+        .type = operationToUndo->type,
+        .itemTemp = (Queue){NULL,NULL}
+    };
     switch (operationToUndo->type) {
     case ACTION_CREATE:
         printf("[LOG] Undo Path: %s\n", operationToUndo->from);
@@ -730,10 +740,27 @@ void undo(FileManager* fileManager) {
         break;
     case ACTION_DELETE:
         // Kembalikan item yang dihapus
-        trashTemp = searchTrashItem(fileManager->trash, operationToUndo->from);
-        if (trashTemp.originalPath != NULL) {
-
+        while(is_queue_empty(operationToUndo->itemTemp)){
+            trashItem = (TrashItem*)dequeue(&operationToUndo->itemTemp);
+            enqueue(&operationToRedo->itemTemp, trashItem);
+            if(trashItem->item.type == ITEM_FOLDER){
+                if(MakeDirectory(trashItem->originalPath) != 0){
+                    printf("Trash folder %s berhasil dikembalikan\n", trashItem->item.name);
+                }else{
+                    printf("Trash folder %s GAGAL dikembalikan\n", trashItem->item.name);
+                }
+            }else if(trashItem->item.type == ITEM_FILE){
+                FILE* newFile = fopen(trashItem->originalPath, "w");
+                if (newFile == NULL) {
+                    printf("Gagal mengembalikan file %s\n", trashItem->item.name);
+                    return;
+                }else{
+                    printf("Berhail mengembalikan file %s\n", trashItem->item.name);
+                }
+                fclose(newFile);
+            }
         }
+        printf("undo delete selesai\n");
         break;
     case ACTION_UPDATE:
         // Kembalikan nama item yang diubah
@@ -752,6 +779,7 @@ void undo(FileManager* fileManager) {
         }
         break;
     case ACTION_PASTE:
+        // Cari item yang sudah di paste, dan tampung
         // Hapus item yang sudah di-paste
 
         break;
@@ -797,8 +825,10 @@ void redo(FileManager* fileManager) {
     case ACTION_PASTE:
         break;
 
-    case ACTION_RECOVER:
-        break;
+        case ACTION_RECOVER:
+        // 1. Ambil item yang sebelumnya telah dihapus
+        // 2. Recover item ke tempat asal
+            break; 
 
     }
 }
