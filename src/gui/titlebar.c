@@ -2,6 +2,11 @@
 #include "macro.h"
 #include "raygui.h"
 #include "gui/ctx.h"
+#include "body.h"
+#include "navbar.h"
+#include "toolbar.h"
+#include "sidebar.h"
+#include "titlebar.h"
 
 #define RESIZE_BORDER 2
 #define MIN_WIDTH 300
@@ -35,7 +40,7 @@ void UpdateResizeCursor(ResizeDirection dir) {
     }
 }
 
-void createTitleBar(TitleBar *titleBar, Context *ctx) {
+void createTitleBar(TitleBar* titleBar, Context* ctx) {
     titleBar->ctx = ctx;
     ctx->titleBar = titleBar;
 
@@ -44,25 +49,25 @@ void createTitleBar(TitleBar *titleBar, Context *ctx) {
 
     titleBar->height = 23;
 
-    titleBar->mousePosition = (Vector2){0, 0};
-    titleBar->windowPosition = (Vector2){0, 0};
-    titleBar->panOffset = (Vector2){0, 0};
+    titleBar->mousePosition = (Vector2){ 0, 0 };
+    titleBar->windowPosition = (Vector2){ 0, 0 };
+    titleBar->panOffset = (Vector2){ 0, 0 };
     titleBar->dragWindow = false;
     titleBar->exitWindow = false;
     titleBar->resizeDir = RESIZE_NONE;
     titleBar->resizing = false;
-    titleBar->resizeOrigin = (Vector2){0, 0};
+    titleBar->resizeOrigin = (Vector2){ 0, 0 };
     titleBar->isBottonMaximizeClicked = false;
     titleBar->isBottonMinimizeClicked = false;
 }
 
-void updateTitleBar(TitleBar *titleBar, Context *ctx) {
+void updateTitleBar(TitleBar* titleBar, Context* ctx) {
     titleBar->ctx = ctx;
 
     titleBar->mousePosition = GetMousePosition();
     Vector2 mouse = titleBar->mousePosition;
     Vector2 winPos = GetWindowPosition();
-    Vector2 screenMouse = {mouse.x + winPos.x, mouse.y + winPos.y};
+    Vector2 screenMouse = { mouse.x + winPos.x, mouse.y + winPos.y };
 
     if (!titleBar->dragWindow && !titleBar->resizing && !IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
         titleBar->resizeDir = GetResizeDirection(mouse, titleBar->screenWidth, titleBar->screenHeight);
@@ -75,7 +80,7 @@ void updateTitleBar(TitleBar *titleBar, Context *ctx) {
     }
 
     if (titleBar->resizing) {
-        Vector2 delta = {screenMouse.x - titleBar->resizeOrigin.x, screenMouse.y - titleBar->resizeOrigin.y};
+        Vector2 delta = { screenMouse.x - titleBar->resizeOrigin.x, screenMouse.y - titleBar->resizeOrigin.y };
         int newWidth = titleBar->screenWidth;
         int newHeight = titleBar->screenHeight;
         Vector2 newPos = winPos;
@@ -115,7 +120,7 @@ void updateTitleBar(TitleBar *titleBar, Context *ctx) {
     }
 
     if (!titleBar->resizing && !titleBar->dragWindow && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        if (CheckCollisionPointRec(mouse, (Rectangle){0, 0, titleBar->screenWidth, titleBar->height})) {
+        if (CheckCollisionPointRec(mouse, (Rectangle) { 0, 0, titleBar->screenWidth, titleBar->height })) {
             titleBar->windowPosition = GetWindowPosition();
             titleBar->dragWindow = true;
             titleBar->panOffset = screenMouse;
@@ -125,10 +130,11 @@ void updateTitleBar(TitleBar *titleBar, Context *ctx) {
     if (titleBar->dragWindow) {
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
             Vector2 newMouse = GetMousePosition();
-            Vector2 newScreenMouse = {newMouse.x + winPos.x, newMouse.y + winPos.y};
-            Vector2 delta = {newScreenMouse.x - titleBar->panOffset.x, newScreenMouse.y - titleBar->panOffset.y};
+            Vector2 newScreenMouse = { newMouse.x + winPos.x, newMouse.y + winPos.y };
+            Vector2 delta = { newScreenMouse.x - titleBar->panOffset.x, newScreenMouse.y - titleBar->panOffset.y };
             SetWindowPosition((int)(titleBar->windowPosition.x + delta.x), (int)(titleBar->windowPosition.y + delta.y));
-        } else {
+        }
+        else {
             titleBar->dragWindow = false;
         }
     }
@@ -150,14 +156,14 @@ void updateTitleBar(TitleBar *titleBar, Context *ctx) {
     titleBar->screenHeight = GetScreenHeight();
 }
 
-void drawTitleBar(TitleBar *titleBar) {
-    titleBar->exitWindow = GuiWindowBox((Rectangle){0, 0, titleBar->screenWidth, titleBar->screenHeight}, "#198# PORTABLE WINDOW");
+void drawTitleBar(TitleBar* titleBar) {
+    titleBar->exitWindow = GuiWindowBox((Rectangle) { 0, 0, titleBar->screenWidth, titleBar->screenHeight }, "#198# PORTABLE WINDOW");
 
     GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 2 - TINY_PADDING, 3, 18, 18}, "#198#")) {
+    if (GuiButton((Rectangle) { titleBar->screenWidth - 20 * 2 - TINY_PADDING, 3, 18, 18 }, "#198#")) {
         titleBar->isBottonMaximizeClicked = true;
     }
-    if (GuiButton((Rectangle){titleBar->screenWidth - 20 * 3 - TINY_PADDING * 2, 3, 18, 18}, "#35#")) {
+    if (GuiButton((Rectangle) { titleBar->screenWidth - 20 * 3 - TINY_PADDING * 2, 3, 18, 18 }, "#35#")) {
         titleBar->isBottonMinimizeClicked = true;
     }
     GuiSetStyle(BUTTON, BORDER_WIDTH, 2);
