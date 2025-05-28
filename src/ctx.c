@@ -1,4 +1,5 @@
 #include "ctx.h"
+#include "file_manager.h"
 #include "gui/body.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
@@ -13,6 +14,8 @@ void createContext(Context* ctx, FileManager* fileManager, int screenWidth, int 
         return;
 
     ctx->fileManager = fileManager;
+    fileManager->ctx = ctx;
+    
     ctx->width = screenWidth;
     ctx->height = screenHeight;
     ctx->disableGroundClick = false;
@@ -62,6 +65,8 @@ void updateContext(Context* ctx, FileManager* fileManager) {
     ctx->width = screenWidth;
     ctx->height = screenHeight;
     ctx->fileManager = fileManager;
+    fileManager->ctx = ctx;
+
     updateTitleBar(ctx->titleBar, ctx);
     updateNavbar(ctx->navbar, ctx);
     updateToolbar(ctx->toolbar, ctx);

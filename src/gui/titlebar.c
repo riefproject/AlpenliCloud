@@ -1,7 +1,7 @@
 #include "gui/titlebar.h"
 #include "macro.h"
 #include "raygui.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 #include "body.h"
 #include "navbar.h"
 #include "toolbar.h"

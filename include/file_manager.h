@@ -1,210 +1,379 @@
 #ifndef FILE_MANAGER_H
 #define FILE_MANAGER_H
 
-#include "nbtree.h"
 #include "item.h"
-#include "stack.h"
+#include "nbtree.h"
 #include "queue.h"
+#include "stack.h"
+
+typedef struct Context Context;
 
 #define alloc(T) (T *)malloc(sizeof(T));
 
 typedef struct FileManager {
-  Tree root;              // root directory
-  LinkedList trash;         // root trash (deleted files)
-  Stack undo;             // stack for undo operations
-  Stack redo;             // stack for redo operations
+    Tree root;              // Direktori root dari sistem file
+    LinkedList trash;       // Tempat penyimpanan file yang dihapus (recycle bin)
+    Stack undo;            // Stack untuk menyimpan operasi yang bisa di-undo
+    Stack redo;            // Stack untuk menyimpan operasi yang bisa di-redo
 
-  Tree treeCursor;        // current tree cursor 
-  // (tree dengan root adalah direktori saat ini)
+    Tree treeCursor;       // Pointer ke direktori yang sedang aktif
+    char *currentPath;     // Path absolut dari direktori yang sedang aktif
+    Queue copied;          // Antrian item yang di-copy
+    Queue cut;             // Antrian item yang di-cut
+    Queue temp;            // Antrian sementara untuk operasi
+    LinkedList selectedItem; // Daftar item yang sedang dipilih
 
-  char* currentPath;       // queue for current path
-  Queue copied;            // queue for copied items
-  Queue cut;               // queue for cut items
-  Queue temp;              // temporary queue for operations
-  LinkedList selectedItem; // linkedlist for selected item
+    Context *ctx;          // Pointer ke Context aplikasi untuk akses global
 } FileManager;
 
-// HELPER PROTOTYPE: Line 130
+/* ========== Core File Manager Functions ========== */
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void createFileManager(FileManager* fileManager);
+/**
+ * @brief Membuat instance baru dari File Manager
+ * @param fileManager Pointer ke struct FileManager yang akan diinisialisasi
+ * @author 
+ * IS: fileManager belum terinisialisasi
+ * FS: fileManager terinisialisasi dengan nilai default
+ */
+void createFileManager(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void initFileManager(FileManager* fileManager);
+/**
+ * @brief Menginisialisasi File Manager dengan data sistem file
+ * @param fileManager Pointer ke struct FileManager
+ * @author 
+ * IS: fileManager sudah dibuat tapi belum memuat data sistem file
+ * FS: fileManager termuat dengan data sistem file aktual
+ */
+void initFileManager(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-Tree loadTree(Tree tree, char* path);
+/**
+ * @brief Memuat struktur direktori ke dalam tree
+ * @param tree Tree yang akan diisi dengan struktur direktori
+ * @param path Path direktori yang akan dimuat
+ * IS: Tree kosong atau belum terisi dengan struktur direktori
+ * FS: Tree terisi dengan struktur direktori sesuai path
+ */
+void loadTree(Tree tree, char *path);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void refreshFileManager(FileManager* fileManager);
+/**
+ * @brief Memperbarui tampilan File Manager
+ * @param fileManager Filemanager
+ * IS: Tampilan File Manager mungkin tidak sesuai dengan state sistem file
+ * FS: Tampilan File Manager diperbarui sesuai state sistem file terkini
+ */
+void refreshFileManager(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-Item searchFile(FileManager* fileManager, char* path);
+/* ========== File Operation Functions ========== */
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name);
+/**
+ * @brief Mencari file dalam sistem file
+ * @param fileManager Pointer ke FileManager
+ * @param path Path file yang dicari
+ * @return Item yang ditemukan atau NULL jika tidak ditemukan
+ * @author 
+ * IS: Path file yang akan dicari sudah ditentukan
+ * FS: Mengembalikan Item jika ditemukan, NULL jika tidak
+ */
+Item searchFile(FileManager *fileManager, char *path);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void deleteFile(FileManager* fileManager);
+/**
+ * @brief Membuat file atau folder baru
+ * @param fileManager Pointer ke FileManager
+ * @param type Tipe item (FILE_TYPE atau FOLDER_TYPE)
+ * @param dirPath Path direktori tempat item akan dibuat
+ * @param name Nama item yang akan dibuat
+ * @author 
+ * IS: Item belum ada di sistem file
+ * FS: Item baru terbuat di lokasi yang ditentukan
+ */
+void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *name);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void renameFile(FileManager* fileManager, char* filePath, char* newName);
+/**
+ * @brief Menghapus file atau folder yang dipilih
+ * @param fileManager Pointer ke FileManager
+ * IS: File/folder yang akan dihapus sudah dipilih
+ * FS: File/folder terhapus dan dipindahkan ke trash
+ */
+void deleteFile(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void recoverFile(FileManager* fileManager);
+/**
+ * @brief Mengubah nama file atau folder
+ * @param fileManager Pointer ke FileManager
+ * @param filePath Path file yang akan diubah nama
+ * @param newName Nama baru untuk file/folder
+ * IS: File/folder memiliki nama lama
+ * FS: File/folder memiliki nama baru
+ */
+void renameFile(FileManager *fileManager, char *filePath, char *newName);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void copyFile(FileManager* fileManager);
+/**
+ * @brief Memulihkan file dari trash
+ * @param fileManager Pointer ke FileManager
+ * IS: File berada di trash
+ * FS: File dipulihkan ke lokasi asli atau lokasi yang ditentukan
+ */
+void recoverFile(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void pasteFile(FileManager* fileManager);
+/**
+ * @brief Menyalin file atau folder yang dipilih
+ * @param fileManager Pointer ke FileManager
+ * IS: File/folder sudah dipilih untuk disalin
+ * FS: File/folder tersimpan dalam antrian copied
+ */
+void copyFile(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void cutFile(FileManager* fileManager);
+/**
+ * @brief Menempelkan file atau folder yang telah disalin
+ * @param fileManager Pointer ke FileManager
+ * IS: Terdapat file/folder dalam antrian copied atau cut
+ * FS: File/folder ditempel ke lokasi yang aktif
+ */
+void pasteFile(FileManager *fileManager);
 
+/**
+ * @brief Memotong file atau folder yang dipilih
+ * @param fileManager Pointer ke FileManager
+ * IS: File/folder sudah dipilih untuk dipindahkan
+ * FS: File/folder tersimpan dalam antrian cut
+ */
+void cutFile(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void undo(FileManager* fileManager);
+/* ========== History Management Functions ========== */
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void redo(FileManager* fileManager);
+/**
+ * @brief Membatalkan operasi terakhir
+ * @param fileManager Pointer ke FileManager
+ * IS: Terdapat operasi yang dapat dibatalkan dalam stack undo
+ * FS: Operasi terakhir dibatalkan dan dipindah ke stack redo
+ */
+void undo(FileManager *fileManager);
 
+/**
+ * @brief Mengulangi operasi yang dibatalkan
+ * @param fileManager Pointer ke FileManager
+ * IS: Terdapat operasi dalam stack redo
+ * FS: Operasi teratas dari stack redo dijalankan kembali
+ */
+void redo(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void selectFile(FileManager* fileManager, Item* item);
+/* ========== Selection Management Functions ========== */
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void deselectFile(FileManager* fileManager, Item* item);
+/**
+ * @brief Memilih sebuah file atau folder
+ * @param fileManager Pointer ke FileManager
+ * @param item Item yang akan dipilih
+ * IS: Item belum terpilih
+ * FS: Item ditambahkan ke daftar item yang dipilih
+ */
+void selectFile(FileManager *fileManager, Item *item);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void clearSelectedFile(FileManager* fileManager);
+/**
+ * @brief Membatalkan pilihan sebuah file atau folder
+ * @param fileManager Pointer ke FileManager
+ * @param item Item yang akan dibatalkan pilihannya
+ * IS: Item sudah terpilih
+ * FS: Item dihapus dari daftar item yang dipilih
+ */
+void deselectFile(FileManager *fileManager, Item *item);
 
-void selectAll(FileManager* fileManager);
+/**
+ * @brief Membersihkan semua pilihan file
+ * @param fileManager Pointer ke FileManager
+ * IS: Mungkin ada item yang terpilih
+ * FS: Tidak ada item yang terpilih
+ */
+void clearSelectedFile(FileManager *fileManager);
 
-/*
-====================================================================
-  Helper Functions (PRIVATE)
-====================================================================
-*/
+/**
+ * @brief Memilih semua item dalam direktori aktif
+ * @param fileManager Pointer ke FileManager
+ * IS: Beberapa atau tidak ada item yang terpilih
+ * FS: Semua item dalam direktori aktif terpilih
+ */
+void selectAll(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void _moveToTrash(FileManager* fileManager, Tree itemTree);
+/* ========== Navigation Functions ========== */
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void _deletePermanently(char* fullPath, ItemType type, char* name);
+/**
+ * @brief Mendapatkan root dari direktori aktif
+ * @param fileManager Record FileManager
+ * @return Tree Root direktori yang sedang aktif
+ */
+Tree getCurrentRoot(FileManager fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void _deleteSingleItem(char* fullPath, ItemType type, char* name);
+/**
+ * @brief Mendapatkan path absolut dari posisi tree
+ * @param tree Tree yang akan dicari pathnya
+ * @return char* Path absolut dari tree
+ */
+char *getCurrentPath(Tree tree);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void _copyFileContent(char* srcPath, char* destPath);
+/**
+ * @brief Kembali ke direktori sebelumnya
+ * @param fileManager Pointer ke FileManager
+ * IS: Berada di suatu direktori
+ * FS: Kembali ke direktori parent
+ */
+void goBack(FileManager *fileManager);
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
-void _copyFolderRecursive(char* srcPath, char* destPath);
-void _removeFromTrash(FileManager* fileManager, char* itemName);
-void _addBackToTree(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
-void remove_node(Tree* root, Tree nodeToRemove);
-void _reconstructTreeStructure(FileManager* fileManager, Tree sourceTree, char* newBasePath, char* destinationPath);
-void _loadTreeFromPath(Tree parentNode, char* basePath);
-// Mengembalikan nama file dari path lengkap
-char* _getNameFromPath(char* path);
+/**
+ * @brief Pindah ke direktori yang dituju
+ * @param fileManager Pointer ke FileManager
+ * @param tree Tree tujuan
+ * IS: Berada di suatu direktori
+ * FS: Berpindah ke direktori tujuan
+ */
+void goTo(FileManager *fileManager, Tree tree);
 
-/*
-  Membuat nama folder baru dengan menambahkan suffix untuk folder duplikat
-  suffix adalah string yang ditambahkan ke belakang nama folder
-  Misal: "folder" menjadi "folder(1)"
-*/
-char* _createDuplicatedFolderName(char* dirPath, char* suffix);
+/**
+ * @brief Mengurutkan children dalam tree
+ * @param parent Pointer ke tree yang akan diurutkan childrennya
+ * IS: Children mungkin tidak terurut
+ * FS: Children terurut sesuai kriteria (nama/tipe)
+ */
+void sort_children(Tree *parent);
 
-/*
-  Membuat nama file baru dengan menambahkan suffix untuk file duplikat
-  suffix adalah string yang ditambahkan ke belakang nama file
-  Misal: "file.txt" menjadi "file(1).txt"
-*/
-char* _createDuplicatedFileName(char* filePath, char* suffix);
+/* ========== Helper Functions (PRIVATE) ========== */
 
-// Cek apakah path adalah folder
-bool isDirectory(char* path);
+/**
+ * @brief Memindahkan item ke trash
+ * @param fileManager Pointer ke FileManager
+ * @param itemTree Tree item yang akan dipindahkan
+ * @author 
+ * IS: Item berada di sistem file
+ * FS: Item dipindahkan ke trash
+ */
+void _moveToTrash(FileManager *fileManager, Tree itemTree);
 
-// Mendapatkan direktori saja dari full path
-char* _getDirectoryFromPath(char* path);
+/**
+ * @brief Menghapus item secara permanen
+ * @param fullPath Path lengkap item
+ * @param type Tipe item
+ * @param name Nama item
+ * IS: Item ada di sistem file atau trash
+ * FS: Item terhapus permanen dari sistem
+ */
+void _deletePermanently(char *fullPath, ItemType type, char *name);
 
-void windowsOpenWith(char* path);
+/**
+ * @brief Menghapus satu item
+ * @param fullPath Path lengkap item
+ * @param type Tipe item
+ * @param name Nama item
+ * IS: Item ada di sistem file
+ * FS: Item terhapus dari sistem file
+ */
+void _deleteSingleItem(char *fullPath, ItemType type, char *name);
 
-Tree getCurrentRoot(FileManager* fileManager);
+/**
+ * @brief Menyalin isi file
+ * @param srcPath Path sumber
+ * @param destPath Path tujuan
+ * IS: File sumber ada
+ * FS: Isi file tersalin ke tujuan
+ */
+void _copyFileContent(char *srcPath, char *destPath);
 
-char* getCurrentPath(Tree tree);
+/**
+ * @brief Menyalin folder secara rekursif
+ * @param srcPath Path sumber
+ * @param destPath Path tujuan
+ * IS: Folder sumber ada
+ * FS: Folder dan isinya tersalin ke tujuan
+ */
+void _copyFolderRecursive(char *srcPath, char *destPath);
 
-void goBack(FileManager* fileManager);
+/**
+ * @brief Menghapus item dari trash
+ * @param fileManager Pointer ke FileManager
+ * @param itemName Nama item yang akan dihapus
+ * IS: Item ada di trash
+ * FS: Item terhapus dari trash
+ */
+void _removeFromTrash(FileManager *fileManager, char *itemName);
 
-void goTo(FileManager* FileManager, Tree tree);
+/**
+ * @brief Mengembalikan item ke tree
+ * @param fileManager Pointer ke FileManager
+ * @param trashItem Item dari trash
+ * @param recoverPath Path tujuan pemulihan
+ * IS: Item ada di trash
+ * FS: Item dikembalikan ke sistem file
+ */
+void _addBackToTree(FileManager *fileManager, TrashItem *trashItem, char *recoverPath);
 
-void sort_children(Tree* parent);
+/**
+ * @brief Menghapus node dari tree
+ * @param root Root dari tree
+ * @param nodeToRemove Node yang akan dihapus
+ * IS: Node ada di tree
+ * FS: Node terhapus dari tree
+ */
+void remove_node(Tree *root, Tree nodeToRemove);
+
+/**
+ * @brief Membangun ulang struktur tree
+ * @param fileManager Pointer ke FileManager
+ * @param sourceTree Tree sumber
+ * @param newBasePath Path dasar baru
+ * @param destinationPath Path tujuan
+ * IS: Tree sumber ada
+ * FS: Struktur tree terbangun ulang di lokasi baru
+ */
+void _reconstructTreeStructure(FileManager *fileManager, Tree sourceTree, char *newBasePath, char *destinationPath);
+
+/**
+ * @brief Memuat tree dari path
+ * @param parentNode Node parent
+ * @param basePath Path dasar
+ * IS: Path valid
+ * FS: Tree termuat dari path
+ */
+void _loadTreeFromPath(Tree parentNode, char *basePath);
+
+/**
+ * @brief Mendapatkan nama file dari path
+ * @param path Path lengkap
+ * @return char* Nama file
+ */
+char *_getNameFromPath(char *path);
+
+/**
+ * @brief Membuat nama folder duplikat
+ * @param dirPath Path direktori
+ * @param suffix Akhiran untuk nama
+ * @return char* Nama folder baru
+ */
+char *_createDuplicatedFolderName(char *dirPath, char *suffix);
+
+/**
+ * @brief Membuat nama file duplikat
+ * @param filePath Path file
+ * @param suffix Akhiran untuk nama
+ * @return char* Nama file baru
+ */
+char *_createDuplicatedFileName(char *filePath, char *suffix);
+
+/**
+ * @brief Mengecek apakah path adalah direktori
+ * @param path Path yang akan dicek
+ * @return bool true jika direktori
+ */
+bool isDirectory(char *path);
+
+/**
+ * @brief Mendapatkan direktori dari path lengkap
+ * @param path Path lengkap
+ * @return char* Path direktori
+ */
+char *_getDirectoryFromPath(char *path);
+
+/**
+ * @brief Membuka file dengan aplikasi default Windows
+ * @param path Path file yang akan dibuka
+ * IS: File ada
+ * FS: File terbuka dengan aplikasi default
+ */
+void windowsOpenWith(char *path);
 
 #endif // !FILE_MANAGER_H

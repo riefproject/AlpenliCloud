@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "file_manager.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
@@ -14,16 +14,16 @@ void createSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->panelContentRec = (Rectangle){0, 0, 160, 340};
     sidebar->panelView = (Rectangle){0};
     sidebar->panelScroll = (Vector2){0};
-    sidebar->sidebarRoot = NULL;
+    sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*ctx->fileManager));
 }
 
 void updateSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->ctx = ctx;
     ctx->sidebar = sidebar;
 
-    if (sidebar->sidebarRoot == NULL) {
-        sidebar->sidebarRoot = crateSidebarItem(getCurrentRoot(sidebar->ctx->fileManager));
-    }
+    // if (sidebar->sidebarRoot == NULL) {
+    //     sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*sidebar->ctx->fileManager));
+    // }
 
     sidebar->currentZeroPosition = *ctx->currentZeroPosition;
     sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
@@ -71,16 +71,26 @@ void drawSidebar(Sidebar *sidebar) {
     sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
 }
 
-SidebarItem *crateSidebarItem(Tree tree) {
-    if (tree == NULL)
+SidebarItem *createSidebarItem(Tree root) {
+    if (root == NULL)
         return NULL;
 
     SidebarItem *sidebarItem = malloc(sizeof(SidebarItem));
-    sidebarItem->tree = tree;
+    sidebarItem->tree = root;
     sidebarItem->isExpanded = false;
-    sidebarItem->first_son = crateSidebarItem(tree->first_son);
-    sidebarItem->next_brother = crateSidebarItem(tree->next_brother);
+    sidebarItem->first_son = createSidebarItem(root->first_son);
+    sidebarItem->next_brother = createSidebarItem(root->next_brother);
     return sidebarItem;
+}
+
+void destroySidebarItem(SidebarItem *item) {
+    if (item == NULL)
+        return;
+
+    destroySidebarItem(item->first_son);
+    destroySidebarItem(item->next_brother);
+    free(item);
+    item = NULL;
 }
 
 void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
@@ -89,7 +99,7 @@ void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManag
 
         if (itemNode->item.type == ITEM_FOLDER) {
             float indent = (DEFAULT_PADDING * 2) * depth;
-            const char *arrow = (itemNode->first_son != NULL) ? (node->isExpanded ? "#116#" : "#115#") : "   ";
+            const char *arrow =  node->isExpanded ? "#116#" : "#115#";
             const char *label = TextFormat("%s %s", arrow, itemNode->item.name);
 
             int labelTextWidth = MeasureText(label, GuiGetStyle(DEFAULT, TEXT_SIZE));

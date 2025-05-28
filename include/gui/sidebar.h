@@ -30,7 +30,9 @@ typedef struct Sidebar {
 
 void createSidebar(Sidebar* sidebar, Context *ctx);
 
-SidebarItem* crateSidebarItem(Tree tree);
+SidebarItem* createSidebarItem(Tree root);
+
+void destroySidebarItem(SidebarItem* item);
 
 void updateSidebar(Sidebar* sidebar, Context *ctx);
 

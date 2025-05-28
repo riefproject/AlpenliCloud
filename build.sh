@@ -125,7 +125,7 @@ build() {
     sleep 1
     "./$EXE_PATH" || echo -e "${RED}❌ AlpenliCloud failed to start! Check for errors. ${RESET}"
     if [ $? -eq 0 ]; then
-        clear
+        # clear
         echo -e "\n\nMantap! Trims sudah pakai ${BLUE}AlpenliCloud${RESET}\n\n"
     fi
 }

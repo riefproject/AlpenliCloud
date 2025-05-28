@@ -1,5 +1,5 @@
 #include "gui/component.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 #include "gui/toolbar.h"
 
 #include "item.h"

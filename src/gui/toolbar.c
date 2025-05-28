@@ -4,7 +4,7 @@
 #include "gui/component.h"
 #include "gui/sidebar.h"
 #include "gui/toolbar.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 
 #include "macro.h"
 #include "raygui.h"

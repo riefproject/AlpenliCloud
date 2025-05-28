@@ -1,6 +1,6 @@
 #include "gui/body.h"
 #include "file_manager.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 #include "item.h"
 #include "macro.h"
 
