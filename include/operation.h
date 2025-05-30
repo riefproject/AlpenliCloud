@@ -19,7 +19,7 @@ typedef struct Operation {
     char* to;
     ActionType type;
     bool isDir;
-    Queue itemTemp;
+    Queue* itemTemp;
 } Operation;
 
 
