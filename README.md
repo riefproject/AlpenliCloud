@@ -31,7 +31,7 @@
 <table border="0" cellspacing="0" cellpadding="0">
     <tr>
         <td style="vertical-align:bottom; width:60px; padding-right:10px; border:none;">
-            <img src="assets/logo.ico" style="height:50px; width:50px;">
+            <img src="assets/icon.png" style="height:50px; width:50px;">
         </td>
         <td style="vertical-align:middle; border:none;">
             <h1 style="margin:0;">AlpenliCloud</h1>

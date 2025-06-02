@@ -1,19 +1,31 @@
+# Abaikan semua konfigurasi vscode dan git
 /**/.vscode/
 /**/.git/
+
+# Abaikan semua file dan direktori hasil build atau kompilasi
 /**/bin/
 /**/build/
+
+# Abaikan semua file dengan ekstensi tertentu
 /**/*.zip
 /**/*.exe
 /**/*.o
 /**/*.res
 /**/*.cpp
+
+# Abaikan semua file sementara 
 coba.c
 coba.exe
-/.dir/**/
+
+# Abaikan semua file dalaam direktori .dir
 /.dir/root/copy/**
 /.dir/root/cut/**
-!/.dir/root
-!/.dir/root/src
-!/.dir/root/copy
-!/.dir/root/cut
-!/.dir/trash
+/.dir/**
+
+# 
+!/.dir/
+!/.dir/root/
+!/.dir/root/test/
+!/.dir/root/copy/
+!/.dir/root/cut/
+!/.dir/trash/
