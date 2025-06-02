@@ -6,9 +6,6 @@ Operation createOperation(char *from, char *to, ActionType type) {
         .from = strdup(from),
         .to = strdup(to),
         .type = type,
-        .itemTemp = (Queue){
-            .front = NULL,
-            .rear = NULL
-        }
+        .itemTemp = NULL
     };
 }

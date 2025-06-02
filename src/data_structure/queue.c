@@ -41,7 +41,7 @@ infotype dequeue(Queue* queue) {
   LinkedList temp_list;
   infotype data;
   temp_list.head = queue->front;
-  delete_first(&temp_list, data);
+  delete_first(&temp_list, &data);
   queue->front = temp_list.head;
   if (queue->front == NULL) {
     queue->rear = NULL;

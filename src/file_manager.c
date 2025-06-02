@@ -159,10 +159,10 @@ void refreshFileManager(FileManager *fileManager) {
  * IS:
  * FS:
 ================================================================================*/
-void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *name) {
-    Item newItem, parentToSearch;
-    char *path;
-    char *currentFullPath;
+void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name, bool isOperation) {
+    Item newItem;
+    char* path;
+    char* currentFullPath;
     Tree currentNode;
     time_t createdTime;
     FILE *newFile;
@@ -200,16 +200,17 @@ void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *na
             fclose(newFile);
         }
 
+        if(isOperation){
+            newOperation = alloc(Operation);
+            *newOperation = createOperation(path, NULL, ACTION_CREATE);
+            push(&fileManager->undo, newOperation);
+        }
         newItem = createItem(_getNameFromPath(path), path, 0, type, createdTime, createdTime, -1);
         insert_node(currentNode, newItem);
-        newOperation = alloc(Operation);
         // printf("[LOG] ===============path:%s\n", path);
-        *newOperation = createOperation(path, NULL, ACTION_CREATE);
-        push(&fileManager->undo, newOperation);
 
-        refreshFileManager(fileManager);
-        printf("[LOG] File %s berhasil dibuat di %s\n", name, dirPath);
-    } else {
+    }
+    else {
         printf("[LOG] Direktori parent tidak ditemukan : %s\n", dirPath);
     }
 }
@@ -218,14 +219,20 @@ void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *na
  * IS:
  * FS:
 ================================================================================*/
-void deleteFile(FileManager *fileManager) {
+void deleteFile(FileManager* fileManager, bool isOperation) {
+    Operation* deleteOperation;
     if (fileManager->selectedItem.head == NULL) {
         printf("[LOG] Tidak ada file yang dipilih untuk dihapus\n");
         return;
     }
 
-    Node *temp = fileManager->selectedItem.head;
-
+    Node* temp = fileManager->selectedItem.head;
+    if(isOperation){
+        deleteOperation = alloc(Operation);
+        *deleteOperation = createOperation(NULL, NULL, ACTION_DELETE);
+        deleteOperation->itemTemp = alloc(Queue);
+        create_queue(&(*(deleteOperation->itemTemp)));
+    }
     while (temp != NULL) {
         Item *itemToDelete = (Item *)temp->data;
         Tree foundTree = searchTree(fileManager->root, *itemToDelete);
@@ -234,12 +241,23 @@ void deleteFile(FileManager *fileManager) {
             temp = temp->next;
             continue;
         }
-
-        _moveToTrash(fileManager, foundTree);
+        
         // printf("[LOG] File berhasil dipindah ke trash\n");
+        // Tambahkan item ke queue dalam operasi
+        if(isOperation){
+            TrashItem* trashItem = alloc(TrashItem);
+            trashItem->item = foundTree->item;
+            trashItem->originalPath = strdup(foundTree->item.path);
+            trashItem->trashPath = strdup(TextFormat("%s/%s", TRASH, foundTree->item.name));
+            enqueue(deleteOperation->itemTemp, trashItem);
+            printf("[LOG] Operasi delete berhasil dibuat dengan origin path:%s\n", trashItem->originalPath);
+        }
+        
+        _moveToTrash(fileManager, foundTree);
         temp = temp->next;
     }
-
+    
+    push(&fileManager->undo, deleteOperation);
     clearSelectedFile(fileManager);
     printf("[LOG] File berhasil dipindah ke trash\n");
 }
@@ -250,10 +268,14 @@ void deleteFile(FileManager *fileManager) {
  * note: file path adalah full path, bukan path direktori
 ================================================================================
 */
-void renameFile(FileManager *fileManager, char *filePath, char *newName) {
+void renameFile(FileManager* fileManager, char* filePath, char* newName, bool isOperation) {
     Item item;
     Tree foundTree;
-    char *newPath;
+    char* newPath;
+    Operation *operationToUndo;
+    if(isOperation){
+        operationToUndo = alloc(Operation);
+    }
     // Cari item
     item = createItem(_getNameFromPath(filePath), filePath, 0, 0, 0, 0, 0);
     foundTree = searchTree(fileManager->treeCursor, item);
@@ -271,6 +293,13 @@ void renameFile(FileManager *fileManager, char *filePath, char *newName) {
         if (FileExists(newPath)) {
             newPath = _createDuplicatedFolderName(newPath, "(1)");
         }
+    }
+    if(isOperation){
+        // Simpan operasi untuk undo
+        *operationToUndo = createOperation(filePath, newPath, ACTION_UPDATE);
+        operationToUndo->isDir = (foundTree->item.type == ITEM_FOLDER);
+        operationToUndo->itemTemp = NULL;
+        push(&fileManager->undo, operationToUndo);
     }
     rename(filePath, newPath);
 
@@ -410,6 +439,7 @@ void cutFile(FileManager *fileManager) {
     printf("[LOG] File berhasil disalin ke clipboard\n");
 }
 
+
 /*  Prosedur
  *  IS:
  *  FS:
@@ -425,12 +455,14 @@ void pasteFile(FileManager *fileManager) {
         Item *itemToPaste = (Item *)temp->data;
 
         // Path untuk file/folder baru di lokasi tujuan
-        char *destinationFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
-        char *newPath = TextFormat("%s/%s", destinationFullPath, itemToPaste->name);
-        char *originPath = itemToPaste->path; // Gunakan path dari item yang disimpan
+        char* destinationFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
+        printf("\n%s\n", fileManager->currentPath);
+        char* newPath = TextFormat("%s/%s", destinationFullPath, itemToPaste->name);
+        char* originPath = itemToPaste->path; // Gunakan path dari item yang disimpan
 
         printf("[LOG] Mencoba paste: %s -> %s\n", originPath, newPath);
         printf("[LOG] Is Copy: %s\n", isCopy ? "true" : "false");
+        printf("[LOG] Item type: %d (ITEM_FOLDER=%d, ITEM_FILE=%d)\n", itemToPaste->type, ITEM_FOLDER, ITEM_FILE);
 
         // COPY operation
         if (isCopy) {
@@ -441,6 +473,7 @@ void pasteFile(FileManager *fileManager) {
                 continue;
             }
             originPath = foundTree->item.path; // Update dengan path dari tree
+            printf("[LOG] Origin path updated to: %s\n", originPath);
         }
 
         // Cek apakah source file/folder masih ada (untuk copy dan cut)
@@ -450,33 +483,62 @@ void pasteFile(FileManager *fileManager) {
             continue;
         }
 
+        printf("[LOG] Source exists, proceeding with copy/cut\n");
+
         // COPY/CUT sama-sama butuh copy content dulu
         if (itemToPaste->type == ITEM_FOLDER) {
+            printf("[LOG] Processing folder: %s\n", itemToPaste->name);
+
             if (DirectoryExists(newPath)) {
+                printf("[LOG] Destination exists, creating duplicate name\n");
                 newPath = _createDuplicatedFolderName(newPath, "(1)");
+                printf("[LOG] New path after duplicate check: %s\n", newPath);
             }
 
             // Untuk CUT, pindah langsung. Untuk COPY, buat folder baru lalu copy
             if (!isCopy) {
+                printf("[LOG] CUT operation - moving folder\n");
                 // CUT operation - rename/move folder
                 if (rename(originPath, newPath) != 0) {
                     printf("[LOG] Gagal memindahkan folder %s\n", itemToPaste->name);
                     temp = temp->next;
                     continue;
                 }
-            } else {
+            }
+            else {
+                printf("[LOG] COPY operation - copying folder\n");
                 // COPY operation - buat folder baru lalu copy isi
+                printf("[LOG] Membuat folder destination: %s\n", newPath);
                 if (MakeDirectory(newPath) != 0) {
                     printf("[LOG] Gagal membuat folder\n");
                     temp = temp->next;
                     continue;
                 }
+                printf("[LOG] Folder destination created successfully\n");
+                printf("[LOG] Mulai copy recursive dari %s ke %s\n", originPath, newPath);
                 _copyFolderRecursive(originPath, newPath);
+                printf("[LOG] Selesai copy recursive\n");
             }
 
-            // Tambahkan ke tree struktur
-            _reconstructTreeStructure(fileManager, NULL, newPath, destinationFullPath);
-        } else if (itemToPaste->type == ITEM_FILE) {
+            // Tambahkan ke tree struktur - gunakan refresh untuk update tree
+            Tree currentNode = fileManager->treeCursor;
+            if (currentNode != NULL) {
+                Item newItem = createItem(
+                    _getNameFromPath(newPath),
+                    newPath,
+                    itemToPaste->size,
+                    ITEM_FOLDER,
+                    itemToPaste->created_at,
+                    time(NULL),
+                    0
+                );
+                insert_node(currentNode, newItem);
+                printf("[LOG] Folder %s berhasil ditambahkan ke tree\n", newItem.name);
+            }
+        }
+        else if (itemToPaste->type == ITEM_FILE) {
+            printf("[LOG] Processing file: %s\n", itemToPaste->name);
+
             if (FileExists(newPath)) {
                 newPath = _createDuplicatedFileName(newPath, "(1)");
             }
@@ -494,8 +556,7 @@ void pasteFile(FileManager *fileManager) {
             }
 
             // Tambahkan item baru ke tree di lokasi tujuan
-            Tree currentNode = searchTree(fileManager->root,
-                                          createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+            Tree currentNode = fileManager->treeCursor;
 
             if (currentNode != NULL) {
                 Item newItem = createItem(
@@ -510,6 +571,9 @@ void pasteFile(FileManager *fileManager) {
                 insert_node(currentNode, newItem);
                 printf("[LOG] Item %s berhasil ditambahkan ke tree\n", newItem.name);
             }
+        }
+        else {
+            printf("[LOG] Unknown item type: %d\n", itemToPaste->type);
         }
 
         // Kalau cut, hapus dari tree (tapi jangan hapus fisik karena sudah di-rename)
@@ -534,10 +598,9 @@ void pasteFile(FileManager *fileManager) {
 }
 
 // Update fungsi _reconstructTreeStructure untuk handle kasus cut
-void _reconstructTreeStructure(FileManager *fileManager, Tree sourceTree, char *newBasePath, char *destinationPath) {
-    // Cari parent node di tree tujuan
-    Tree parentNode = searchTree(fileManager->root,
-                                 createItem(_getNameFromPath(destinationPath), destinationPath, 0, ITEM_FOLDER, 0, 0, 0));
+void _reconstructTreeStructure(FileManager* fileManager, Tree sourceTree, char* newBasePath, char* destinationPath) {
+    // Fix: Use treeCursor directly instead of searching
+    Tree parentNode = fileManager->treeCursor;
 
     if (parentNode == NULL) {
         printf("[LOG] Parent node tidak ditemukan\n");
@@ -701,14 +764,16 @@ void undo(FileManager *fileManager) {
         return;
     }
     operationToUndo = alloc(Operation);
-    operationToRedo = alloc(Operation);
-    operationToUndo = (Operation *)pop(&(fileManager->undo));
+    operationToRedo = alloc (Operation);
+    operationToUndo = (Operation*)pop(&(fileManager->undo));
+
     *operationToRedo = (Operation){
         .from = strdup(operationToUndo->from),
         .isDir = operationToUndo->isDir,
         .to = strdup(operationToUndo->to),
         .type = operationToUndo->type,
-        .itemTemp = (Queue){NULL, NULL}};
+        .itemTemp = NULL
+    };
     switch (operationToUndo->type) {
     case ACTION_CREATE:
         printf("[LOG] Undo Path: %s\n", operationToUndo->from);
@@ -723,26 +788,20 @@ void undo(FileManager *fileManager) {
         }
         break;
     case ACTION_DELETE:
+        operationToRedo->itemTemp = alloc(Queue);
+        create_queue(&(*(operationToRedo->itemTemp)));
         // Kembalikan item yang dihapus
-        while (is_queue_empty(operationToUndo->itemTemp)) {
-            trashItem = (TrashItem *)dequeue(&operationToUndo->itemTemp);
-            enqueue(&operationToRedo->itemTemp, trashItem);
-            if (trashItem->item.type == ITEM_FOLDER) {
-                if (MakeDirectory(trashItem->originalPath) != 0) {
-                    printf("Trash folder %s berhasil dikembalikan\n", trashItem->item.name);
-                } else {
-                    printf("Trash folder %s GAGAL dikembalikan\n", trashItem->item.name);
-                }
-            } else if (trashItem->item.type == ITEM_FILE) {
-                FILE *newFile = fopen(trashItem->originalPath, "w");
-                if (newFile == NULL) {
-                    printf("Gagal mengembalikan file %s\n", trashItem->item.name);
-                    return;
-                } else {
-                    printf("Berhail mengembalikan file %s\n", trashItem->item.name);
-                }
-                fclose(newFile);
-            }
+        if(is_queue_empty(*(operationToUndo->itemTemp))){
+            printf("bajigur, kosong\n");
+        }
+        while(!is_queue_empty(*(operationToUndo->itemTemp))){
+            trashItem = (TrashItem*)dequeue(&(*operationToUndo->itemTemp));
+            printf("Item origin path:%s\n", trashItem->originalPath);
+            enqueue(&(*operationToRedo->itemTemp), trashItem);
+            // Buat item baru dengan path yang sudah dihapus
+            createFile(fileManager, trashItem->item.type, _getDirectoryFromPath(trashItem->originalPath), trashItem->item.name, false);
+ 
+            // enqueue(&(operationToRedo->itemTemp), trashItem);
         }
         printf("undo delete selesai\n");
         break;
@@ -750,7 +809,7 @@ void undo(FileManager *fileManager) {
         // Kembalikan nama item yang diubah
         foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToUndo->to), operationToUndo->to, 0, ITEM_FILE, 0, 0, 0));
         if (foundTree != NULL) {
-            renameFile(fileManager, foundTree->item.path, operationToUndo->from);
+            renameFile(fileManager, foundTree->item.path, _getNameFromPath(operationToUndo->from), false);
             printf("[LOG] Undo update: %s to %s\n", operationToUndo->to, operationToUndo->from);
         }
         break;
@@ -763,15 +822,35 @@ void undo(FileManager *fileManager) {
         }
         break;
     case ACTION_PASTE:
-        // Cari item yang sudah di paste, dan tampung
         // Hapus item yang sudah di-paste
-
+        if (isCopy) {
+            // Hapus item yang sudah di-copy
+            while (is_queue_empty(*(operationToUndo->itemTemp))) {
+                Item* itemToDelete = (Item*)dequeue(operationToUndo->itemTemp);
+                foundTree = searchTree(fileManager->root, *itemToDelete);
+                if (foundTree != NULL) {
+                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
+                    printf("[LOG] Undo paste: %s\n", foundTree->item.name);
+                }
+            }
+        } else {
+            // Hapus item yang sudah di-cut
+            while (is_queue_empty(*(operationToUndo->itemTemp))) {
+                Item* itemToDelete = (Item*)dequeue(operationToUndo->itemTemp);
+                foundTree = searchTree(fileManager->root, *itemToDelete);
+                if (foundTree != NULL) {
+                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
+                    printf("[LOG] Undo cut: %s\n", foundTree->item.name);
+                }
+            }
+        }
         break;
 
     default:
         break;
     }
-    push(&(fileManager->redo), operationToUndo);
+    push(&(fileManager->redo), operationToRedo);
+    refreshFileManager(fileManager);
     // printf("[LOG] Redo Pushed : %s\n", operationToUndo->from);
 }
 
@@ -779,41 +858,65 @@ void undo(FileManager *fileManager) {
  *  IS:
  *  FS:
 ================================================================================*/
-void redo(FileManager *fileManager) {
-    Operation *operationToRedo;
+void redo(FileManager* fileManager) {
+    Operation* operationToRedo;
+    Operation* operationToUndo;
     Tree foundTree;
     if (fileManager->redo == NULL) {
         printf("[LOG] No actions to redo.\n");
         return;
     }
     operationToRedo = alloc(Operation);
-    operationToRedo = (Operation *)pop(&(fileManager->redo));
-    push(&(fileManager->undo), operationToRedo);
+    operationToRedo = (Operation*)pop(&(fileManager->redo));
+    operationToUndo = alloc(Operation);
+    *operationToUndo = (Operation){
+        .from = strdup(operationToRedo->from),
+        .isDir = operationToRedo->isDir,
+        .to = strdup(operationToRedo->to),
+        .type = operationToRedo->type,
+        .itemTemp = NULL
+    };
     switch (operationToRedo->type) {
-    case ACTION_CREATE:
+        case ACTION_CREATE:
         // Buat item yang sudah dihapus
-        createFile(fileManager, operationToRedo->isDir ? ITEM_FOLDER : ITEM_FILE, _getDirectoryFromPath(operationToRedo->from), _getNameFromPath(operationToRedo->from));
+        createFile(fileManager, operationToRedo->isDir ? ITEM_FOLDER : ITEM_FILE, _getDirectoryFromPath(operationToRedo->from), _getNameFromPath(operationToRedo->from), false);
         printf("[LOG] Redo create: %s\n", operationToRedo->from);
         break;
-    case ACTION_DELETE:
-        // delete item yang dikembalikan
-        foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToRedo->from), operationToRedo->from, 0, ITEM_FILE, 0, 0, 0));
-        _moveToTrash(fileManager, foundTree);
-        printf("[LOG] Redo delete: %s\n", operationToRedo->from);
+        case ACTION_DELETE:
+        operationToUndo->itemTemp = alloc(Queue);
+        create_queue(&(*(operationToUndo->itemTemp)));
+        // kembalikan item ke trash (delete to trash)
+        while (!is_queue_empty(*(operationToRedo->itemTemp))) {
+            TrashItem* trashItem = (TrashItem*)dequeue(&(*operationToRedo->itemTemp));
+            enqueue(&(*operationToUndo->itemTemp), trashItem);
+            printf("[LOG] Redo delete item: %s\n", trashItem->item.name);
+            foundTree = searchTree(fileManager->root, createItem(trashItem->item.name, trashItem->item.path, 0, trashItem->item.type, 0, 0, 0));
+            if (foundTree == NULL) {
+                printf("[LOG] Item tidak ditemukan untuk di-delete kembali: %s\n", trashItem->item.name);
+                continue;
+            }
+            _moveToTrash(fileManager, foundTree);
+            printf("[LOG] Redo delete: %s\n", trashItem->item.name);
+        }
+        
+        
+        printf("[LOG] Redo delete completed\n");
         break;
-    case ACTION_UPDATE:
+        case ACTION_UPDATE:
         foundTree = searchTree(fileManager->root, createItem(_getNameFromPath(operationToRedo->from), operationToRedo->from, 0, ITEM_FILE, 0, 0, 0));
-        renameFile(fileManager, foundTree->item.path, _getNameFromPath(operationToRedo->to));
+        renameFile(fileManager, foundTree->item.path, _getNameFromPath(operationToRedo->to), false);
         printf("[LOG] Redo rename: %s\n", operationToRedo->from);
         break;
     case ACTION_PASTE:
         break;
-
-    case ACTION_RECOVER:
+        
+        case ACTION_RECOVER:
         // 1. Ambil item yang sebelumnya telah dihapus
         // 2. Recover item ke tempat asal
-        break;
+        break; 
+        
     }
+    push(&(fileManager->undo), operationToUndo);
 }
 
 // ================================================================================
@@ -1010,32 +1113,57 @@ void _moveToTrash(FileManager *fileManager, Tree itemTree) {
  *  IS:
  *  FS:
 ================================================================================*/
-void _copyFolderRecursive(char *srcPath, char *destPath) {
-    DIR *dp = opendir(srcPath);
-    if (!dp)
+void _copyFolderRecursive(char* srcPath, char* destPath) {
+    DIR* dp = opendir(srcPath);
+    if (!dp) {
+        printf("[LOG] Gagal membuka direktori source: %s\n", srcPath);
         return;
+    }
 
     struct dirent *ep;
     struct stat statbuf;
+
+    printf("[LOG] Copying dari %s ke %s\n", srcPath, destPath);
 
     while ((ep = readdir(dp)) != NULL) {
         if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
             continue;
 
-        char *srcItem = TextFormat("%s/%s", srcPath, ep->d_name);
-        char *destItem = TextFormat("%s/%s", destPath, ep->d_name);
+        // Fix: Use manual string construction instead of TextFormat
+        char* srcItem = malloc(strlen(srcPath) + strlen(ep->d_name) + 2);
+        char* destItem = malloc(strlen(destPath) + strlen(ep->d_name) + 2);
 
-        if (stat(srcItem, &statbuf) == -1)
+        sprintf(srcItem, "%s/%s", srcPath, ep->d_name);
+        sprintf(destItem, "%s/%s", destPath, ep->d_name);
+
+        printf("[LOG] Processing: %s -> %s\n", srcItem, destItem);
+
+        if (stat(srcItem, &statbuf) == -1) {
+            printf("[LOG] Gagal stat file: %s\n", srcItem);
+            free(srcItem);
+            free(destItem);
             continue;
+        }
 
         if (S_ISDIR(statbuf.st_mode)) {
             // Buat folder dan copy rekursif
-            MakeDirectory(destItem);
+            printf("[LOG] Membuat direktori: %s\n", destItem);
+            if (MakeDirectory(destItem) != 0) {
+                printf("[LOG] Gagal membuat direktori: %s\n", destItem);
+                free(srcItem);
+                free(destItem);
+                continue;
+            }
             _copyFolderRecursive(srcItem, destItem);
-        } else {
+        }
+        else if (S_ISREG(statbuf.st_mode)) {
             // Copy file content
+            printf("[LOG] Copying file: %s -> %s\n", srcItem, destItem);
             _copyFileContent(srcItem, destItem);
         }
+
+        free(srcItem);
+        free(destItem);
     }
     closedir(dp);
 }

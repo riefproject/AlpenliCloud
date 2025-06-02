@@ -129,7 +129,7 @@ void ShortcutKeys(Context* ctx) {
         if (!ctx->toolbar->newButtonProperty.showModal) {
             char* name = ctx->toolbar->newButtonProperty.inputBuffer;
             char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
-            createFile(ctx->fileManager, ITEM_FOLDER, dirPath, name);
+            createFile(ctx->fileManager, ITEM_FOLDER, dirPath, name, true);
         }
     }
 
@@ -144,7 +144,7 @@ void ShortcutKeys(Context* ctx) {
             if (!ctx->toolbar->newButtonProperty.showModal) {
                 char* name = ctx->toolbar->newButtonProperty.inputBuffer;
                 char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
-                createFile(ctx->fileManager, ITEM_FILE, dirPath, name);
+                createFile(ctx->fileManager, ITEM_FILE, dirPath, name, true);
             }
         }
     }

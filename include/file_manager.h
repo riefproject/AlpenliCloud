@@ -11,19 +11,22 @@ typedef struct Context Context;
 #define alloc(T) (T *)malloc(sizeof(T));
 
 typedef struct FileManager {
-    Tree root;              // Direktori root dari sistem file
-    LinkedList trash;       // Tempat penyimpanan file yang dihapus (recycle bin)
-    Stack undo;            // Stack untuk menyimpan operasi yang bisa di-undo
-    Stack redo;            // Stack untuk menyimpan operasi yang bisa di-redo
+  Tree root;              // root directory
+  LinkedList trash;         // root trash (deleted files)
+  Stack undo;             // stack for undo operations
+  Stack redo;             // stack for redo operations
 
-    Tree treeCursor;       // Pointer ke direktori yang sedang aktif
-    char *currentPath;     // Path absolut dari direktori yang sedang aktif
-    Queue copied;          // Antrian item yang di-copy
-    Queue cut;             // Antrian item yang di-cut
-    Queue temp;            // Antrian sementara untuk operasi
-    LinkedList selectedItem; // Daftar item yang sedang dipilih
+  Tree treeCursor;        // current tree cursor 
+  // (tree dengan root adalah direktori saat ini)
 
-    Context *ctx;          // Pointer ke Context aplikasi untuk akses global
+  char* currentPath;       // queue for current path
+  Queue copied;            // queue for copied items
+  Queue cut;               // queue for cut items
+  Queue temp;              // temporary queue for operations
+  LinkedList selectedItem; // linkedlist for selected item
+  bool needsRefresh;
+
+  Context *ctx;
 } FileManager;
 
 /* ========== Core File Manager Functions ========== */
@@ -76,35 +79,23 @@ void refreshFileManager(FileManager *fileManager);
  */
 Item searchFile(FileManager *fileManager, char *path);
 
-/**
- * @brief Membuat file atau folder baru
- * @param fileManager Pointer ke FileManager
- * @param type Tipe item (FILE_TYPE atau FOLDER_TYPE)
- * @param dirPath Path direktori tempat item akan dibuat
- * @param name Nama item yang akan dibuat
- * @author 
- * IS: Item belum ada di sistem file
- * FS: Item baru terbuat di lokasi yang ditentukan
- */
-void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *name);
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name, bool isOperation);
 
-/**
- * @brief Menghapus file atau folder yang dipilih
- * @param fileManager Pointer ke FileManager
- * IS: File/folder yang akan dihapus sudah dipilih
- * FS: File/folder terhapus dan dipindahkan ke trash
- */
-void deleteFile(FileManager *fileManager);
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void deleteFile(FileManager* fileManager, bool isOperation);
 
-/**
- * @brief Mengubah nama file atau folder
- * @param fileManager Pointer ke FileManager
- * @param filePath Path file yang akan diubah nama
- * @param newName Nama baru untuk file/folder
- * IS: File/folder memiliki nama lama
- * FS: File/folder memiliki nama baru
- */
-void renameFile(FileManager *fileManager, char *filePath, char *newName);
+/*  Prosedur
+ *  IS:
+ *  FS:
+================================================================================*/
+void renameFile(FileManager* fileManager, char* filePath, char* newName, bool isOperation);
 
 /**
  * @brief Memulihkan file dari trash
