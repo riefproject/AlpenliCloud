@@ -61,19 +61,19 @@ Item searchFile(FileManager* fileManager, char* path);
  *  IS:
  *  FS:
 ================================================================================*/
-void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name);
+void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name, bool isOperation);
 
 /*  Prosedur
  *  IS:
  *  FS:
 ================================================================================*/
-void deleteFile(FileManager* fileManager);
+void deleteFile(FileManager* fileManager, bool isOperation);
 
 /*  Prosedur
  *  IS:
  *  FS:
 ================================================================================*/
-void renameFile(FileManager* fileManager, char* filePath, char* newName);
+void renameFile(FileManager* fileManager, char* filePath, char* newName, bool isOperation);
 
 /*  Prosedur
  *  IS:

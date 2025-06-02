@@ -106,7 +106,7 @@ int main() {
 
         ShortcutKeys(&ctx);
         if(IsKeyPressed(KEY_F2)){
-            renameFile(&fileManager, ".dir/root/abcd.txt", "newname.txt");
+            renameFile(&fileManager, ".dir/root/abcd.txt", "newname.txt", true);
             printf("[LOG] File renamed successfully\n");
         }
         // Draw

@@ -58,7 +58,7 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
     if (toolbar->newButtonProperty.itemCreated) {
         char *name = toolbar->newButtonProperty.inputBuffer;
         char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
-        createFile(ctx->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name);
+        createFile(ctx->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name, true);
         toolbar->newButtonProperty.itemCreated = false;
     }
     if (toolbar->isButtonCopyActive) {
@@ -70,7 +70,7 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         toolbar->isButtonCutActive = false;
     }
     if (toolbar->isButtonDeleteActive) {
-        deleteFile(ctx->fileManager);
+        deleteFile(ctx->fileManager, true);
         toolbar->isButtonDeleteActive = false;
     }
     if (toolbar->isButtonPasteActive) {
