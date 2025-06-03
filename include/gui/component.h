@@ -61,7 +61,7 @@ void GuiNewButton(ButtonWithModalProperty* buttonProperty, Context* ctx);
 // IS: Context valid, showModal true untuk menampilkan modal
 // FS: Modal ditampilkan di tengah layar dengan overlay hitam, input box untuk nama item, tombol Create mengeksekusi pembuatan jika input tidak kosong, tombol Cancel atau ESC menutup modal
 // Created by: Farras
-void DrawCreateModal(Context* ctx);
+void DrawCreateModal(Context* ctx, ButtonWithModalProperty* buttonProperty);
 
 /*
 ====================================================================
