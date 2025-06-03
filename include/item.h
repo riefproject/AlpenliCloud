@@ -37,7 +37,7 @@ typedef struct TrashItem {
 // Membuat struct Item dengan semua field terisi dan selected=false menggunakan strdup untuk string
 // IS: Parameter name, path, size, type, dan waktu diketahui dan valid
 // FS: Item baru dibuat dengan name dan path di-copy menggunakan strdup, selected diset false, semua field terisi sesuai parameter
-// Created by: 
+// Created by: Maulana
 Item createItem(char* name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
 
 /*
@@ -50,7 +50,7 @@ Item createItem(char* name, char* path, long size, ItemType type, time_t created
 // Mencari TrashItem berdasarkan originalPath dalam LinkedList trash dengan strcmp
 // IS: LinkedList trash dan originalPath diketahui
 // FS: TrashItem yang sesuai dikembalikan jika ditemukan, atau TrashItem dengan semua field 0/NULL jika tidak ditemukan atau trash kosong
-// Created by: 
+// Created by: Maulana
 TrashItem searchTrashItem(LinkedList trash, char* originalPath);
 
 #endif // !ITEM_H

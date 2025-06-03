@@ -38,7 +38,7 @@ typedef struct Operation {
 // Membuat struct Operation dengan field from dan to menggunakan strdup dan itemTemp diset NULL
 // IS: Parameter from, to, dan type diketahui dan valid
 // FS: Operation baru dibuat dengan from dan to di-copy menggunakan strdup, type diset sesuai parameter, isDir dan itemTemp diinisialisasi
-// Created by: 
+// Created by: Maulana
 Operation createOperation(char* from, char* to, ActionType type);
 
 #endif // !OPERATION_H

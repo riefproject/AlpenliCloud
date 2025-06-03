@@ -19,14 +19,14 @@ typedef struct Context Context;
 // Membaca input string dari user secara dinamis dengan realokasi memori hingga enter ditekan
 // IS: Pointer string belum terinisialisasi atau kosong
 // FS: String dialokasikan secara dinamis, diisi dengan input user karakter per karakter menggunakan realloc, diakhiri null terminator
-// Created by: 
+// Created by: Farras
 void inputString(char** s);
 
 // Prosedur trim trailing slash
 // Menghapus karakter '/' di akhir path string secara iteratif
 // IS: String path mungkin memiliki satu atau lebih karakter '/' di akhir
 // FS: Semua karakter '/' di akhir string dihapus, panjang string disesuaikan dengan null terminator
-// Created by: 
+// Created by: Farras
 void trimTrailingSlash(char* path);
 
 /*
@@ -39,7 +39,7 @@ void trimTrailingSlash(char* path);
 // Menangani semua keyboard shortcuts untuk operasi file manager dan navigasi UI menggunakan raylib
 // IS: Context berisi state aplikasi dan komponen UI yang valid
 // FS: Shortcut keyboard diproses (Ctrl+C/V/X untuk copy/paste/cut, F5 untuk refresh, arrow keys untuk navigasi, dll), state UI dan file manager diperbarui sesuai shortcut
-// Created by: 
+// Created by: Arief
 void ShortcutKeys(Context* ctx);
 
 #endif
