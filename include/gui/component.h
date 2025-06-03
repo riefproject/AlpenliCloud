@@ -18,8 +18,8 @@ typedef struct ButtonWithModalProperty {
     Rectangle dropdownRect; // Rectangle yang mendefinisikan posisi dan ukuran menu dropdown
     Rectangle modalRect;    // Rectangle yang mendefinisikan posisi dan ukuran dialog modal
 
-    char *placeholder;
-    char *tooltip;
+    char* placeholder;
+    char* tooltip;
     char inputBuffer[MAX_STRING_LENGTH];
 
     int dropdownIndex;
@@ -34,9 +34,25 @@ typedef struct ButtonWithModalProperty {
     bool disabled;
 } ButtonWithModalProperty;
 
-void GuiNewButton(ButtonWithModalProperty *buttonProperty, Context *ctx);
-void DrawCreateModal(Context *ctx);
 
-bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled, bool notClickable);
-bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled, bool notClickable);
+typedef struct {
+    bool shouldCancel;
+    bool isActive;
+} ProgressBarState;
+
+void GuiNewButton(ButtonWithModalProperty* buttonProperty, Context* ctx);
+void DrawCreateModal(Context* ctx);
+
+bool GuiButtonCustom(Rectangle bounds, const char* text, const char* tooltip, bool disabled, bool notClickable);
+bool GuiTextBoxCustom(Rectangle bounds, char* icon, char* placeholder, char* inputText, int textSize, bool* editMode, bool disabled, bool notClickable);
+
+/*  Prosedur untuk menampilkan progress bar paste operation
+ *  IS: currentProgress dan totalItems diketahui
+ *  FS: Progress bar ditampilkan di layar
+================================================================================*/
+void showPasteProgressBar(int currentProgress, int totalItems, const char* currentItemName);
+
+bool shouldCancelPaste();
+
+void resetProgressBarState();
 #endif // COMPONENT_H

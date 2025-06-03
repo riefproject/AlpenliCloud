@@ -208,4 +208,10 @@ void goTo(FileManager* FileManager, Tree tree);
 
 void sort_children(Tree* parent);
 
+/*  Function untuk mengecek apakah perlu menampilkan progress bar
+ *  IS: totalItems diketahui
+ *  FS: return true jika perlu progress bar, false jika tidak
+================================================================================*/
+bool shouldShowProgressBar(int totalItems);
+
 #endif // !FILE_MANAGER_H
