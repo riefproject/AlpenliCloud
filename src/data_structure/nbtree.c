@@ -102,12 +102,12 @@ void printTree(Tree node, int depth) {
   printf("==================================\n");
 
   // Cetak saudara (next_brother)
-  if (node->next_brother != NULL) {
-    printTree(node->next_brother, depth);
-  }
+  // if (node->next_brother != NULL) {
+  //   printTree(node->next_brother, depth);
+  // }
 
-  // Cetak anak (first_son)
-  if (node->first_son != NULL) {
-    printTree(node->first_son, depth + 1);
-  }
+  // // Cetak anak (first_son)
+  // if (node->first_son != NULL) {
+  //   printTree(node->first_son, depth + 1);
+  // }
 }
