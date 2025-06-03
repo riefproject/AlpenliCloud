@@ -18,6 +18,10 @@ typedef struct ButtonWithModalProperty {
     Rectangle dropdownRect; // Rectangle yang mendefinisikan posisi dan ukuran menu dropdown
     Rectangle modalRect;    // Rectangle yang mendefinisikan posisi dan ukuran dialog modal
 
+    char *yesButtonText; // Teks untuk tombol "Ya" pada dialog modal
+    char *noButtonText;  // Teks untuk tombol "Tidak" pada dialog modal
+    char *title;         // Judul dialog modal
+
     char *placeholder;
     char *tooltip;
     char inputBuffer[MAX_STRING_LENGTH];
@@ -35,7 +39,7 @@ typedef struct ButtonWithModalProperty {
 } ButtonWithModalProperty;
 
 void GuiNewButton(ButtonWithModalProperty *buttonProperty, Context *ctx);
-void DrawCreateModal(Context *ctx);
+void DrawCreateModal(Context *ctx, ButtonWithModalProperty *buttonProperty);
 
 bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled, bool notClickable);
 bool GuiTextBoxCustom(Rectangle bounds, char *icon, char *placeholder, char *inputText, int textSize, bool *editMode, bool disabled, bool notClickable);

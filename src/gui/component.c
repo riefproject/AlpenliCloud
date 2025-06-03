@@ -87,9 +87,7 @@ void GuiNewButton(ButtonWithModalProperty *buttonProperty, Context *ctx) {
     }
 }
 
-void DrawCreateModal(Context *ctx) {
-    ButtonWithModalProperty *buttonProperty = &ctx->toolbar->newButtonProperty;
-
+void DrawCreateModal(Context *ctx, ButtonWithModalProperty *buttonProperty) {
     if (!buttonProperty->showModal)
         return;
 
@@ -104,7 +102,7 @@ void DrawCreateModal(Context *ctx) {
 
     const char *typeStr = (buttonProperty->selectedType == ITEM_FILE) ? "File" : "Folder";
     char title[64];
-    snprintf(title, sizeof(title), "Create New %s", typeStr);
+    snprintf(title, sizeof(title), "%s %s", buttonProperty->title, typeStr);
 
     bool quit = GuiWindowBox(buttonProperty->modalRect, title);
 
@@ -139,14 +137,14 @@ void DrawCreateModal(Context *ctx) {
         btnCreate.width,
         30};
 
-    if ((GuiButton(btnCreate, "Create") || IsKeyPressed(KEY_ENTER)) && strcmp(buttonProperty->inputBuffer, "") != 0) {
+    if ((GuiButton(btnCreate, buttonProperty->yesButtonText) || IsKeyPressed(KEY_ENTER)) && strcmp(buttonProperty->inputBuffer, "") != 0) {
         buttonProperty->itemCreated = true;
         buttonProperty->showModal = false;
         ctx->disableGroundClick = false;
         buttonProperty->inputEditMode = false;
     }
 
-    if (GuiButton(btnCancel, "Cancel") || quit) {
+    if (GuiButton(btnCancel, buttonProperty->noButtonText) || quit) {
         buttonProperty->itemCreated = false;
         buttonProperty->showModal = false;
         buttonProperty->inputEditMode = false;

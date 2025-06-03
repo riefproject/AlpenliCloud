@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "file_manager.h"
 #include "ctx.h"
+#include "file_manager.h"
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
@@ -83,15 +83,15 @@ SidebarItem *createSidebarItem(Tree root) {
     return sidebarItem;
 }
 
-void destroySidebarItem(SidebarItem *item) {
-    if (item == NULL)
-        return;
+// void destroySidebarItem(SidebarItem **item) {
+//     if (item == NULL || *item == NULL)
+//         return;
 
-    destroySidebarItem(item->first_son);
-    destroySidebarItem(item->next_brother);
-    free(item);
-    item = NULL;
-}
+//     destroySidebarItem(&(*item)->first_son);
+//     destroySidebarItem(&(*item)->next_brother);
+//     free(*item);
+//     *item = NULL;
+// }
 
 void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
     while (node) {
@@ -99,7 +99,7 @@ void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManag
 
         if (itemNode->item.type == ITEM_FOLDER) {
             float indent = (DEFAULT_PADDING * 2) * depth;
-            const char *arrow =  node->isExpanded ? "#116#" : "#115#";
+            const char *arrow = node->isExpanded ? "#116#" : "#115#";
             const char *label = TextFormat("%s %s", arrow, itemNode->item.name);
 
             int labelTextWidth = MeasureText(label, GuiGetStyle(DEFAULT, TEXT_SIZE));

@@ -79,6 +79,8 @@ int main() {
     // getchar();
     // redo(&fileManager);
 
+    printTrash(fileManager.trash);
+
     // return 0;
 
     Context ctx;
@@ -127,11 +129,13 @@ int main() {
 
         drawNavbar(ctx.navbar);
 
-        DrawCreateModal(&ctx);
+        DrawCreateModal(&ctx, &ctx.toolbar->newButtonProperty);
+
 
         EndDrawing();
     }
 
+    saveTrashToFile(&fileManager);
     CloseWindow();
     return 0;
 }

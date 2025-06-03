@@ -13,10 +13,6 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
     if (!ctx)
         return;
 
-    ctx->fileManager = fileManager;
-    fileManager->ctx = (Context *)malloc(sizeof(Context));
-    fileManager->ctx = ctx;
-
     ctx->width = screenWidth;
     ctx->height = screenHeight;
     ctx->disableGroundClick = false;
@@ -37,6 +33,10 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
     ctx->navbar = (Navbar *)malloc(sizeof(Navbar));
     ctx->sidebar = (Sidebar *)malloc(sizeof(Sidebar));
     ctx->body = (Body *)malloc(sizeof(Body));
+
+    ctx->fileManager = fileManager;
+    fileManager->ctx = (Context *)malloc(sizeof(Context));
+    fileManager->ctx = ctx;
 
     if (ctx->titleBar)
         createTitleBar(ctx->titleBar, ctx);

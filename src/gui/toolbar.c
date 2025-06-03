@@ -1,14 +1,13 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "ctx.h"
 #include "gui/component.h"
 #include "gui/sidebar.h"
 #include "gui/toolbar.h"
-#include "ctx.h"
 
 #include "macro.h"
 #include "raygui.h"
-
 
 void createToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->ctx = ctx;
@@ -16,6 +15,9 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .btnRect = {50, 50, 100, 24},
         .dropdownRect = {50, 82, 100, 60},
         .modalRect = {300, 200, 300, 150},
+        .yesButtonText = "CREATE",
+        .noButtonText = "CANCEL",
+        .title = "Create Item",
         .placeholder = "#65# New",
         .tooltip = "Add a file or folder",
         .inputBuffer = "",
@@ -25,13 +27,30 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .showModal = false,
         .itemCreated = false,
         .inputEditMode = false,
-        .disabled = false
-    };
+        .disabled = false};
+    toolbar->renameButtonProperty = (ButtonWithModalProperty){
+        .btnRect = {0},
+        .dropdownRect = {0},
+        .modalRect = {300, 200, 300, 150},
+        .noButtonText = "CANCEL",
+        .yesButtonText = "RENAME",
+        .title = "Rename Item",
+        .placeholder = NULL,
+        .tooltip = "NULL",
+        .inputBuffer = "",
+        .dropdownIndex = 0,
+        .dropdownActive = false,
+        .selectedType = ITEM_FILE,
+        .showModal = false,
+        .itemCreated = false,
+        .inputEditMode = false,
+        .disabled = false};
     toolbar->currentZeroPosition = (Rectangle){0};
     toolbar->isButtonCopyActive = false;
     toolbar->isButtonCutActive = false;
     toolbar->isButtonDeleteActive = false;
     toolbar->isButtonPasteActive = false;
+    toolbar->isbuttonRenameActive = false;
 }
 
 void updateToolbar(Toolbar *toolbar, Context *ctx) {
@@ -77,6 +96,20 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         pasteFile(ctx->fileManager);
         toolbar->isButtonPasteActive = false;
     }
+    if (toolbar->isbuttonRenameActive) {
+        toolbar->renameButtonProperty.showModal = true;
+        toolbar->renameButtonProperty.inputEditMode = true;
+    }
+    if (toolbar->renameButtonProperty.itemCreated) {
+        char *name = toolbar->renameButtonProperty.inputBuffer;
+        char *filePath = ctx->fileManager->currentPath;
+        renameFile(ctx->fileManager, filePath, name, true);
+        toolbar->renameButtonProperty.showModal = false;
+        toolbar->renameButtonProperty.inputEditMode = false;
+        toolbar->renameButtonProperty.inputBuffer[0] = '\0';
+        toolbar->renameButtonProperty.itemCreated = false;
+        toolbar->isbuttonRenameActive = false;
+    }
 }
 
 void drawToolbar(Toolbar *toolbar) {
@@ -87,7 +120,7 @@ void drawToolbar(Toolbar *toolbar) {
     int rightStartx = x + width;
 
     x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false, toolbar->ctx->disableGroundClick);
+    toolbar->isbuttonRenameActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
     toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", false, toolbar->ctx->disableGroundClick);

@@ -12,12 +12,14 @@ typedef struct Context Context;
 
 typedef struct Toolbar {
     ButtonWithModalProperty newButtonProperty;
+    ButtonWithModalProperty renameButtonProperty;
     Rectangle currentZeroPosition;
 
     bool isButtonCopyActive;
     bool isButtonCutActive;
     bool isButtonDeleteActive;
     bool isButtonPasteActive;
+    bool isbuttonRenameActive;
 
     Context *ctx;
 } Toolbar;
