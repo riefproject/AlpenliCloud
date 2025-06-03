@@ -29,6 +29,11 @@ typedef struct TrashItem {
   char* trashPath;        // path di dalam folder trash fisik
 } TrashItem;
 
+typedef struct PasteItem{
+  Item item;
+  char* originalPath;     // path asli sebelum dihapus
+}PasteItem;
+
 /*
 ====================================================================
     KONSTRUKTOR ITEM
@@ -42,6 +47,12 @@ typedef struct TrashItem {
 // Created by: Maulana
 Item createItem(char* name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at);
 
+// Function create paste item
+// Membuat struct PasteItem dengan item dan originalPath menggunakan strdup untuk path
+// IS: Parameter item dan originalPath diketahui dan valid
+// FS: PasteItem baru dibuat dengan item terisi, originalPath di-copy menggunakan strdup
+// Created by: Maulana
+PasteItem createPasteItem(Item item, char* originalPath);
 /*
 ====================================================================
     OPERASI TRASH ITEM
@@ -54,5 +65,9 @@ Item createItem(char* name, char* path, long size, ItemType type, time_t created
 // FS: TrashItem yang sesuai dikembalikan jika ditemukan, atau TrashItem dengan semua field 0/NULL jika tidak ditemukan atau trash kosong
 // Created by: Maulana
 TrashItem searchTrashItem(LinkedList trash, char* originalPath);
+
+
+
+
 
 #endif // !ITEM_H
