@@ -130,6 +130,7 @@ int main() {
         drawNavbar(ctx.navbar);
 
         DrawCreateModal(&ctx, &ctx.toolbar->newButtonProperty);
+        DrawCreateModal(&ctx, &ctx.toolbar->renameButtonProperty);
 
 
         EndDrawing();

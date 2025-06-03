@@ -155,7 +155,7 @@ void DrawCreateModal(Context *ctx, ButtonWithModalProperty *buttonProperty) {
 
 bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bool disabled, bool notClickable) {
     bool pressed = false;
-
+    // printf("disabled: %d, notClickable: %d\n", disabled, notClickable);
     if (disabled || notClickable) {
         // Warna sesuai style
         Color borderColor = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_NORMAL));
@@ -199,6 +199,8 @@ bool GuiButtonCustom(Rectangle bounds, const char *text, const char *tooltip, bo
     }
 
     GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetState(STATE_NORMAL);
+    GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL))));
     return pressed;
 }
 
