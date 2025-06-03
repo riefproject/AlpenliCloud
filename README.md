@@ -1,5 +1,5 @@
 <!-- ============================================
-     AlpenliCloud - File Manager CLI
+     AlpenliCloud - File Manager GUI
      Struktur Data & Algoritma - Tugas Akhir
      ============================================ -->
 
@@ -26,8 +26,6 @@
       void undo(FileManager *fileManager);
 -->
 
-<!-- CATATAN: Silakan edit bila ada yang tidak sesuai -->
-
 <table border="0" cellspacing="0" cellpadding="0">
     <tr>
         <td style="vertical-align:bottom; width:60px; padding-right:10px; border:none;">
@@ -41,93 +39,145 @@
 
 ## Deskripsi Program
 
-AlpenliCloud adalah aplikasi **File Manager** berbasis **Command Line Interface (CLI)** yang dirancang sebagai simulasi sistem manajemen berkas sederhana. Aplikasi ini mengimplementasikan struktur data berbasis **Abstract Data Type (ADT)** seperti **non-binary tree**, **stack**, dan **queue** untuk merepresentasikan struktur dan perilaku sistem file secara digital.
+AlpenliCloud adalah aplikasi **File Manager** berbasis **Graphical User Interface (GUI)** yang dirancang menyerupai Windows Explorer. Aplikasi ini mengimplementasikan struktur data berbasis **Abstract Data Type (ADT)** seperti **non-binary tree**, **stack**, dan **queue** untuk merepresentasikan struktur dan perilaku sistem file secara digital, dengan antarmuka yang intuitif menggunakan raylib dan raygui.
 
 ### Tujuan
 
-Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan Algoritma**, dengan fokus pada penerapan konsep struktur data dalam konteks manajemen file. AlpenliCloud menyediakan fitur pengelolaan file dan folder seperti membuat, memperbarui, menghapus, memulihkan, menyalin, memindahkan, serta menampilkan file. Fitur **undo** dan **redo** juga didukung melalui struktur data **stack**, memberikan pengalaman interaktif tanpa antarmuka grafis.
+Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan Algoritma**, dengan fokus pada penerapan konsep struktur data dalam konteks manajemen file. AlpenliCloud menyediakan fitur pengelolaan file dan folder seperti membuat, memperbarui, menghapus, memulihkan, menyalin, memindahkan, serta menampilkan file dengan antarmuka grafis yang user-friendly. Fitur **undo** dan **redo** juga didukung melalui struktur data **stack**.
 
 ### Fitur Utama
 
-1. **Inisialisasi File Manager**: Menginisialisasi struktur data (Tree, Stack, Queue) untuk pengelolaan file.
-2. **Create File**: Membuat file atau folder baru sebagai child dari node parent.
-3. **Update File**: Mengubah nama file atau folder.
-4. **Delete File**: Memindahkan file/folder ke trash.
-5. **Recover File**: Memulihkan file/folder dari trash ke direktori utama.
-6. **Search File**: Mencari file berdasarkan nama dengan traversal Tree.
-7. **Undo Aksi**: Membatalkan aksi terakhir menggunakan stack.
-8. **Redo Aksi**: Mengembalikan aksi yang telah di-undo.
-9. **Copy File**: Menyalin file ke buffer sementara.
-10. **Paste File**: Menambahkan salinan file dari buffer ke direktori tujuan.
-11. **Cut File**: Memindahkan file/folder ke lokasi baru.
-12. **Show File**: Menampilkan struktur direktori atau trash secara hierarkis.
+1. **Antarmuka GUI Modern**: Interface menyerupai Windows Explorer dengan title bar, toolbar, navbar, sidebar, dan body area
+2. **File Manager Operations**:
+    - Create file/folder dengan modal dialog
+    - Rename file/folder (F2 shortcut)
+    - Delete file/folder ke trash dengan confirm dialog
+    - Copy (Ctrl+C), Cut (Ctrl+X), Paste (Ctrl+V)
+    - Drag & drop support
+3. **Navigation System**:
+    - Sidebar dengan tree structure yang dapat di-expand/collapse
+    - Navbar dengan path navigation dan search functionality
+    - Back navigation (Backspace/Alt+Left)
+4. **Advanced Features**:
+    - Progress bar untuk operasi file dalam jumlah banyak (>10 items)
+    - Undo/Redo system dengan visual feedback
+    - Multi-selection dengan Ctrl+Click dan Select All (Ctrl+A)
+    - Keyboard shortcuts lengkap
+5. **Trash Management**:
+    - Soft delete ke trash directory
+    - Recover files dari trash
+    - Duplicate name handling
+6. **Window Management**:
+    - Resizable window dengan drag borders
+    - Maximize/minimize buttons
+    - Custom title bar
+
+### Komponen GUI
+
+-   **TitleBar**: Window controls (minimize, maximize, close) dan window dragging
+-   **Navbar**: Path navigation, search box, dan navigation buttons (back, undo, redo)
+-   **Toolbar**: File operations (New, Copy, Cut, Paste, Delete, Rename)
+-   **Sidebar**: Tree view untuk navigasi folder hierarchy
+-   **Body**: Main content area dengan file/folder listing dalam format tabel
 
 ## Struktur Data yang Digunakan
 
--   **Non-Binary Tree**: Untuk merepresentasikan struktur direktori dan trash.
--   **Stack**: Untuk mendukung fitur undo dan redo.
--   **Queue**: Untuk mengelola item yang sedang dipilih.
+-   **Non-Binary Tree**: Untuk merepresentasikan struktur direktori dan file system hierarchy
+-   **Stack**: Untuk mendukung fitur undo dan redo operations
+-   **Queue**: Untuk mengelola copied/cut items dan paste operations
+-   **LinkedList**: Untuk mengelola selected items dan trash items
+
+## Teknologi yang Digunakan
+
+-   **raylib**: Graphics library untuk rendering dan input handling
+-   **raygui**: Immediate mode GUI library untuk UI components
+-   **C Language**: Core programming language
+-   **Windows API**: Untuk file system operations dan native integrations
 
 ## Cara Menjalankan
 
-1.  Pastikan lingkungan pengembangan mendukung bahasa pemrograman yang digunakan (misalnya, C, C++, atau lainnya).
-2.  Clone repository ini:
+1. Pastikan sistem mendukung kompilasi C dengan raylib
+2. Clone repository ini:
     ```bash
     git clone https://github.com/riefproject/AlpenliCloud.git
     ```
-3.  Compile and run: - Menggunakan shell script:
-    ```bash
-    . build.sh
-        # Anda dapat menambahkan parameter clean atau rebuild jika dibutuhkan
-        # contoh: . build.sh rebuild
-        # atau tanpa parameter sekalipun
-    ```
-    -   Menggunakan Makefile
-    ```bash
-    make # optional parameter <clean | rebuild>
-    ```
+3. Compile dan run:
+    - Menggunakan build script:
+        ```bash
+        ./build.sh
+        # Parameter tersedia: clean, build, rebuild
+        # contoh: ./build.sh rebuild
+        ```
+    - Menggunakan debug script (dengan debug symbols):
+        ```bash
+        ./debug.sh
+        ```
+    - Menggunakan Makefile:
+        ```bash
+        make # optional parameter <clean | rebuild>
+        ```
 
-## Contoh Penggunaan
+## Cara Penggunaan
 
-Berikut adalah contoh beberapa perintah yang dapat dijalankan di AlpenliCloud CLI:
+### Navigasi Dasar
 
-```bash
-# Membuat folder baru
-create_folder Documents
+-   **Double-click folder**: Masuk ke direktori
+-   **Double-click file**: Buka dengan aplikasi default
+-   **Sidebar navigation**: Klik folder di sidebar untuk navigasi cepat
+-   **Path bar**: Ketik path manual untuk navigasi langsung
 
-# Membuat file baru di dalam folder
-create_file Documents tugas.txt
+### File Operations
 
-# Mengubah nama file
-update_file Documents/tugas.txt tugas_akhir.txt
+-   **New File/Folder**: Klik tombol "New" di toolbar atau Ctrl+N
+-   **Copy**: Select file → Ctrl+C atau tombol Copy
+-   **Cut**: Select file → Ctrl+X atau tombol Cut
+-   **Paste**: Ctrl+V atau tombol Paste
+-   **Delete**: Select file → Delete key atau tombol Delete
+-   **Rename**: Select file → F2 atau tombol Rename
 
-# Menghapus file (memindahkan ke trash)
-delete_file Documents/tugas_akhir.txt
+### Selection
 
-# Memulihkan file dari trash
-recover_file tugas_akhir.txt
+-   **Single select**: Click pada file/folder
+-   **Multi-select**: Ctrl+Click untuk toggle selection
+-   **Select all**: Ctrl+A atau checkbox di header tabel
+-   **Deselect all**: Click area kosong atau Ctrl+A lagi
 
-# Menyalin file
-copy_file Documents/tugas_akhir.txt
+### Keyboard Shortcuts
 
-# Menempelkan file ke folder lain
-paste_file Backup
+-   **Ctrl+C**: Copy selected items
+-   **Ctrl+X**: Cut selected items
+-   **Ctrl+V**: Paste items
+-   **Ctrl+Z**: Undo last operation
+-   **Ctrl+Y**: Redo operation
+-   **F2**: Rename selected item
+-   **F5/Ctrl+R**: Refresh view
+-   **Delete**: Move to trash
+-   **Backspace/Alt+Left**: Go back
+-   **Ctrl+A**: Select/deselect all
 
-# Memindahkan file ke folder lain
-cut_file Documents/tugas_akhir.txt
-paste_file Backup
+## Struktur Project
 
-# Menampilkan struktur direktori
-show_tree
-
-# Menampilkan isi trash
-show_trash
-
-# Undo aksi terakhir
-undo
-
-# Redo aksi yang telah di-undo
-redo
+```
+AlpenliCloud/
+├── src/
+│   ├── main.c                 # Entry point aplikasi
+│   ├── file_manager.c         # Core file management logic
+│   ├── utils.c               # Utility functions dan shortcuts
+│   ├── win_utils.c           # Windows-specific operations
+│   ├── gui/
+│   │   ├── ctx.c             # GUI context management
+│   │   ├── titlebar.c        # Window title bar component
+│   │   ├── navbar.c          # Navigation bar component
+│   │   ├── toolbar.c         # Toolbar component
+│   │   ├── sidebar.c         # Sidebar tree component
+│   │   ├── body.c            # Main content area
+│   │   └── component.c       # Reusable UI components
+│   └── data_structure/       # ADT implementations
+├── include/                  # Header files
+├── lib/raylib/              # raylib library
+├── assets/                  # Icons dan resources
+├── build/                   # Build output
+└── bin/                     # Executable output
 ```
 
 ## Kontribusi
