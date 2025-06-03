@@ -81,7 +81,7 @@ void loadTree(Tree tree, char *path) {
     dp = opendir(path);
     if (dp == NULL) {
         perror("Tidak dapat membuka direktori");
-        return NULL;
+        return;
     }
 
     while ((ep = readdir(dp)) != NULL) {
@@ -111,7 +111,7 @@ void loadTree(Tree tree, char *path) {
     }
 
     closedir(dp);
-    return 0;
+    return;
 }
 
 /*

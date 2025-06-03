@@ -61,6 +61,27 @@ void initFileManager(FileManager *fileManager);
 // Created by: Farras
 void loadTree(Tree tree, char *path);
 
+// Prosedur load trash dari file
+// Membaca file trash_dump.txt untuk memuat item yang telah dihapus ke dalam LinkedList trash
+// IS: File trash_dump.txt ada dan berisi data yang valid
+// FS: LinkedList trash diisi dengan item yang telah dihapus, setiap item berisi nama, path asli, waktu penghapusan, dan path trash
+// Created by: Farras
+void loadTrashFromFile(LinkedList *trash);
+
+// Prosedur untuk menimpan trash ke file
+// Menyimpan semua item yang ada di LinkedList trash ke file trash_dump.txt
+// IS: LinkedList trash berisi item yang telah dihapus
+// FS: File trash_dump.txt diupdate dengan data dari LinkedList trash, setiap item disimpan dalam format "name,originalPath,deletedTime"
+// Created by: Farras
+void saveTrashToFile(FileManager *fileManager);
+
+// Prosedur untuk mencetak isi trash
+// Mencetak semua item yang ada di LinkedList trash ke konsol
+// IS: LinkedList trash berisi item yang telah dihapus
+// FS: Mencetak setiap item dengan nama, path asli, waktu penghapusan, dan path trash ke konsol
+// Created by: Farras
+void printTrash(LinkedList trash);
+
 // Prosedur refresh file manager
 // Memuat ulang struktur tree dari direktori saat ini dengan menghapus child dan reload
 // IS: Struktur tree mungkin tidak sinkron dengan filesystem
