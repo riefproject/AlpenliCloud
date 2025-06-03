@@ -12,9 +12,15 @@ typedef struct SidebarItem SidebarItem;
 typedef struct SidebarItem {
     Tree tree;
     bool isExpanded;
-    SidebarItem* first_son;
-    SidebarItem* next_brother;
+    SidebarItem *first_son;
+    SidebarItem *next_brother;
 } SidebarItem;
+
+typedef struct SidebarState {
+    Tree treeNode;
+    bool isExpanded;
+    struct SidebarState *next;
+} SidebarState;
 
 typedef struct Sidebar {
     Rectangle panelRec;        // adalah ukuran sidebar
@@ -22,24 +28,33 @@ typedef struct Sidebar {
     Rectangle panelView;       // adalah ukuran yang terlihat di sidebar (tinggi - tinggi scroll bawah dll)
     Vector2 panelScroll;       // adalah jauhnya scroll
 
-    SidebarItem* sidebarRoot;
+    SidebarItem *sidebarRoot;
     Rectangle currentZeroPosition;
 
     Context *ctx;
 } Sidebar;
 
-void createSidebar(Sidebar* sidebar, Context *ctx);
+void createSidebar(Sidebar *sidebar, Context *ctx);
 
-SidebarItem* createSidebarItem(Tree root);
+SidebarItem *createSidebarItem(Tree root);
 
-void destroySidebarItem(SidebarItem* item);
+SidebarItem *createSidebarItemWithState(Tree root, SidebarState *stateList);
 
-void updateSidebar(Sidebar* sidebar, Context *ctx);
+void collectSidebarState(SidebarItem *item, SidebarState **stateList);
 
-void drawSidebar(Sidebar* sidebar);
+bool getExpandedForTree(Tree tree, SidebarState *stateList);
 
-void drawSidebarItem(Sidebar* sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
+void destroySidebarState(SidebarState *stateList);
 
-int getMaxChildLabelWidth(SidebarItem* node, int depth, int textSize);
+
+void destroySidebarItem(SidebarItem **item);
+
+void updateSidebar(Sidebar *sidebar, Context *ctx);
+
+void drawSidebar(Sidebar *sidebar);
+
+void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
+
+int getMaxChildLabelWidth(SidebarItem *node, int depth, int textSize);
 
 #endif

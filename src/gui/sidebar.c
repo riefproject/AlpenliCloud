@@ -7,70 +7,7 @@
 #include "macro.h"
 #include "raygui.h"
 
-void createSidebar(Sidebar *sidebar, Context *ctx) {
-    sidebar->ctx = ctx;
-
-    sidebar->panelRec = (Rectangle){0};
-    sidebar->panelContentRec = (Rectangle){0, 0, 160, 340};
-    sidebar->panelView = (Rectangle){0};
-    sidebar->panelScroll = (Vector2){0};
-    sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*ctx->fileManager));
-}
-
-void updateSidebar(Sidebar *sidebar, Context *ctx) {
-    sidebar->ctx = ctx;
-    ctx->sidebar = sidebar;
-
-    // if (sidebar->sidebarRoot == NULL) {
-    //     sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*sidebar->ctx->fileManager));
-    // }
-
-    sidebar->currentZeroPosition = *ctx->currentZeroPosition;
-    sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
-    sidebar->currentZeroPosition.height = +sidebar->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2;
-
-    sidebar->panelRec = (Rectangle){sidebar->currentZeroPosition.x, sidebar->currentZeroPosition.y, 170, sidebar->currentZeroPosition.height};
-}
-
-void drawSidebar(Sidebar *sidebar) {
-    if (sidebar->sidebarRoot == NULL)
-        return;
-
-    float itemHeight = 24;
-    Vector2 scroll = sidebar->panelScroll;
-
-    if (sidebar->ctx->disableGroundClick)
-        GuiDisable();
-    GuiScrollPanel(sidebar->panelRec, NULL, sidebar->panelContentRec, &scroll, &sidebar->panelView);
-    GuiEnable();
-
-    sidebar->panelScroll = scroll;
-
-    Vector2 drawPos = {
-        sidebar->panelRec.x + DEFAULT_PADDING + scroll.x,
-        sidebar->panelRec.y + DEFAULT_PADDING + scroll.y};
-
-    float scrollWidth = sidebar->panelContentRec.width; // Initial width
-
-    BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
-
-    drawSidebarItem(
-        sidebar,
-        sidebar->sidebarRoot,
-        sidebar->ctx->fileManager,
-        &drawPos,
-        0,
-        sidebar->panelContentRec.width,
-        itemHeight,
-        &scrollWidth);
-
-    EndScissorMode();
-
-    // Update width and height
-    sidebar->panelContentRec.width = scrollWidth;
-    sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
-}
-
+// SidebarItem Management
 SidebarItem *createSidebarItem(Tree root) {
     if (root == NULL)
         return NULL;
@@ -83,15 +20,122 @@ SidebarItem *createSidebarItem(Tree root) {
     return sidebarItem;
 }
 
-// void destroySidebarItem(SidebarItem **item) {
-//     if (item == NULL || *item == NULL)
-//         return;
+SidebarItem *createSidebarItemWithState(Tree root, SidebarState *stateList) {
+    if (root == NULL)
+        return NULL;
 
-//     destroySidebarItem(&(*item)->first_son);
-//     destroySidebarItem(&(*item)->next_brother);
-//     free(*item);
-//     *item = NULL;
-// }
+    SidebarItem *sidebarItem = malloc(sizeof(SidebarItem));
+    sidebarItem->tree = root;
+    sidebarItem->isExpanded = getExpandedForTree(root, stateList);
+    sidebarItem->first_son = createSidebarItemWithState(root->first_son, stateList);
+    sidebarItem->next_brother = createSidebarItemWithState(root->next_brother, stateList);
+    return sidebarItem;
+}
+
+void destroySidebarItem(SidebarItem **item) {
+    if (item == NULL || *item == NULL)
+        return;
+
+    destroySidebarItem(&(*item)->first_son);
+    destroySidebarItem(&(*item)->next_brother);
+    free(*item);
+    *item = NULL;
+}
+
+void collectSidebarState(SidebarItem *item, SidebarState **stateList) {
+    if (item == NULL)
+        return;
+
+    SidebarState *state = malloc(sizeof(SidebarState));
+    state->treeNode = item->tree;
+    state->isExpanded = item->isExpanded;
+    state->next = *stateList;
+    *stateList = state;
+
+    collectSidebarState(item->first_son, stateList);
+    collectSidebarState(item->next_brother, stateList);
+}
+
+bool getExpandedForTree(Tree tree, SidebarState *stateList) {
+    while (stateList) {
+        if (stateList->treeNode == tree)
+            return stateList->isExpanded;
+        stateList = stateList->next;
+    }
+    return false; // default
+}
+
+void destroySidebarState(SidebarState *stateList) {
+    SidebarState *tmp;
+    while (stateList) {
+        tmp = stateList;
+        stateList = stateList->next;
+        free(tmp);
+    }
+}
+
+// Sidebar lifecycle
+void createSidebar(Sidebar *sidebar, Context *ctx) {
+    sidebar->ctx = ctx;
+    sidebar->panelRec = (Rectangle){0};
+    sidebar->panelContentRec = (Rectangle){0, 0, 160, 340};
+    sidebar->panelView = (Rectangle){0};
+    sidebar->panelScroll = (Vector2){0};
+    sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*ctx->fileManager));
+}
+
+void updateSidebar(Sidebar *sidebar, Context *ctx) {
+    sidebar->ctx = ctx;
+    ctx->sidebar = sidebar;
+
+    sidebar->currentZeroPosition = *ctx->currentZeroPosition;
+    sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
+    sidebar->currentZeroPosition.height = sidebar->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2;
+
+    sidebar->panelRec = (Rectangle){
+        sidebar->currentZeroPosition.x,
+        sidebar->currentZeroPosition.y,
+        170,
+        sidebar->currentZeroPosition.height};
+}
+
+void drawSidebar(Sidebar *sidebar) {
+    float itemHeight = 24;
+    Vector2 scroll = sidebar->panelScroll;
+
+    if (sidebar->ctx->disableGroundClick)
+        GuiDisable();
+
+    GuiScrollPanel(sidebar->panelRec, NULL, sidebar->panelContentRec, &scroll, &sidebar->panelView);
+    GuiEnable();
+
+    sidebar->panelScroll = scroll;
+
+    Vector2 drawPos = {
+        sidebar->panelRec.x + DEFAULT_PADDING + scroll.x,
+        sidebar->panelRec.y + DEFAULT_PADDING + scroll.y};
+
+    float scrollWidth = sidebar->panelContentRec.width;
+
+    BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
+
+    if (sidebar->sidebarRoot) {
+        drawSidebarItem(
+            sidebar,
+            sidebar->sidebarRoot,
+            sidebar->ctx->fileManager,
+            &drawPos,
+            0,
+            sidebar->panelContentRec.width,
+            itemHeight,
+            &scrollWidth);
+    }
+
+    EndScissorMode();
+
+    sidebar->panelContentRec.width = scrollWidth;
+    sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
+}
 
 void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
     while (node) {
@@ -119,8 +163,7 @@ void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManag
                         if (CheckCollisionPointRec(mouse, (Rectangle){labelBounds.x, labelBounds.y, 20, height}) && itemNode->first_son) {
                             node->isExpanded = !node->isExpanded;
                         } else {
-                            goTo(fileManager, itemNode);
-                            printf("Navigating to: %s\n", itemNode->item.name);
+                            goTo(sidebar->ctx->fileManager, itemNode);
                         }
                     }
                 }

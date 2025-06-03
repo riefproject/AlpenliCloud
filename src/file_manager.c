@@ -229,19 +229,6 @@ void saveTrashToFile(FileManager *fileManager) {
  * FS:
  * Author:
 ================================================================================*/
-void destroyTree(Tree *tree) {
-    if (*tree == NULL)
-        return;
-
-    destroyTree(&(*tree)->first_son);
-    destroyTree(&(*tree)->next_brother);
-
-    free((*tree)->item.name);
-    free((*tree)->item.path);
-    free(*tree);
-    *tree = NULL;
-}
-
 void printTrash(LinkedList trash) {
     Node *current = trash.head;
     if (current == NULL) {
@@ -267,23 +254,56 @@ void printTrash(LinkedList trash) {
  * FS:
  * Author:
 ================================================================================*/
+void destroyTree(Tree *tree) {
+    if (*tree == NULL)
+        return;
+
+    destroyTree(&(*tree)->first_son);
+    destroyTree(&(*tree)->next_brother);
+
+    free((*tree)->item.name);
+    free((*tree)->item.path);
+    free(*tree);
+    *tree = NULL;
+}
+
+/*
+ * IS:
+ * FS:
+ * Author:
+================================================================================*/
 void refreshFileManager(FileManager *fileManager) {
     if (fileManager != NULL && fileManager->treeCursor != NULL) {
-        Tree currentDir = fileManager->treeCursor; // Gunakan current directory, bukan root
-        if (currentDir != NULL) {
-            printf("[LOG] Refreshing directory: %s\n", currentDir->item.path);
+        printf("\n\n");
+        printf("==========================================================\n");
+        printf("[LOG] Refreshing FileManager...\n");
+        printf("[LOG] Tree Cursor Path: %s\n", fileManager->treeCursor->item.name);
+        printf("[LOG] Tree Cursor Full Path: %s\n", fileManager->treeCursor->item.path);
+        printf("[LOG] Tree Cursor Type: %s\n", fileManager->treeCursor->item.type == ITEM_FOLDER ? "Folder" : "File");
+        printf("==========================================================\n\n");
 
-            destroyTree(&currentDir->first_son);
+        // Hapus semua anak dari direktori saat ini, bukan seluruh node
+        destroyTree(&fileManager->treeCursor->first_son);
+        fileManager->treeCursor->first_son = NULL;
 
-            loadTree(currentDir, currentDir->item.path);
+        // Muat ulang isi dari direktori tersebut
+        loadTree(fileManager->treeCursor, fileManager->treeCursor->item.path);
 
-            // SidebarItem *sidebarItem = fileManager->ctx->sidebar->sidebarRoot;
-            // // fileManager->ctx->sidebar->sidebarRoot = NULL;
-            // // destroySidebarItem(sidebarItem);
-            // // createSidebarItem(getCurrentRoot(*fileManager));
+        printf("==========================================================\n");
+        printTree(fileManager->treeCursor, 0);
+        printf("==========================================================\n\n");
 
-            printf("[LOG] Directory refreshed successfully\n");
-        }
+        printf("[LOG] Directory refreshed successfully\n");
+
+        printf("[LOG] Resfreshing sidebar...\n");
+        SidebarState *stateList = NULL;
+        collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
+        destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
+        fileManager->ctx->sidebar->sidebarRoot = NULL;
+        fileManager->ctx->sidebar->sidebarRoot = createSidebarItemWithState(fileManager->root, stateList);
+        destroySidebarState(stateList);
+
+        printf("[LOG] Sidebar refreshed successfully\n");
     }
 }
 
@@ -341,8 +361,8 @@ void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *na
         }
         newItem = createItem(_getNameFromPath(path), path, 0, type, createdTime, createdTime, -1);
         insert_node(currentNode, newItem);
-        // printf("[LOG] ===============path:%s\n", path);
 
+        refreshFileManager(fileManager);
     } else {
         printf("[LOG] Direktori parent tidak ditemukan : %s\n", dirPath);
     }
@@ -1410,7 +1430,7 @@ char *getCurrentPath(Tree tree) {
 void goTo(FileManager *fileManager, Tree tree) {
     if (!fileManager || !tree)
         return;
-    refreshFileManager(fileManager);
+
     fileManager->treeCursor = tree;
 
     char *newPath = getCurrentPath(tree);
@@ -1418,6 +1438,8 @@ void goTo(FileManager *fileManager, Tree tree) {
         // free(fileManager->currentPath);
         fileManager->currentPath = newPath;
     }
+
+    refreshFileManager(fileManager);
 
     printf("[LOG] %s\n", newPath);
 }
