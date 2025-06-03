@@ -18,9 +18,15 @@ typedef struct SidebarItem SidebarItem;
 typedef struct SidebarItem {
     Tree tree;
     bool isExpanded;
-    SidebarItem* first_son;
-    SidebarItem* next_brother;
+    SidebarItem *first_son;
+    SidebarItem *next_brother;
 } SidebarItem;
+
+typedef struct SidebarState {
+    Tree treeNode;
+    bool isExpanded;
+    struct SidebarState *next;
+} SidebarState;
 
 typedef struct Sidebar {
     Rectangle panelRec;        // adalah ukuran sidebar
@@ -28,7 +34,7 @@ typedef struct Sidebar {
     Rectangle panelView;       // adalah ukuran yang terlihat di sidebar (tinggi - tinggi scroll bawah dll)
     Vector2 panelScroll;       // adalah jauhnya scroll
 
-    SidebarItem* sidebarRoot;
+    SidebarItem *sidebarRoot;
     Rectangle currentZeroPosition;
 
     Context* ctx;

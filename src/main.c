@@ -70,13 +70,16 @@ int main() {
     initFileManager(&fileManager);
 
     // createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
-    // printTree((fileManager.treeCursor), 0);
+    printTree((fileManager.treeCursor), 0);
+    printf("%s\n", fileManager.currentPath);
     // printf("Enter to Undo...");
     // getchar();
     // undo(&fileManager);
     // printf("Enter to redo...");
     // getchar();
     // redo(&fileManager);
+
+    printTrash(fileManager.trash);
 
     // return 0;
 
@@ -126,11 +129,14 @@ int main() {
 
         drawNavbar(ctx.navbar);
 
-        DrawCreateModal(&ctx);
+        DrawCreateModal(&ctx, &ctx.toolbar->newButtonProperty);
+        DrawCreateModal(&ctx, &ctx.toolbar->renameButtonProperty);
+
 
         EndDrawing();
     }
 
+    saveTrashToFile(&fileManager);
     CloseWindow();
     return 0;
 }

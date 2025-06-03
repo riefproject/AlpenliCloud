@@ -9,7 +9,7 @@
 #include "macro.h"
 
 #include "gui/component.h"
-#include "gui/ctx.h"
+#include "ctx.h"
 #include "gui/navbar.h"
 void trimTrailingSlash(char* path);
 
@@ -45,7 +45,7 @@ void updateNavbar(Navbar* navbar, Context* ctx) {
         strncpy(trimmedPath, navbar->textboxPath, MAX_STRING_LENGTH);
         trimTrailingSlash(trimmedPath);
 
-        Tree root = getCurrentRoot(ctx->fileManager);
+        Tree root = getCurrentRoot(*ctx->fileManager);
         if (!root) {
             printf("Root tidak ditemukan\n");
             return;

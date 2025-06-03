@@ -22,6 +22,10 @@ typedef struct ButtonWithModalProperty {
     char* tooltip;
     char inputBuffer[MAX_STRING_LENGTH];
 
+    char *yesButtonText;
+    char *noButtonText;
+    char *title;
+
     int dropdownIndex;
     bool dropdownActive;
 

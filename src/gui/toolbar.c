@@ -1,14 +1,13 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "ctx.h"
 #include "gui/component.h"
 #include "gui/sidebar.h"
 #include "gui/toolbar.h"
-#include "gui/ctx.h"
 
 #include "macro.h"
 #include "raygui.h"
-
 
 void createToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->ctx = ctx;
@@ -16,6 +15,9 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .btnRect = {50, 50, 100, 24},
         .dropdownRect = {50, 82, 100, 60},
         .modalRect = {300, 200, 300, 150},
+        .yesButtonText = "CREATE",
+        .noButtonText = "CANCEL",
+        .title = "Create Item",
         .placeholder = "#65# New",
         .tooltip = "Add a file or folder",
         .inputBuffer = "",
@@ -25,13 +27,30 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .showModal = false,
         .itemCreated = false,
         .inputEditMode = false,
-        .disabled = false
-    };
+        .disabled = false};
+    toolbar->renameButtonProperty = (ButtonWithModalProperty){
+        .btnRect = {0},
+        .dropdownRect = {0},
+        .modalRect = {300, 200, 300, 150},
+        .noButtonText = "CANCEL",
+        .yesButtonText = "RENAME",
+        .title = "Rename Item",
+        .placeholder = NULL,
+        .tooltip = "NULL",
+        .inputBuffer = "",
+        .dropdownIndex = 0,
+        .dropdownActive = false,
+        .selectedType = ITEM_FILE,
+        .showModal = false,
+        .itemCreated = false,
+        .inputEditMode = false,
+        .disabled = false};
     toolbar->currentZeroPosition = (Rectangle){0};
     toolbar->isButtonCopyActive = false;
     toolbar->isButtonCutActive = false;
     toolbar->isButtonDeleteActive = false;
     toolbar->isButtonPasteActive = false;
+    toolbar->isbuttonRenameActive = false;
 }
 
 void updateToolbar(Toolbar *toolbar, Context *ctx) {
@@ -77,6 +96,38 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         pasteFile(ctx->fileManager);
         toolbar->isButtonPasteActive = false;
     }
+    if (toolbar->isbuttonRenameActive) {
+        toolbar->renameButtonProperty.showModal = true;
+        toolbar->renameButtonProperty.inputEditMode = true;
+        Item *selectedItem = ctx->fileManager->selectedItem.head ? (Item *)ctx->fileManager->selectedItem.head->data : NULL;
+        if (selectedItem) {
+            strncpy(toolbar->renameButtonProperty.inputBuffer, selectedItem->name, MAX_STRING_LENGTH - 1);
+            toolbar->renameButtonProperty.inputBuffer[MAX_STRING_LENGTH - 1] = '\0';
+            toolbar->renameButtonProperty.selectedType = selectedItem->type;
+        } else {
+            toolbar->renameButtonProperty.inputBuffer[0] = '\0';
+        }
+    }
+
+    if (toolbar->renameButtonProperty.itemCreated) {
+        char *newName = toolbar->renameButtonProperty.inputBuffer;
+        char *name = toolbar->ctx->fileManager->selectedItem.head ? ((Item *)toolbar->ctx->fileManager->selectedItem.head->data)->name : NULL;
+        if (name == NULL || strlen(name) == 0) {
+            printf("[ERROR] No item selected for renaming.\n");
+            return;
+        }
+
+        char *filePath = TextFormat(".dir/%s/%s", ctx->fileManager->currentPath, name);
+
+        printf("filePath: %s\n", filePath);
+
+        renameFile(ctx->fileManager, filePath, newName, true);
+        toolbar->renameButtonProperty.showModal = false;
+        toolbar->renameButtonProperty.inputEditMode = false;
+        toolbar->renameButtonProperty.inputBuffer[0] = '\0';
+        toolbar->renameButtonProperty.itemCreated = false;
+        toolbar->isbuttonRenameActive = false;
+    }
 }
 
 void drawToolbar(Toolbar *toolbar) {
@@ -85,21 +136,24 @@ void drawToolbar(Toolbar *toolbar) {
     float width = toolbar->currentZeroPosition.width;
 
     int rightStartx = x + width;
+    int selectedItemCount = get_length(toolbar->ctx->fileManager->selectedItem);
+
+    // printf("[LOG] Selected Item Count: %d, boolean: %d\n", selectedItemCount, selectedItemCount <= 0);
 
     x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
-    GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", false, toolbar->ctx->disableGroundClick);
+    toolbar->isbuttonRenameActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", selectedItemCount <= 0 || selectedItemCount > 1, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", false, toolbar->ctx->disableGroundClick);
+    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", false, toolbar->ctx->disableGroundClick);
+    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
     x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", false, toolbar->ctx->disableGroundClick);
+    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
     rightStartx -= 24;
-    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", false, toolbar->ctx->disableGroundClick);
+    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
     GuiNewButton(&toolbar->newButtonProperty, toolbar->ctx);
 

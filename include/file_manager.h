@@ -1,14 +1,20 @@
 #ifndef FILE_MANAGER_H
 #define FILE_MANAGER_H
 
-#include "nbtree.h"
 #include "item.h"
+#include "nbtree.h"
+#include "queue.h"
 #include "stack.h"
 #include "queue.h"
 #include <stdbool.h>
 
-#define alloc(T) (T *)malloc(sizeof(T));
+#define alloc(T) (T *)malloc(sizeof(T))
 
+/*
+ * Struktur utama untuk mengelola sistem file dalam aplikasi
+ * Berisi tree direktori, trash, undo/redo, dan path aktif
+ * Author: 
+================================================================================*/
 typedef struct FileManager {
   Tree root;              // root directory
   LinkedList trash;       // root trash (deleted files)
