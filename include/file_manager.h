@@ -411,4 +411,10 @@ bool isExternalPath(char* path);
 // Created by: GitHub Copilot
 bool validateImportPath(char* path);
 
+
+// Function to convert Windows path to Unix path
+// Mengganti backslash ('\') dengan forward slash ('/') untuk kompatibilitas lintas platform
+// FS: Return string path dengan backslash diganti forward slash, atau NULL jika path NULL
+char* _convertToUnixPath(char* path);
+
 #endif // !FILE_MANAGER_H

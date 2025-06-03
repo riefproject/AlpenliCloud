@@ -1600,6 +1600,7 @@ bool validateImportPath(char* path) {
     return ValidateWindowsPath(path) == 1;
 }
 
+
 /*  Function check if path is directory menggunakan Windows utils
  *  IS: Path diketahui
  *  FS: Return true jika directory, false jika file
@@ -1612,6 +1613,7 @@ bool validateImportPath(char* path) {
  *  FS: File/folder diimpor ke direktori saat ini dengan progress feedback
 ================================================================================*/
 void importFile(FileManager* fileManager, char* sourcePath, bool isOperation) {
+    sourcePath = _convertToUnixPath(sourcePath);
     if (!validateImportPath(sourcePath)) {
         printf("[LOG] Path tidak valid untuk import: %s\n", sourcePath);
         return;
@@ -1733,4 +1735,21 @@ void importFile(FileManager* fileManager, char* sourcePath, bool isOperation) {
     }
 }
 
-// ...existing code...
+char *_convertToUnixPath(char *path) {
+    if (path == NULL) return NULL;
+
+    // Alokasikan memori untuk path baru
+    char *unixPath = malloc(strlen(path) + 1);
+    if (unixPath == NULL) {
+        perror("malloc failed");
+        exit(1);
+    }
+
+    // Ganti backslash dengan forward slash
+    for (int i = 0; path[i] != '\0'; i++) {
+        unixPath[i] = (path[i] == '\\') ? '/' : path[i];
+    }
+    unixPath[strlen(path)] = '\0'; // Tambahkan null terminator
+
+    return unixPath;
+}
