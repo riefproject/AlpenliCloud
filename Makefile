@@ -1,49 +1,39 @@
-# Directories
-SRC_DIRS = src src/gui src/data_structure
-BUILD_DIR = build/output
-BIN_DIR = bin
-EXE_NAME = AlpenliCloud.exe
-EXE_PATH = $(BIN_DIR)/$(EXE_NAME)
+CC = gcc
+CFLAGS = -std=c99 -Wall -Wextra -Iinclude -DWIN32_LEAN_AND_MEAN
+LIBS = -lraylib -lcomdlg32 -lshell32 -lole32 -lshlwapi -luser32 -lkernel32 -lgdi32 -lwinmm
 
-# Resource files
-RESOURCE_RC = assets/resource.rc
-RESOURCE_RES = assets/resource.res
+# Source files
+SRCDIR = src
+GUIDIR = src/gui
+SOURCES = $(wildcard $(SRCDIR)/*.c) $(wildcard $(GUIDIR)/*.c)
+OBJECTS = $(SOURCES:.c=.o)
 
-# Compiler flags
-CFLAGS = -Iinclude -Iinclude/gui -Iinclude/data_structure -Ilib/raylib/include
-LDFLAGS = lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+# Output
+TARGET = AlpenliCloud.exe
+OUTDIR = build/output
 
-# Find all .c files in source directories
-SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
-OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
+.PHONY: all clean
 
-# Default target
-.PHONY: all clean rebuild
-all: $(EXE_PATH)
+all: $(OUTDIR)/$(TARGET)
 
-# Create directories
-$(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(@D)
-	@echo "🔨 Compiling $<..."
-	@gcc $(CFLAGS) -c $< -o $@
+$(OUTDIR)/$(TARGET): $(OBJECTS) | $(OUTDIR)
+	$(CC) $(OBJECTS) -o $@ $(LIBS)
+	@echo "Build successful! Executable: $@"
 
-# Resource compilation
-$(RESOURCE_RES): $(RESOURCE_RC)
-	@echo "🎨 Compiling resource file..."
-	@windres $< -O coff -o $@
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Linking
-$(EXE_PATH): $(OBJS) $(RESOURCE_RES)
-	@mkdir -p $(BIN_DIR)
-	@echo "🔧 Linking..."
-	@gcc $(OBJS) $(RESOURCE_RES) -o $@ $(LDFLAGS)
-	@echo "🚀 Build complete!"
-	@echo "Run './$(EXE_PATH)' to start AlpenliCloud"
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
 
-# Clean build files
 clean:
-	@echo "🧹 Cleaning build directories..."
-	@rm -rf $(BUILD_DIR) $(BIN_DIR) $(RESOURCE_RES)
+	rm -f $(OBJECTS) $(OUTDIR)/$(TARGET)
+	@echo "Cleaned build files"
 
-# Rebuild everything
-rebuild: clean all
+# Debug target
+debug: CFLAGS += -g -DDEBUG
+debug: all
+
+# Release target  
+release: CFLAGS += -O2 -DNDEBUG
+release: all

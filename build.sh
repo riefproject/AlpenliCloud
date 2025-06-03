@@ -22,7 +22,13 @@ CFLAGS="$WNO
         -Iinclude/gui
         -Iinclude/data_structure
         -Ilib/raylib/include"
+WINFLAGS="-lcomdlg32
+         -lshell32
+         -lole32
+         -lshlwapi
+         -lkernel32"
 LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+ALLFLAGS="$WINFLAGS $LDFLAGS"
 OBJECT_FILES=()
 
 # Biar CLI nya cakep
@@ -105,7 +111,7 @@ link_if_needed() {
 
     if $need_link; then
         echo "🔧 Linking..."
-        gcc "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS
+        gcc "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $ALLFLAGS
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1

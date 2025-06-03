@@ -72,8 +72,7 @@ void printIndent(int depth) {
 
 // Fungsi rekursif untuk mencetak pohon
 void printTree(Tree node, int depth) {
-  if (node == NULL)
-    return;
+  return;
 
   // Cetak node saat ini
 
