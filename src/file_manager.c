@@ -359,7 +359,7 @@ void createFile(FileManager *fileManager, ItemType type, char *dirPath, char *na
 
         if (isOperation) {
             newOperation = alloc(Operation);
-            *newOperation = createOperation(path, NULL, ACTION_CREATE);
+            *newOperation = createOperation(path, NULL, ACTION_CREATE, false, NULL);
             push(&fileManager->undo, newOperation);
         }
         newItem = createItem(_getNameFromPath(path), path, 0, type, createdTime, createdTime, -1);
@@ -385,7 +385,7 @@ void deleteFile(FileManager *fileManager, bool isOperation) {
     Node *temp = fileManager->selectedItem.head;
     if (isOperation) {
         deleteOperation = alloc(Operation);
-        *deleteOperation = createOperation(NULL, NULL, ACTION_DELETE);
+        *deleteOperation = createOperation(NULL, NULL, ACTION_DELETE, false, NULL);
         deleteOperation->itemTemp = alloc(Queue);
         create_queue(&(*(deleteOperation->itemTemp)));
     }
@@ -452,7 +452,7 @@ void renameFile(FileManager *fileManager, char *filePath, char *newName, bool is
     }
     if (isOperation) {
         // Simpan operasi untuk undo
-        *operationToUndo = createOperation(filePath, newPath, ACTION_UPDATE);
+        *operationToUndo = createOperation(filePath, newPath, ACTION_UPDATE, false, NULL);
         operationToUndo->isDir = (foundTree->item.type == ITEM_FOLDER);
         operationToUndo->itemTemp = NULL;
         push(&fileManager->undo, operationToUndo);
@@ -1008,12 +1008,8 @@ void undo(FileManager *fileManager) {
     operationToRedo = alloc(Operation);
     operationToUndo = (Operation *)pop(&(fileManager->undo));
 
-    *operationToRedo = (Operation){
-        .from = strdup(operationToUndo->from),
-        .isDir = operationToUndo->isDir,
-        .to = strdup(operationToUndo->to),
-        .type = operationToUndo->type,
-        .itemTemp = NULL};
+    *operationToRedo = createOperation(operationToUndo->from, operationToUndo->to, operationToUndo->type, operationToUndo->isDir, NULL);
+
     switch (operationToUndo->type) {
     case ACTION_CREATE:
         printf("[LOG] Undo Path: %s\n", operationToUndo->from);
@@ -1063,27 +1059,6 @@ void undo(FileManager *fileManager) {
         break;
     case ACTION_PASTE:
         // Hapus item yang sudah di-paste
-        if (isCopy) {
-            // Hapus item yang sudah di-copy
-            while (is_queue_empty(*(operationToUndo->itemTemp))) {
-                Item *itemToDelete = (Item *)dequeue(operationToUndo->itemTemp);
-                foundTree = searchTree(fileManager->root, *itemToDelete);
-                if (foundTree != NULL) {
-                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
-                    printf("[LOG] Undo paste: %s\n", foundTree->item.name);
-                }
-            }
-        } else {
-            // Hapus item yang sudah di-cut
-            while (is_queue_empty(*(operationToUndo->itemTemp))) {
-                Item *itemToDelete = (Item *)dequeue(operationToUndo->itemTemp);
-                foundTree = searchTree(fileManager->root, *itemToDelete);
-                if (foundTree != NULL) {
-                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
-                    printf("[LOG] Undo cut: %s\n", foundTree->item.name);
-                }
-            }
-        }
         break;
 
     default:
