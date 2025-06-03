@@ -39,6 +39,6 @@ typedef struct Operation {
 // IS: Parameter from, to, dan type diketahui dan valid
 // FS: Operation baru dibuat dengan from dan to di-copy menggunakan strdup, type diset sesuai parameter, isDir dan itemTemp diinisialisasi
 // Created by: Maulana
-Operation createOperation(char* from, char* to, ActionType type);
+Operation createOperation(char* from, char* to, ActionType type, bool isDir, Queue* itemTemp);
 
 #endif // !OPERATION_H
