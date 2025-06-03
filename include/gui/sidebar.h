@@ -37,7 +37,7 @@ typedef struct Sidebar {
     SidebarItem *sidebarRoot;
     Rectangle currentZeroPosition;
 
-    Context* ctx;
+    Context *ctx;
 } Sidebar;
 
 /*
@@ -51,14 +51,14 @@ typedef struct Sidebar {
 // IS: Sidebar pointer dan Context valid
 // FS: Sidebar terinisialisasi dengan panelRec kosong, panelContentRec (0,0,160,340), panelView kosong, panelScroll (0,0), sidebarRoot NULL, ctx direferensikan
 // Created by: Farras
-void createSidebar(Sidebar* sidebar, Context* ctx);
+void createSidebar(Sidebar *sidebar, Context *ctx);
 
 // Prosedur update sidebar component
 // Memperbarui ukuran dan posisi sidebar serta memuat sidebarRoot dari fileManager
 // IS: Sidebar dan Context valid, fileManager dapat diakses
 // FS: sidebarRoot dibuat dari getCurrentRoot jika masih NULL, currentZeroPosition diupdate dengan offset y dan height adjustment, panelRec dihitung dengan lebar 170 dan height berdasarkan currentZeroPosition
 // Created by: Farras
-void updateSidebar(Sidebar* sidebar, Context* ctx);
+void updateSidebar(Sidebar *sidebar, Context *ctx);
 
 /*
 ====================================================================
@@ -71,7 +71,23 @@ void updateSidebar(Sidebar* sidebar, Context* ctx);
 // IS: Tree dapat berupa NULL atau valid dengan struktur first_son dan next_brother
 // FS: SidebarItem dibuat dengan malloc, tree direferensikan, isExpanded false, first_son dan next_brother dibuat rekursif, return pointer SidebarItem atau NULL jika tree NULL
 // Created by: Farras
-SidebarItem* crateSidebarItem(Tree tree);
+SidebarItem *crateSidebarItem(Tree tree);
+
+
+SidebarItem *createSidebarItemWithState(Tree root, SidebarState *stateList);
+
+
+void destroySidebarItem(SidebarItem **item);
+
+
+void collectSidebarState(SidebarItem *item, SidebarState **stateList);
+
+
+bool getExpandedForTree(Tree tree, SidebarState *stateList);
+
+
+void destroySidebarState(SidebarState *stateList);
+
 
 /*
 ====================================================================
@@ -84,14 +100,14 @@ SidebarItem* crateSidebarItem(Tree tree);
 // IS: Sidebar valid dengan sidebarRoot yang sudah diinisialisasi
 // FS: GuiScrollPanel digambar dengan scissor mode, drawPos dihitung dari panelRec dengan scroll offset, drawSidebarItem dipanggil untuk render semua item, panelContentRec width dan height diupdate berdasarkan content
 // Created by: Farras
-void drawSidebar(Sidebar* sidebar);
+void drawSidebar(Sidebar *sidebar);
 
 // Prosedur draw sidebar item recursive
 // Menggambar item sidebar secara rekursif dengan indentasi dan handling mouse interaction
 // IS: SidebarItem node valid, posisi dan ukuran item ditentukan parameter
 // FS: Item folder digambar dengan arrow icon (#115#/#116#), indentasi berdasarkan depth, mouse click dihandle untuk expand/collapse dan navigasi goTo, background BLUE untuk treeCursor aktif, scrollWidth diupdate berdasarkan content width, child items digambar rekursif jika expanded
 // Created by: Farras
-void drawSidebarItem(Sidebar* sidebar, SidebarItem* node, FileManager* fileManager, Vector2* pos, int depth, float width, float height, float* scrollWidth);
+void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth);
 
 /*
 ====================================================================
@@ -104,6 +120,6 @@ void drawSidebarItem(Sidebar* sidebar, SidebarItem* node, FileManager* fileManag
 // IS: SidebarItem node, depth indentasi, dan textSize diketahui
 // FS: Lebar maksimum label dihitung dengan traversal rekursif semua child nodes, return lebar maksimum dalam pixel
 // Created by: Farras
-int getMaxChildLabelWidth(SidebarItem* node, int depth, int textSize);
+int getMaxChildLabelWidth(SidebarItem *node, int depth, int textSize);
 
 #endif
