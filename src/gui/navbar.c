@@ -11,6 +11,7 @@
 #include "gui/component.h"
 #include "ctx.h"
 #include "gui/navbar.h"
+
 void trimTrailingSlash(char* path);
 
 void createNavbar(Navbar* navbar, Context* ctx) {
@@ -68,7 +69,9 @@ void updateNavbar(Navbar* navbar, Context* ctx) {
     if (navbar->shouldSearch) {
         navbar->shouldSearch = false;
         printf("Search string: %s\n", navbar->textboxSearch);
-        // Handle fungsi pencarian
+        ctx->fileManager->isSearching = true;
+        searchingItem(ctx->fileManager, navbar->textboxSearch);
+        printSearchingList(ctx->fileManager);
     }
 
     // Handle undo button
@@ -85,6 +88,7 @@ void updateNavbar(Navbar* navbar, Context* ctx) {
         // if (&navbar->ctx.fileManager) {
         //     redo(&navbar->ctx.fileManager);
         // }
+        // navbar->ctx.
     }
 
     // Handle go back button

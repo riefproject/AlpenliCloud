@@ -42,6 +42,7 @@ void createFileManager(FileManager *fileManager) {
     create_queue(&(fileManager->cut));
     create_queue(&(fileManager->temp));
     create_list(&(fileManager->selectedItem));
+    create_list(&(fileManager->searchingList));
 }
 
 /* IS:                          FS:
@@ -275,13 +276,13 @@ void destroyTree(Tree *tree) {
 ================================================================================*/
 void refreshFileManager(FileManager *fileManager) {
     if (fileManager != NULL && fileManager->treeCursor != NULL) {
-        printf("\n\n");
-        printf("==========================================================\n");
+        // printf("\n\n");
+        // printf("==========================================================\n");
         printf("[LOG] Refreshing FileManager...\n");
-        printf("[LOG] Tree Cursor Path: %s\n", fileManager->treeCursor->item.name);
-        printf("[LOG] Tree Cursor Full Path: %s\n", fileManager->treeCursor->item.path);
-        printf("[LOG] Tree Cursor Type: %s\n", fileManager->treeCursor->item.type == ITEM_FOLDER ? "Folder" : "File");
-        printf("==========================================================\n\n");
+        // printf("[LOG] Tree Cursor Path: %s\n", fileManager->treeCursor->item.name);
+        // printf("[LOG] Tree Cursor Full Path: %s\n", fileManager->treeCursor->item.path);
+        // printf("[LOG] Tree Cursor Type: %s\n", fileManager->treeCursor->item.type == ITEM_FOLDER ? "Folder" : "File");
+        // printf("==========================================================\n\n");
 
         // Hapus semua anak dari direktori saat ini, bukan seluruh node
         destroyTree(&fileManager->treeCursor->first_son);
@@ -290,13 +291,14 @@ void refreshFileManager(FileManager *fileManager) {
         // Muat ulang isi dari direktori tersebut
         loadTree(fileManager->treeCursor, fileManager->treeCursor->item.path);
 
-        printf("==========================================================\n");
-        printTree(fileManager->treeCursor, 0);
-        printf("==========================================================\n\n");
+        // printf("==========================================================\n");
+        // printTree(fileManager->treeCursor, 0);
+        // printf("==========================================================\n\n");
 
         printf("[LOG] Directory refreshed successfully\n");
 
         printf("[LOG] Resfreshing sidebar...\n");
+
         SidebarState *stateList = NULL;
         collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
         destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
@@ -547,6 +549,59 @@ Item searchFile(FileManager *fileManager, char *path) {
     }
     item = foundTree->item;
     return item;
+}
+
+void searchingItem(FileManager *fileManager, char *keyword) {
+    if (fileManager->searchingList.head != NULL) {
+        destroy_list(&(fileManager->searchingList)); // Perlu dipastikan fungsi ini ada
+        printf("[LOG] Hasil pencarian sebelumnya telah dihapus\n");
+    }
+
+    if (keyword == NULL || strlen(keyword) == 0) {
+        printf("[LOG] Keyword pencarian tidak boleh kosong\n");
+        return;
+    }
+
+    searchingItemRecursive(&(fileManager->searchingList), fileManager->root, keyword);
+
+    if (fileManager->searchingList.head == NULL) {
+        printf("[LOG] Tidak ada file yang cocok dengan keyword '%s'\n", keyword);
+    } else {
+        printf("[LOG] Pencarian selesai. Gunakan printSearchingList() untuk melihat hasil.\n");
+    }
+}
+
+void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword) {
+    if (tree == NULL)
+        return;
+
+    if (strstr(tree->item.name, keyword) != NULL) {
+        printf("===========================================================\n");
+        insert_last(linkedList, tree);
+        printf("[LOG] Menemukan item: %s, Path: %s\n", tree->item.name, tree->item.path);
+        printf("===========================================================\n");
+    }
+
+    searchingItemRecursive(linkedList, tree->first_son, keyword);
+    searchingItemRecursive(linkedList, tree->next_brother, keyword);
+}
+
+void printSearchingList(FileManager *fileManager) {
+    if (fileManager->searchingList.head == NULL) {
+        printf("[LOG] Tidak ada hasil pencarian\n");
+        return;
+    }
+
+    Node *temp = fileManager->searchingList.head;
+    while (temp != NULL) {
+        Tree treePtr = (Tree)temp->data;
+        printf("[LOG] Hasil Pencarian: %s, Path: %s, Size: %ld, Type: %s\n",
+               treePtr->item.name,
+               treePtr->item.path,
+               treePtr->item.size,
+               (treePtr->item.type == ITEM_FOLDER) ? "Folder" : "File");
+        temp = temp->next;
+    }
 }
 
 /*  Prosedur
