@@ -97,11 +97,11 @@ int main() {
 
     // initialization
     // ----------------------------------------------------------------------------------------
-    createTitleBar(ctx.titleBar, &ctx);
-    createNavbar(ctx.navbar, &ctx);
-    createSidebar(ctx.sidebar, &ctx);
-    createToolbar(ctx.toolbar, &ctx);
-    createBody(&ctx, ctx.body);
+    // createTitleBar(ctx.titleBar, &ctx);
+    // createNavbar(ctx.navbar, &ctx);
+    // createSidebar(ctx.sidebar, &ctx);
+    // createToolbar(ctx.toolbar, &ctx);
+    // createBody(&ctx, ctx.body);
 
     while (!ctx.titleBar->exitWindow && !WindowShouldClose()) {
 

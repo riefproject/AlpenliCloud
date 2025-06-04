@@ -112,11 +112,35 @@ Item searchFile(FileManager *fileManager, char *path);
 // IS: Keyword untuk pencarian diketahui
 // FS: LinkedList searchingList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
 // Created by: Farras
-void searchingItem(FileManager *fileManager, char *keyword);
+void searchingTreeItem(FileManager *fileManager, char *keyword);
 
+// Prosedur search item di tree secara rekursif
+// Mencari semua item yang sesuai dengan keyword di tree secara rekursif
+// IS: LinkedList untuk menyimpan hasil pencarian, tree yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingTreeItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
+
+// Prosedur search item di linked list
+// Mencari item di LinkedList berdasarkan keyword dengan membandingkan nama item
+// IS: LinkedList yang berisi item, item yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingLinkedListItem(FileManager *FileManager, Node *node, char *keyword);
+
+// Prosedur search item di linked list secara rekursif
+// Mencari item di LinkedList secara rekursif berdasarkan keyword
+// IS: LinkedList yang berisi item, node yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingLinkedListRecursive(FileManager *FileManager, Node *node, char *keyword);
+
+// Prosedur print searching list
+// Mencetak semua item yang ada di LinkedList searchingList ke konsol
+// IS: LinkedList searchingList berisi item yang telah ditemukan
+// FS: Mencetak setiap item dengan nama, path, ukuran, tipe, dan waktu ke konsol
+// Created by: Farras
 void printSearchingList(FileManager *fileManager);
-
-void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
 
 // Prosedur create file/folder
 // Membuat file atau folder baru di direktori dengan pengecekan duplikasi dan operasi undo
