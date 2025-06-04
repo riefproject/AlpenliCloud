@@ -653,6 +653,10 @@ void cutFile(FileManager *fileManager) {
  *  FS:
 ================================================================================*/
 void pasteFile(FileManager *fileManager) {
+    Operation *pasteOperation;
+    pasteOperation = alloc(Operation);
+    *pasteOperation = createOperation(NULL, NULL, ACTION_PASTE, false, NULL);
+
     if (fileManager->temp.front == NULL) {
         printf("[LOG] Clipboard kosong\n");
         return;
@@ -680,7 +684,6 @@ void pasteFile(FileManager *fileManager) {
     Node *temp = fileManager->temp.front;
     while (temp != NULL && !cancelled) {
         Item *itemToPaste = (Item *)temp->data;
-
         // Update progress bar dan cek cancel
         if (showProgress) {
             showPasteProgressBar(currentProgress, totalItems, itemToPaste->name);
@@ -816,7 +819,13 @@ void pasteFile(FileManager *fileManager) {
                 printf("[LOG] Item %s berhasil dihapus dari tree asal\n", itemToPaste->name);
             }
         }
-
+        PasteItem *pasteItem = alloc(PasteItem);
+        *pasteItem = createPasteItem(
+            *itemToPaste,
+            originPath
+        );
+        enqueue(pasteOperation->itemTemp, pasteItem);
+        printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
         temp = temp->next;
         currentProgress++;
     }
