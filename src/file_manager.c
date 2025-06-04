@@ -825,6 +825,7 @@ void pasteFile(FileManager *fileManager, bool isOperation) {
         }
         if(isOperation){
             PasteItem *pasteItem = alloc(PasteItem);
+            itemToPaste->path = strdup(newPath); // Update path ke lokasi baru
             *pasteItem = createPasteItem(*itemToPaste, originPath);
             enqueue(pasteOperation->itemTemp, pasteItem);
             printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
@@ -1074,7 +1075,20 @@ void undo(FileManager *fileManager) {
         break;
     case ACTION_PASTE:
         // Hapus item yang sudah di-paste
-
+        if(operationToUndo->isCopy){
+            while (!is_queue_empty(*(operationToUndo->itemTemp))) {
+                PasteItem *pasteItem = (PasteItem *)dequeue(&(*operationToUndo->itemTemp));
+                foundTree = searchTree(fileManager->root, createItem(pasteItem->item.name, pasteItem->item.path, 0, pasteItem->item.type, 0, 0, 0));
+                if (foundTree != NULL) {
+                    printf("[LOG] Undo paste path: %s\n", pasteItem->item.path);
+                    printf("[LOG] Undo paste name: %s\n", pasteItem->item.name);
+                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
+                } else {
+                    printf("[LOG] Item tidak ditemukan untuk dihapus: %s\n", pasteItem->item.name);
+                }
+            }
+        }
+        printf("[LOG] Undo paste operation completed\n");
         break;
 
     default:
@@ -1137,6 +1151,7 @@ void redo(FileManager *fileManager) {
         printf("[LOG] Redo rename: %s\n", operationToRedo->from);
         break;
     case ACTION_PASTE:
+        
         break;
 
     case ACTION_RECOVER:
