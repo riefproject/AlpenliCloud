@@ -822,8 +822,8 @@ void pasteFile(FileManager *fileManager) {
         PasteItem *pasteItem = alloc(PasteItem);
         *pasteItem = createPasteItem(
             *itemToPaste,
-            originPath;
-        )
+            originPath
+        );
         enqueue(pasteOperation->itemTemp, pasteItem);
         printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
         temp = temp->next;
