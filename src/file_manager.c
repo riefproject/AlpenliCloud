@@ -70,9 +70,9 @@ void initFileManager(FileManager *fileManager) {
 }
 
 /*
- * IS:
- * FS:
- * Author
+ * IS: Direktori `path` valid dan dapat diakses. contoh path: `.dir/root` (dimulai dari ./dir)
+ * FS: Tree diisi dengan struktur direktori dan file dari `path`.
+ * Author: Farras Fadhil Syafiq
 ================================================================================*/
 void loadTree(Tree tree, char *path) {
     DIR *dp;
@@ -207,7 +207,7 @@ void loadTrashFromFile(LinkedList *trash) {
 void saveTrashToFile(FileManager *fileManager) {
     FILE *trashFile = fopen(TRASH_DUMP, "w");
     if (trashFile == NULL) {
-        perror("Gagal membuka file trash untuk menulis");
+        perror("[ERROR] Gagal membuka file trash untuk menulis");
         return;
     }
 
@@ -227,9 +227,9 @@ void saveTrashToFile(FileManager *fileManager) {
 }
 
 /*
- * IS:
- * FS:
- * Author:
+ * IS: LinkedList trash berisi item yang telah dihapus.
+ * FS: Mencetak semua item yang ada di LinkedList trash ke konsol.
+ * Author: Farras Fadhil Syafiq
 ================================================================================*/
 void printTrash(LinkedList trash) {
     Node *current = trash.head;
@@ -553,7 +553,7 @@ Item searchFile(FileManager *fileManager, char *path) {
 
 void searchingItem(FileManager *fileManager, char *keyword) {
     if (fileManager->searchingList.head != NULL) {
-        destroy_list(&(fileManager->searchingList)); // Perlu dipastikan fungsi ini ada
+        destroy_list(&(fileManager->searchingList));
         printf("[LOG] Hasil pencarian sebelumnya telah dihapus\n");
     }
 
