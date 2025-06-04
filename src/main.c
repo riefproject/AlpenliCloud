@@ -2,32 +2,33 @@
 
 #include <dirent.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
 
+#include "body.h"
+#include "component.h"
+#include "file_manager.h"
 #include "macro.h"
+#include "navbar.h"
 #include "raygui.h"
 #include "raylib.h"
-#include "file_manager.h"
-#include "body.h"
-#include "navbar.h"
 #include "sidebar.h"
 #include "titlebar.h"
 #include "toolbar.h"
 #include "utils.h"
-#include "component.h"
 
 #include "ctx.h"
 
+#include "gui/rheme.h"
 // Fungsi untuk membaca isi direktori
-void readDirectory(const char* path, FileManager* fileManager) {
-    DIR* dir = opendir(path);
+void readDirectory(const char *path, FileManager *fileManager) {
+    DIR *dir = opendir(path);
     if (dir == NULL) {
         printf("Error: Unable to open directory %s\n", path);
         return;
     }
 
-    struct dirent* entry;
+    struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             printf("Found: %s\n", entry->d_name);
@@ -39,7 +40,7 @@ void readDirectory(const char* path, FileManager* fileManager) {
 }
 
 // Fungsi untuk memeriksa perubahan direktori
-int checkDirectoryChanges(const char* path, FileManager* fileManager) {
+int checkDirectoryChanges(const char *path, FileManager *fileManager) {
     static time_t lastModified = 0;
     struct stat dirStat;
 
@@ -58,6 +59,7 @@ int checkDirectoryChanges(const char* path, FileManager* fileManager) {
 }
 
 int main() {
+
     // Windows config
     // ----------------------------------------------------------------------------------------
     int screenWidth = 800;
@@ -70,8 +72,8 @@ int main() {
     initFileManager(&fileManager);
 
     // createFile(&fileManager, ITEM_FILE, ".dir/root", "INI FILE BARU DIBUAT.txt");
-    printTree((fileManager.treeCursor), 0);
-    printf("%s\n", fileManager.currentPath);
+    // printTree((fileManager.treeCursor), 0);
+    // printf("%s\n", fileManager.currentPath);
     // printf("Enter to Undo...");
     // getchar();
     // undo(&fileManager);
@@ -79,14 +81,14 @@ int main() {
     // getchar();
     // redo(&fileManager);
 
-    printTrash(fileManager.trash);
+    // printTrash(fileManager.trash);
 
     // return 0;
 
     Context ctx;
     createContext(&ctx, &fileManager, screenWidth, screenHeight);
 
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_UNDECORATED | FLAG_VSYNC_HINT);
     SetTargetFPS(60);
 
     InitWindow(screenWidth, screenHeight, "AlpenliCloud");
@@ -108,14 +110,13 @@ int main() {
         updateContext(&ctx, &fileManager);
 
         ShortcutKeys(&ctx);
-        if(IsKeyPressed(KEY_F2)){
+        if (IsKeyPressed(KEY_F2)) {
             renameFile(&fileManager, ".dir/root/abcd.txt", "newname.txt", true);
             printf("[LOG] File renamed successfully\n");
         }
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
-
 
         ClearBackground(RAYWHITE);
 
@@ -131,7 +132,6 @@ int main() {
 
         DrawCreateModal(&ctx, &ctx.toolbar->newButtonProperty);
         DrawCreateModal(&ctx, &ctx.toolbar->renameButtonProperty);
-
 
         EndDrawing();
     }

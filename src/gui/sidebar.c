@@ -3,6 +3,7 @@
 
 #include "ctx.h"
 #include "file_manager.h"
+#include "gui/component.h"
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
@@ -90,13 +91,29 @@ void updateSidebar(Sidebar *sidebar, Context *ctx) {
 
     sidebar->currentZeroPosition = *ctx->currentZeroPosition;
     sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
-    sidebar->currentZeroPosition.height = sidebar->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2;
+    sidebar->currentZeroPosition.height = sidebar->currentZeroPosition.height - DEFAULT_PADDING * 3 - 24 * 2 - 24;
 
     sidebar->panelRec = (Rectangle){
         sidebar->currentZeroPosition.x,
         sidebar->currentZeroPosition.y,
         170,
         sidebar->currentZeroPosition.height};
+
+    if (sidebar->isButtonOpenTrashClicked) {
+        sidebar->isButtonOpenTrashClicked = false;
+
+        sidebar->ctx->fileManager->isRootTrash = true;
+        clearSelectedFile(sidebar->ctx->fileManager);
+        printf("[LOG] Opening Trash...\n");
+    }
+    
+    if (sidebar->isButtonGoBackClicked) {
+        sidebar->isButtonGoBackClicked = false;
+        
+        sidebar->ctx->fileManager->isRootTrash = false;
+        clearSelectedFile(sidebar->ctx->fileManager);
+        printf("[LOG] Going back to root...\n");
+    }
 }
 
 void drawSidebar(Sidebar *sidebar) {
@@ -135,6 +152,60 @@ void drawSidebar(Sidebar *sidebar) {
 
     sidebar->panelContentRec.width = scrollWidth;
     sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
+
+    if (!sidebar->ctx->fileManager->isRootTrash) {
+        int prevBgColor = GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+        int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
+        int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
+        int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
+        int prevFocusedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED);
+        int prevFocusedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED);
+        int prevPressedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
+        int prevPressedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED);
+        int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);
+
+        // Normal
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color){180, 0, 0, 255}));
+
+        // Focused
+        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color){200, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        // Pressed
+        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color){150, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
+        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        sidebar->isButtonOpenTrashClicked = GuiButtonCustom(
+            (Rectangle){
+                sidebar->panelRec.x,
+                sidebar->panelRec.y + sidebar->panelRec.height + DEFAULT_PADDING,
+                sidebar->panelRec.width,
+                24},
+            "#143# Open Trash", NULL, false, sidebar->ctx->disableGroundClick);
+
+        // Restore
+        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, prevBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, prevTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, prevBorderColor);
+        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, prevFocusedBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, prevFocusedTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, prevFocusedBorderColor);
+        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, prevPressedBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, prevPressedTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, prevPressedBorderColor);
+    } else {
+        sidebar->isButtonGoBackClicked = GuiButtonCustom(
+            (Rectangle){
+                sidebar->panelRec.x,
+                sidebar->panelRec.y + sidebar->panelRec.height + DEFAULT_PADDING,
+                sidebar->panelRec.width,
+                24},
+            "#72# Kembali", NULL, false, sidebar->ctx->disableGroundClick);
+    }
 }
 
 void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManager, Vector2 *pos, int depth, float width, float height, float *scrollWidth) {
@@ -153,7 +224,7 @@ void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManag
                 *scrollWidth = totalWidth;
             }
 
-            Rectangle labelBounds = {pos->x + indent, pos->y, labelTextWidth, height};
+            Rectangle labelBounds = {pos->x + indent, pos->y, *scrollWidth, height};
 
             // Interaction
             if (!sidebar->ctx->disableGroundClick) {

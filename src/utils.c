@@ -75,7 +75,7 @@ void ShortcutKeys(Context* ctx) {
 
     // DELETE (Delete key atau Ctrl + Delete)
     if (IsKeyPressed(KEY_DELETE) || ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_DELETE))) {
-        ctx->toolbar->isButtonDeleteActive = true;
+        ctx->toolbar->isButtonDeleteClicked = true;
         printf("[LOG] Delete shortcut activated\n");
     }
 

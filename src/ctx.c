@@ -35,7 +35,6 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
     ctx->body = (Body *)malloc(sizeof(Body));
 
     ctx->fileManager = fileManager;
-    fileManager->ctx = (Context *)malloc(sizeof(Context));
     fileManager->ctx = ctx;
 
     if (ctx->titleBar)

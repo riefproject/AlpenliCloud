@@ -21,11 +21,13 @@ typedef struct Toolbar {
     ButtonWithModalProperty renameButtonProperty;
     Rectangle currentZeroPosition;
 
-    bool isButtonCopyActive;
-    bool isButtonCutActive;
-    bool isButtonDeleteActive;
-    bool isButtonPasteActive;
-    bool isbuttonRenameActive;
+    bool isButtonCopyClicked;
+    bool isButtonCutClicked;
+    bool isButtonDeleteClicked;
+    bool isButtonPasteClicked;
+    bool isbuttonRenameClicked;
+    bool isButtonRestoreClicked;
+    bool isButtonPermanentDeleteClicked;
 
     Context* ctx;
 } Toolbar;

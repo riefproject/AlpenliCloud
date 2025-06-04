@@ -37,6 +37,9 @@ typedef struct Sidebar {
     SidebarItem *sidebarRoot;
     Rectangle currentZeroPosition;
 
+    bool isButtonOpenTrashClicked;
+    bool isButtonGoBackClicked;
+    
     Context *ctx;
 } Sidebar;
 

@@ -16,21 +16,25 @@ typedef struct Context Context;
  * Author:
 ================================================================================*/
 typedef struct FileManager {
+    // (tree dengan root adalah direktori saat ini)
     Tree root;        // root directory
     LinkedList trash; // root trash (deleted files)
-    Stack undo;       // stack for undo operations
-    Stack redo;       // stack for redo operations
+    bool isRootTrash; // status apakah trash adalah root trash
 
-    Tree treeCursor; // current tree cursor
-    // (tree dengan root adalah direktori saat ini)
+    LinkedList searchingList; // linkedlist untuk menyimpan hasil pencarian
+    bool isSearching;         // status apakah sedang dalam mode pencarian
 
-    char *currentPath;       // current path string
+    char *currentPath; // current path string
+    Tree treeCursor;   // current tree cursor
+
+    Stack undo;              // stack for undo operations
+    Stack redo;              // stack for redo operations
     Queue copied;            // queue for copied items
     Queue cut;               // queue for cut items
     Queue temp;              // temporary queue for operations
     LinkedList selectedItem; // linkedlist for selected item
-    bool needsRefresh;
 
+    bool needsRefresh;
     Context *ctx; // context untuk akses sidebar dan komponen lainnya
 } FileManager;
 
@@ -102,6 +106,17 @@ void refreshFileManager(FileManager *fileManager);
 // FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan
 // Created by: Maulana
 Item searchFile(FileManager *fileManager, char *path);
+
+// Prosedur search all file/folder
+// Mencari semua file/folder yang sesuai dengan keyword di direktori saat ini
+// IS: Keyword untuk pencarian diketahui
+// FS: LinkedList searchingList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingItem(FileManager *fileManager, char *keyword);
+
+void printSearchingList(FileManager *fileManager);
+
+void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
 
 // Prosedur create file/folder
 // Membuat file atau folder baru di direktori dengan pengecekan duplikasi dan operasi undo
