@@ -21,6 +21,9 @@ typedef struct FileManager {
     Stack undo;       // stack for undo operations
     Stack redo;       // stack for redo operations
 
+    LinkedList searchingList; // linkedlist untuk menyimpan hasil pencarian
+    bool isSearching; // status apakah sedang dalam mode pencarian
+
     Tree treeCursor; // current tree cursor
     // (tree dengan root adalah direktori saat ini)
 
@@ -96,12 +99,24 @@ void refreshFileManager(FileManager *fileManager);
 ====================================================================
 */
 
-// Function search file
-// Mencari file berdasarkan path dengan membuat item dummy dan menggunakan searchTree
-// IS: Path file diketahui dan valid
-// FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan
-// Created by: Maulana
-Item searchFile(FileManager *fileManager, char *path);
+// Function search file 
+// Mencari file berdasarkan path dengan membuat item dummy dan menggunakan searchTree 
+// IS: Path file diketahui dan valid 
+// FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan 
+// Created by: Maulana 
+Item searchFile(FileManager *fileManager, char *path); 
+
+// Prosedur search all file/folder
+// Mencari semua file/folder yang sesuai dengan keyword di direktori saat ini
+// IS: Keyword untuk pencarian diketahui
+// FS: LinkedList searchingList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingItem(FileManager *fileManager, char *keyword);
+
+void printSearchingList(FileManager *fileManager);
+
+void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
+
 
 // Prosedur create file/folder
 // Membuat file atau folder baru di direktori dengan pengecekan duplikasi dan operasi undo

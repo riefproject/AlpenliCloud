@@ -23,14 +23,14 @@ typedef struct Toolbar Toolbar;
 */
 
 typedef struct Context {
-    FileManager* fileManager;
-    Body* body;
-    Navbar* navbar;
-    Sidebar* sidebar;
-    TitleBar* titleBar;
-    Toolbar* toolbar;
+    FileManager *fileManager;
+    Body *body;
+    Navbar *navbar;
+    Sidebar *sidebar;
+    TitleBar *titleBar;
+    Toolbar *toolbar;
 
-    Rectangle* currentZeroPosition;
+    Rectangle *currentZeroPosition;
 
     int height;
     int width;
@@ -49,13 +49,13 @@ typedef struct Context {
 // IS: Context pointer dan FileManager valid, screenWidth dan screenHeight diketahui
 // FS: Context terinisialisasi dengan ukuran layar, currentZeroPosition dialokasikan dengan Rectangle berdasarkan DEFAULT_PADDING, semua komponen GUI (titleBar, toolbar, navbar, sidebar, body) dialokasikan dan diinisialisasi, disableGroundClick diset false
 // Created by: Farras
-void createContext(Context* ctx, FileManager* fileManager, int screenWidth, int screenHeight);
+void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int screenHeight);
 
 // Prosedur update context
 // Memperbarui Context dengan ukuran layar terbaru dan update semua komponen GUI
 // IS: Context dan FileManager valid, layar mungkin telah berubah ukuran
 // FS: currentZeroPosition diupdate berdasarkan GetScreenWidth/Height dan titleBar height, width/height Context diperbarui, fileManager direferensikan ulang, semua komponen GUI diupdate dengan urutan titleBar→navbar→toolbar→sidebar→body
 // Created by: Farras
-void updateContext(Context* ctx, FileManager* fileManager);
+void updateContext(Context *ctx, FileManager *fileManager);
 
 #endif // CTX_H
