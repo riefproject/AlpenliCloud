@@ -171,7 +171,7 @@ void cutFile(FileManager *fileManager);
 // IS: Ada file/folder di queue temp dari operasi copy/cut
 // FS: File/folder ditempelkan ke treeCursor dengan copy content atau move, progress bar ditampilkan jika >10 item, queue temp dikosongkan untuk cut
 // Created by: Arief
-void pasteFile(FileManager *fileManager);
+void pasteFile(FileManager *fileManager, bool isOperation);
 
 /*
 ====================================================================

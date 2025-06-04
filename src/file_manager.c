@@ -652,10 +652,14 @@ void cutFile(FileManager *fileManager) {
  *  IS:
  *  FS:
 ================================================================================*/
-void pasteFile(FileManager *fileManager) {
+void pasteFile(FileManager *fileManager, bool isOperation) {
     Operation *pasteOperation;
-    pasteOperation = alloc(Operation);
-    *pasteOperation = createOperation(NULL, NULL, ACTION_PASTE, false, NULL);
+    if(isOperation){
+        pasteOperation = alloc(Operation);
+        *pasteOperation = createOperation(NULL, NULL, ACTION_PASTE, false, NULL);
+        pasteOperation->itemTemp = alloc(Queue);
+        create_queue(&(*(pasteOperation->itemTemp)));
+    }
 
     if (fileManager->temp.front == NULL) {
         printf("[LOG] Clipboard kosong\n");
@@ -819,13 +823,12 @@ void pasteFile(FileManager *fileManager) {
                 printf("[LOG] Item %s berhasil dihapus dari tree asal\n", itemToPaste->name);
             }
         }
-        PasteItem *pasteItem = alloc(PasteItem);
-        *pasteItem = createPasteItem(
-            *itemToPaste,
-            originPath
-        );
-        enqueue(pasteOperation->itemTemp, pasteItem);
-        printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
+        if(isOperation){
+            PasteItem *pasteItem = alloc(PasteItem);
+            *pasteItem = createPasteItem(*itemToPaste, originPath);
+            enqueue(pasteOperation->itemTemp, pasteItem);
+            printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
+        }
         temp = temp->next;
         currentProgress++;
     }
@@ -843,7 +846,10 @@ void pasteFile(FileManager *fileManager) {
     } else {
         printf("[LOG] Paste berhasil!\n");
     }
-
+    if(isOperation){
+        pasteOperation->isCopy = isCopy;
+        push(&fileManager->undo, pasteOperation);
+    }
     refreshFileManager(fileManager);
 }
 
@@ -1068,6 +1074,7 @@ void undo(FileManager *fileManager) {
         break;
     case ACTION_PASTE:
         // Hapus item yang sudah di-paste
+
         break;
 
     default:

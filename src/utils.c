@@ -49,7 +49,7 @@ void ShortcutKeys(Context* ctx) {
 
     // PASTE (Ctrl + V)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_V)) {
-        pasteFile(ctx->fileManager);
+        pasteFile(ctx->fileManager, true);
     }
 
     // CUT (Ctrl + X)

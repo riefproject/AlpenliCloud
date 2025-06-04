@@ -51,7 +51,7 @@ TrashItem searchTrashItem(LinkedList trash, char* originalPath) {
 PasteItem createPasteItem(Item item, char* originalPath) {
   return (PasteItem) {
     .item = item,
-    .originalPath = strdup(originalPath)
+    .originalPath = strdup(originalPath),
   };
 }
 // TrashItem createTrashItem(Item item, char* origin) {
