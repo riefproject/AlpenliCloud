@@ -166,7 +166,7 @@ void drawToolbar(Toolbar *toolbar) {
     } else {
         toolbar->isButtonRestoreClicked = GuiButtonCustom((Rectangle){x, y, 100, 24}, "#77# Restore", "RESTORE SELECTED ITEM", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
-        int prevBgColor = GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+        int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
         int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
         int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
         int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);

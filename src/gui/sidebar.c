@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ctx.h"
 #include "file_manager.h"
 #include "gui/component.h"
+#include "gui/navbar.h"
 #include "gui/sidebar.h"
 #include "macro.h"
 #include "raygui.h"
@@ -83,6 +85,8 @@ void createSidebar(Sidebar *sidebar, Context *ctx) {
     sidebar->panelView = (Rectangle){0};
     sidebar->panelScroll = (Vector2){0};
     sidebar->sidebarRoot = createSidebarItem(getCurrentRoot(*ctx->fileManager));
+    sidebar->isButtonGoBackClicked = false;
+    sidebar->isButtonOpenTrashClicked = false;
 }
 
 void updateSidebar(Sidebar *sidebar, Context *ctx) {
@@ -102,16 +106,20 @@ void updateSidebar(Sidebar *sidebar, Context *ctx) {
     if (sidebar->isButtonOpenTrashClicked) {
         sidebar->isButtonOpenTrashClicked = false;
 
-        sidebar->ctx->fileManager->isRootTrash = true;
         clearSelectedFile(sidebar->ctx->fileManager);
+        strcpy(sidebar->ctx->navbar->textboxPath, "trash");
+        sidebar->ctx->fileManager->currentPath = "trash";
+        sidebar->ctx->fileManager->isRootTrash = true;
         printf("[LOG] Opening Trash...\n");
     }
-    
+
     if (sidebar->isButtonGoBackClicked) {
         sidebar->isButtonGoBackClicked = false;
-        
-        sidebar->ctx->fileManager->isRootTrash = false;
+
         clearSelectedFile(sidebar->ctx->fileManager);
+        strcpy(sidebar->ctx->navbar->textboxPath, "root");
+        sidebar->ctx->fileManager->currentPath = "root";
+        sidebar->ctx->fileManager->isRootTrash = false;
         printf("[LOG] Going back to root...\n");
     }
 }
@@ -123,6 +131,7 @@ void drawSidebar(Sidebar *sidebar) {
     if (sidebar->ctx->disableGroundClick)
         GuiDisable();
 
+
     GuiScrollPanel(sidebar->panelRec, NULL, sidebar->panelContentRec, &scroll, &sidebar->panelView);
     GuiEnable();
 
@@ -133,7 +142,7 @@ void drawSidebar(Sidebar *sidebar) {
         sidebar->panelRec.y + DEFAULT_PADDING + scroll.y};
 
     float scrollWidth = sidebar->panelContentRec.width;
-
+    sidebar->panelContentRec.width = scrollWidth + DEFAULT_PADDING;
     BeginScissorMode(sidebar->panelView.x, sidebar->panelView.y, sidebar->panelView.width, sidebar->panelView.height);
 
     if (sidebar->sidebarRoot) {
@@ -154,12 +163,14 @@ void drawSidebar(Sidebar *sidebar) {
     sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
 
     if (!sidebar->ctx->fileManager->isRootTrash) {
-        int prevBgColor = GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+        int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
         int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
         int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
+
         int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
         int prevFocusedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED);
         int prevFocusedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED);
+        
         int prevPressedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
         int prevPressedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED);
         int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);

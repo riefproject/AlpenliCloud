@@ -27,15 +27,18 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
             screenHeight - DEFAULT_PADDING * 2};
     }
 
+    ctx->fileManager = (FileManager *)malloc(sizeof(FileManager));
+    if (ctx->fileManager) {
+        ctx->fileManager = fileManager;
+        fileManager->ctx = ctx;
+    }
+
     // Alokasi dan inisialisasi komponen GUI
     ctx->titleBar = (TitleBar *)malloc(sizeof(TitleBar));
     ctx->toolbar = (Toolbar *)malloc(sizeof(Toolbar));
     ctx->navbar = (Navbar *)malloc(sizeof(Navbar));
     ctx->sidebar = (Sidebar *)malloc(sizeof(Sidebar));
     ctx->body = (Body *)malloc(sizeof(Body));
-
-    ctx->fileManager = fileManager;
-    fileManager->ctx = ctx;
 
     if (ctx->titleBar)
         createTitleBar(ctx->titleBar, ctx);

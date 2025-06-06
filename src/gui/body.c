@@ -111,9 +111,9 @@ void drawBody(Context *ctx, Body *body) {
         }
 
         int i = 0;
-        Node *temp = ctx->fileManager->searchingList.head;
-        if (ctx->fileManager->isRootTrash) {
-            temp = ctx->fileManager->trash.head;
+        Node *temp = ctx->fileManager->trash.head;
+        if (ctx->fileManager->isSearching) {
+            temp = ctx->fileManager->searchingList.head;
         }
 
         while (temp != NULL) {
