@@ -46,11 +46,12 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .inputEditMode = false,
         .disabled = false};
     toolbar->currentZeroPosition = (Rectangle){0};
-    toolbar->isButtonCopyActive = false;
-    toolbar->isButtonCutActive = false;
-    toolbar->isButtonDeleteActive = false;
-    toolbar->isButtonPasteActive = false;
-    toolbar->isbuttonRenameActive = false;
+    toolbar->isButtonCopyClicked = false;
+    toolbar->isButtonCutClicked = false;
+    toolbar->isButtonDeleteClicked = false;
+    toolbar->isButtonPasteClicked = false;
+    toolbar->isbuttonRenameClicked = false;
+    toolbar->isButtonRestoreClicked = false;
 }
 
 void updateToolbar(Toolbar *toolbar, Context *ctx) {
@@ -80,23 +81,23 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         createFile(ctx->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name, true);
         toolbar->newButtonProperty.itemCreated = false;
     }
-    if (toolbar->isButtonCopyActive) {
+    if (toolbar->isButtonCopyClicked) {
         copyFile(ctx->fileManager);
-        toolbar->isButtonCopyActive = false;
+        toolbar->isButtonCopyClicked = false;
     }
-    if (toolbar->isButtonCutActive) {
+    if (toolbar->isButtonCutClicked) {
         cutFile(ctx->fileManager);
-        toolbar->isButtonCutActive = false;
+        toolbar->isButtonCutClicked = false;
     }
-    if (toolbar->isButtonDeleteActive) {
+    if (toolbar->isButtonDeleteClicked) {
         deleteFile(ctx->fileManager, true);
-        toolbar->isButtonDeleteActive = false;
+        toolbar->isButtonDeleteClicked = false;
     }
-    if (toolbar->isButtonPasteActive) {
+    if (toolbar->isButtonPasteClicked) {
         pasteFile(ctx->fileManager, true);
-        toolbar->isButtonPasteActive = false;
+        toolbar->isButtonPasteClicked = false;
     }
-    if (toolbar->isbuttonRenameActive) {
+    if (toolbar->isbuttonRenameClicked) {
         toolbar->renameButtonProperty.showModal = true;
         toolbar->renameButtonProperty.inputEditMode = true;
         Item *selectedItem = ctx->fileManager->selectedItem.head ? (Item *)ctx->fileManager->selectedItem.head->data : NULL;
@@ -126,7 +127,12 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         toolbar->renameButtonProperty.inputEditMode = false;
         toolbar->renameButtonProperty.inputBuffer[0] = '\0';
         toolbar->renameButtonProperty.itemCreated = false;
-        toolbar->isbuttonRenameActive = false;
+        toolbar->isbuttonRenameClicked = false;
+    }
+
+    if (toolbar->isButtonRestoreClicked) {
+        toolbar->isButtonRestoreClicked = false;
+        // recoverFile(ctx->fileManager);
     }
 }
 
@@ -140,22 +146,64 @@ void drawToolbar(Toolbar *toolbar) {
 
     // printf("[LOG] Selected Item Count: %d, boolean: %d\n", selectedItemCount, selectedItemCount <= 0);
 
-    x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
-    toolbar->isbuttonRenameActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", selectedItemCount <= 0 || selectedItemCount > 1, toolbar->ctx->disableGroundClick);
+    if (!toolbar->ctx->fileManager->isRootTrash) {
+        x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
+        toolbar->isbuttonRenameClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", (selectedItemCount <= 0 || selectedItemCount > 1), toolbar->ctx->disableGroundClick);
 
-    x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCutActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        x += 24 + DEFAULT_PADDING;
+        toolbar->isButtonCutClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
-    x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonCopyActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        x += 24 + DEFAULT_PADDING;
+        toolbar->isButtonCopyClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
-    x += 24 + DEFAULT_PADDING;
-    toolbar->isButtonPasteActive = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        x += 24 + DEFAULT_PADDING;
+        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
-    rightStartx -= 24;
-    toolbar->isButtonDeleteActive = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        rightStartx -= 24;
+        toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
-    GuiNewButton(&toolbar->newButtonProperty, toolbar->ctx);
+        GuiNewButton(&toolbar->newButtonProperty, toolbar->ctx);
+    } else {
+        toolbar->isButtonRestoreClicked = GuiButtonCustom((Rectangle){x, y, 100, 24}, "#77# Restore", "RESTORE SELECTED ITEM", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+
+        int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
+        int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
+        int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
+        int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
+        int prevFocusedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED);
+        int prevFocusedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED);
+        int prevPressedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
+        int prevPressedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED);
+        int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);
+
+        // Normal
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color){180, 0, 0, 255}));
+
+        // Focused
+        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color){200, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        // Pressed
+        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color){150, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
+        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        toolbar->isButtonPermanentDeleteClicked = GuiButtonCustom((Rectangle){rightStartx - 150, y, 150, 24}, "#143# Permanent Delete", NULL, selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+
+        // Restore
+        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, prevBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, prevTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, prevBorderColor);
+        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, prevFocusedBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, prevFocusedTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, prevFocusedBorderColor);
+        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, prevPressedBgColor);
+        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, prevPressedTextColor);
+        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, prevPressedBorderColor);
+    }
 
     GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
 }

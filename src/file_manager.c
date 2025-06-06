@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "ctx.h"
+#include "gui/navbar.h"
 #include "gui/sidebar.h"
 
 #include <time.h>
@@ -43,6 +44,12 @@ void createFileManager(FileManager *fileManager) {
     create_queue(&(fileManager->temp));
     create_list(&(fileManager->selectedItem));
     create_list(&(fileManager->searchingList));
+    fileManager->isRootTrash = false;
+    fileManager->isSearching = false;
+    fileManager->needsRefresh = false;
+    fileManager->currentPath = NULL;
+    fileManager->treeCursor = NULL;
+    fileManager->ctx = NULL;
 }
 
 /* IS:                          FS:
@@ -70,9 +77,9 @@ void initFileManager(FileManager *fileManager) {
 }
 
 /*
- * IS:
- * FS:
- * Author
+ * IS: Direktori `path` valid dan dapat diakses. contoh path: `.dir/root` (dimulai dari ./dir)
+ * FS: Tree diisi dengan struktur direktori dan file dari `path`.
+ * Author: Farras Fadhil Syafiq
 ================================================================================*/
 void loadTree(Tree tree, char *path) {
     DIR *dp;
@@ -207,7 +214,7 @@ void loadTrashFromFile(LinkedList *trash) {
 void saveTrashToFile(FileManager *fileManager) {
     FILE *trashFile = fopen(TRASH_DUMP, "w");
     if (trashFile == NULL) {
-        perror("Gagal membuka file trash untuk menulis");
+        perror("[ERROR] Gagal membuka file trash untuk menulis");
         return;
     }
 
@@ -227,9 +234,9 @@ void saveTrashToFile(FileManager *fileManager) {
 }
 
 /*
- * IS:
- * FS:
- * Author:
+ * IS: LinkedList trash berisi item yang telah dihapus.
+ * FS: Mencetak semua item yang ada di LinkedList trash ke konsol.
+ * Author: Farras Fadhil Syafiq
 ================================================================================*/
 void printTrash(LinkedList trash) {
     Node *current = trash.head;
@@ -551,9 +558,9 @@ Item searchFile(FileManager *fileManager, char *path) {
     return item;
 }
 
-void searchingItem(FileManager *fileManager, char *keyword) {
+void searchingTreeItem(FileManager *fileManager, char *keyword) {
     if (fileManager->searchingList.head != NULL) {
-        destroy_list(&(fileManager->searchingList)); // Perlu dipastikan fungsi ini ada
+        destroy_list(&(fileManager->searchingList));
         printf("[LOG] Hasil pencarian sebelumnya telah dihapus\n");
     }
 
@@ -562,7 +569,7 @@ void searchingItem(FileManager *fileManager, char *keyword) {
         return;
     }
 
-    searchingItemRecursive(&(fileManager->searchingList), fileManager->root, keyword);
+    searchingTreeItemRecursive(&(fileManager->searchingList), fileManager->treeCursor, keyword);
 
     if (fileManager->searchingList.head == NULL) {
         printf("[LOG] Tidak ada file yang cocok dengan keyword '%s'\n", keyword);
@@ -571,7 +578,7 @@ void searchingItem(FileManager *fileManager, char *keyword) {
     }
 }
 
-void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword) {
+void searchingTreeItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword) {
     if (tree == NULL)
         return;
 
@@ -582,8 +589,47 @@ void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keywo
         printf("===========================================================\n");
     }
 
-    searchingItemRecursive(linkedList, tree->first_son, keyword);
-    searchingItemRecursive(linkedList, tree->next_brother, keyword);
+    searchingTreeItemRecursive(linkedList, tree->first_son, keyword);
+    searchingTreeItemRecursive(linkedList, tree->next_brother, keyword);
+}
+
+void searchingLinkedListItem(FileManager *fileManager, Node *node, char *keyword) {
+    if (node == NULL) {
+        return;
+    }
+
+    if (fileManager->searchingList.head != NULL) {
+        destroy_list(&(fileManager->searchingList));
+        printf("[LOG] Hasil pencarian sebelumnya telah dihapus\n");
+    }
+
+    if (keyword == NULL || strlen(keyword) == 0) {
+        printf("[LOG] Keyword pencarian tidak boleh kosong\n");
+        return;
+    }
+
+    searchingLinkedListRecursive(fileManager, node, keyword);
+
+    if (fileManager->searchingList.head == NULL) {
+        printf("[LOG] Tidak ada item yang cocok dengan keyword '%s'\n", keyword);
+    } else {
+        printf("[LOG] Pencarian selesai. Gunakan printSearchingList() untuk melihat hasil.\n");
+    }
+}
+
+void searchingLinkedListRecursive(FileManager *fileManager, Node *node, char *keyword) {
+    if (node == NULL)
+        return;
+
+    Tree current = (Tree)node->data; // diasumsikan node->data menyimpan pointer ke Tree
+    if (strstr(current->item.name, keyword) != NULL) {
+        printf("===========================================================\n");
+        printf("[LOG] Menemukan item: %s, Path: %s\n", current->item.name, current->item.path);
+        insert_last(&(fileManager->searchingList), current);
+        printf("===========================================================\n");
+    }
+
+    searchingLinkedListRecursive(fileManager, node->next, keyword);
 }
 
 void printSearchingList(FileManager *fileManager) {
@@ -1005,7 +1051,6 @@ void selectAll(FileManager *fileManager) {
     }
     printf("[LOG] Semua file di direktori saat ini telah dipilih\n");
 }
-// === UNDO/REDO
 
 /*  Prosedur
  *  IS:
@@ -1562,6 +1607,14 @@ void goTo(FileManager *fileManager, Tree tree) {
     }
 
     refreshFileManager(fileManager);
+    fileManager->isSearching = false;
+    strcpy(fileManager->ctx->navbar->textboxSearch, "");
+
+    if (fileManager->isRootTrash) {
+        strcpy(fileManager->ctx->navbar->textboxPath, "root");
+        fileManager->currentPath = "root";
+        clearSelectedFile(fileManager);
+    }
 
     printf("[LOG] %s\n", newPath);
 }

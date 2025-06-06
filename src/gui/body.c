@@ -87,14 +87,35 @@ void drawBody(Context *ctx, Body *body) {
     float startY = body->panelRec.y + headerHeight + body->panelScroll.y;
     float startX = body->panelRec.x + body->panelScroll.x;
 
-    if (ctx->fileManager->isSearching && ctx->fileManager->searchingList.head != NULL) {
-        if (ctx->fileManager->searchingList.head == NULL) {
-            printf("[LOG] Tidak ada hasil pencarian\n");
-            return;
+    if (ctx->fileManager->isSearching || ctx->fileManager->isRootTrash) {
+        // Jika tidak ada hasil pencarian
+        if (ctx->fileManager->isSearching && ctx->fileManager->searchingList.head == NULL) {
+            Rectangle noResultRec = {
+                startX,
+                startY,
+                body->panelContentRec.width,
+                body->panelContentRec.height - headerHeight};
+            DrawRectangleRec(noResultRec, Fade(LIGHTGRAY, 0.5f));
+            DrawText("Tidak ada hasil pencarian", startX + 10, startY + 10, 20, DARKGRAY);
+        }
+
+        // Jika ada trash kosong
+        if (ctx->fileManager->trash.head == NULL && ctx->fileManager->isRootTrash) {
+            Rectangle noTrashRec = {
+                startX,
+                startY,
+                body->panelContentRec.width,
+                body->panelContentRec.height - headerHeight};
+            DrawRectangleRec(noTrashRec, Fade(LIGHTGRAY, 0.5f));
+            DrawText("Trash kosong", startX + 10, startY + 10, 20, DARKGRAY);
         }
 
         int i = 0;
-        Node *temp = ctx->fileManager->searchingList.head;
+        Node *temp = ctx->fileManager->trash.head;
+        if (ctx->fileManager->isSearching) {
+            temp = ctx->fileManager->searchingList.head;
+        }
+
         while (temp != NULL) {
             Tree treePtr = (Tree)temp->data;
             drawTableItem(ctx, body, treePtr, i, startX, body->panelRec.y + headerHeight + body->panelScroll.y, rowHeight, colWidths);
@@ -133,11 +154,11 @@ void drawTableItem(Context *ctx, Body *body, Tree subTree, int index, float star
         body->focusedIndex = index;
 
         // Handle double tap untuk navigation/open
-        if (GetGestureDetected() == GESTURE_DOUBLETAP) {
+        if (GetGestureDetected() == GESTURE_DOUBLETAP && ctx->fileManager->isRootTrash == false) {
             if (item.type == ITEM_FOLDER) {
                 ctx->fileManager->isSearching = false;
                 // ctx->navbar
-                    goTo(ctx->fileManager, subTree);
+                goTo(ctx->fileManager, subTree);
             } else if (item.type == ITEM_FILE) {
                 windowsOpenWith(item.path);
             }

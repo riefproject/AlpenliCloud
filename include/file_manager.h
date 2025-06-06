@@ -16,24 +16,25 @@ typedef struct Context Context;
  * Author:
 ================================================================================*/
 typedef struct FileManager {
+    // (tree dengan root adalah direktori saat ini)
     Tree root;        // root directory
     LinkedList trash; // root trash (deleted files)
-    Stack undo;       // stack for undo operations
-    Stack redo;       // stack for redo operations
+    bool isRootTrash; // status apakah trash adalah root trash
 
     LinkedList searchingList; // linkedlist untuk menyimpan hasil pencarian
-    bool isSearching; // status apakah sedang dalam mode pencarian
+    bool isSearching;         // status apakah sedang dalam mode pencarian
 
-    Tree treeCursor; // current tree cursor
-    // (tree dengan root adalah direktori saat ini)
+    char *currentPath; // current path string
+    Tree treeCursor;   // current tree cursor
 
-    char *currentPath;       // current path string
+    Stack undo;              // stack for undo operations
+    Stack redo;              // stack for redo operations
     Queue copied;            // queue for copied items
     Queue cut;               // queue for cut items
     Queue temp;              // temporary queue for operations
     LinkedList selectedItem; // linkedlist for selected item
-    bool needsRefresh;
 
+    bool needsRefresh;
     Context *ctx; // context untuk akses sidebar dan komponen lainnya
 } FileManager;
 
@@ -99,24 +100,47 @@ void refreshFileManager(FileManager *fileManager);
 ====================================================================
 */
 
-// Function search file 
-// Mencari file berdasarkan path dengan membuat item dummy dan menggunakan searchTree 
-// IS: Path file diketahui dan valid 
-// FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan 
-// Created by: Maulana 
-Item searchFile(FileManager *fileManager, char *path); 
+// Function search file
+// Mencari file berdasarkan path dengan membuat item dummy dan menggunakan searchTree
+// IS: Path file diketahui dan valid
+// FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan
+// Created by: Maulana
+Item searchFile(FileManager *fileManager, char *path);
 
 // Prosedur search all file/folder
 // Mencari semua file/folder yang sesuai dengan keyword di direktori saat ini
 // IS: Keyword untuk pencarian diketahui
 // FS: LinkedList searchingList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
 // Created by: Farras
-void searchingItem(FileManager *fileManager, char *keyword);
+void searchingTreeItem(FileManager *fileManager, char *keyword);
 
+// Prosedur search item di tree secara rekursif
+// Mencari semua item yang sesuai dengan keyword di tree secara rekursif
+// IS: LinkedList untuk menyimpan hasil pencarian, tree yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingTreeItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
+
+// Prosedur search item di linked list
+// Mencari item di LinkedList berdasarkan keyword dengan membandingkan nama item
+// IS: LinkedList yang berisi item, item yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingLinkedListItem(FileManager *FileManager, Node *node, char *keyword);
+
+// Prosedur search item di linked list secara rekursif
+// Mencari item di LinkedList secara rekursif berdasarkan keyword
+// IS: LinkedList yang berisi item, node yang akan dicari, dan keyword yang digunakan
+// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
+// Created by: Farras
+void searchingLinkedListRecursive(FileManager *FileManager, Node *node, char *keyword);
+
+// Prosedur print searching list
+// Mencetak semua item yang ada di LinkedList searchingList ke konsol
+// IS: LinkedList searchingList berisi item yang telah ditemukan
+// FS: Mencetak setiap item dengan nama, path, ukuran, tipe, dan waktu ke konsol
+// Created by: Farras
 void printSearchingList(FileManager *fileManager);
-
-void searchingItemRecursive(LinkedList *linkedList, Tree tree, const char *keyword);
-
 
 // Prosedur create file/folder
 // Membuat file atau folder baru di direktori dengan pengecekan duplikasi dan operasi undo
