@@ -40,8 +40,7 @@ void createFileManager(FileManager* fileManager) {
     create_stack(&(fileManager->undo));
     create_stack(&(fileManager->redo));
     create_queue(&(fileManager->copied));
-    create_queue(&(fileManager->cut));
-    create_queue(&(fileManager->temp));
+    create_queue(&(fileManager->clipboard));
     create_list(&(fileManager->selectedItem));
     create_list(&(fileManager->searchingList));
     fileManager->isRootTrash = false;
@@ -285,6 +284,16 @@ void destroyTree(Tree* tree) {
  * Author:
 ================================================================================*/
 void refreshFileManager(FileManager* fileManager) {
+    if (!fileManager || !fileManager->treeCursor) {
+        printf("[LOG] Invalid fileManager or treeCursor in refresh\n");
+        return;
+    }
+
+    // Add null checks for treeCursor->item.path
+    if (!fileManager->treeCursor->item.path) {
+        printf("[LOG] Invalid path in treeCursor\n");
+        return;
+    }
     if (fileManager != NULL && fileManager->treeCursor != NULL) {
         // printf("\n\n");
         // printf("==========================================================\n");
@@ -307,16 +316,18 @@ void refreshFileManager(FileManager* fileManager) {
 
         printf("[LOG] Directory refreshed successfully\n");
 
-        printf("[LOG] Resfreshing sidebar...\n");
+        if (fileManager->ctx && fileManager->ctx->sidebar) {
+            printf("[LOG] Refreshing sidebar...\n");
 
-        SidebarState* stateList = NULL;
-        collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
-        destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
-        fileManager->ctx->sidebar->sidebarRoot = NULL;
-        fileManager->ctx->sidebar->sidebarRoot = createSidebarItemWithState(fileManager->root, stateList);
-        destroySidebarState(stateList);
+            SidebarState* stateList = NULL;
+            collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
+            destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
+            fileManager->ctx->sidebar->sidebarRoot = NULL;
+            fileManager->ctx->sidebar->sidebarRoot = createSidebarItemWithState(fileManager->root, stateList);
+            destroySidebarState(stateList);
 
-        printf("[LOG] Sidebar refreshed successfully\n");
+            printf("[LOG] Sidebar refreshed successfully\n");
+        }
     }
 }
 
@@ -665,36 +676,51 @@ void printSearchingList(FileManager* fileManager) {
  *  FS:
 ================================================================================*/
 void copyToClipboard(FileManager* fm) {
-    if (is_queue_empty(fm->copied)) {
-        clear_queue(&fm->copied);
+    // Clear clipboard yang lama
+    if (!is_queue_empty(fm->clipboard)) {
+        clear_queue(&fm->clipboard);
+        printf("[LOG] Clipboard lama telah dibersihkan\n");
     }
 
+    // Clear copied queue untuk memastikan konsistensi
+    if (!is_queue_empty(fm->copied)) {
+        clear_queue(&fm->copied);
+        printf("[LOG] Copied queue telah dibersihkan\n");
+    }
+
+    // Copy item yang selected ke clipboard
     Node* temp = fm->selectedItem.head;
+    int copiedCount = 0;
+
     while (temp != NULL) {
         Item* itemToCopy = (Item*)temp->data;
-        enqueue(&(fm->copied), itemToCopy);
+
+        // Enqueue ke clipboard (bukan ke copied)
+        enqueue(&(fm->clipboard), itemToCopy);
+        copiedCount++;
+
+        printf("[LOG] Item %s ditambahkan ke clipboard\n", itemToCopy->name);
         temp = temp->next;
     }
-    if (is_queue_empty(fm->copied)) {
-        printf("[LOG] Gagal Menyalin File!\n");
+
+    if (copiedCount == 0) {
+        printf("[LOG] Gagal Menyalin File - tidak ada item yang dipilih!\n");
         return;
     }
-    clear_queue(&fm->temp);
-    fm->temp = fm->copied;
-    printf("[LOG] File berhasil disalin ke clipboard\n");
+
+    printf("[LOG] %d file berhasil disalin ke clipboard\n", copiedCount);
 }
+
 void copyFile(FileManager* fm) {
     copyToClipboard(fm);
     isCopy = true;
+    printf("[LOG] Mode: COPY\n");
 }
 
-/*  Prosedur
- *  IS:
- *  FS:
-================================================================================*/
 void cutFile(FileManager* fm) {
     copyToClipboard(fm);
     isCopy = false;
+    printf("[LOG] Mode: CUT\n");
 }
 
 /*  Prosedur
@@ -704,7 +730,7 @@ void cutFile(FileManager* fm) {
 // Function untuk menghitung total items dalam clipboard
 int _calculateTotalPasteItems(FileManager* fileManager) {
     int totalItems = 0;
-    Node* countNode = fileManager->temp.front;
+    Node* countNode = fileManager->clipboard.front;
     while (countNode != NULL) {
         totalItems++;
         countNode = countNode->next;
@@ -840,7 +866,7 @@ void _createPasteItemRecord(Item* itemToPaste, char* originPath) {
 
 // Function utama yang sudah direfactor
 void pasteFile(FileManager* fileManager) {
-    if (is_queue_empty(fileManager->temp)) {
+    if (is_queue_empty(fileManager->clipboard)) {
         printf("[LOG] Clipboard kosong\n");
         return;
     }
@@ -857,9 +883,20 @@ void pasteFile(FileManager* fileManager) {
     printf("[LOG] Total items to paste: %d, Show progress: %s\n",
         totalItems, showProgress ? "true" : "false");
 
-    Node* temp = fileManager->temp.front;
-    while (temp != NULL && !cancelled) {
-        Item* itemToPaste = (Item*)temp->data;
+    // PERBAIKAN: Buat temporary queue untuk iterasi
+    Queue tempQueue;
+    create_queue(&tempQueue);
+
+    // Copy semua items ke temporary queue
+    Node* temp = fileManager->clipboard.front;
+    while (temp != NULL) {
+        enqueue(&tempQueue, temp->data);
+        temp = temp->next;
+    }
+
+    // Iterasi menggunakan temporary queue
+    while (!is_queue_empty(tempQueue) && !cancelled) {
+        Item* itemToPaste = (Item*)dequeue(&tempQueue);
 
         // Update progress bar dan cek cancel
         if (showProgress) {
@@ -874,7 +911,6 @@ void pasteFile(FileManager* fileManager) {
         char* originPath;
         // Proses validasi dan setup untuk item ini
         if (!_processSinglePasteItem(fileManager, itemToPaste, &originPath)) {
-            temp = temp->next;
             currentProgress++;
             continue;
         }
@@ -900,16 +936,19 @@ void pasteFile(FileManager* fileManager) {
             _createPasteItemRecord(itemToPaste, originPath);
         }
 
-        temp = temp->next;
         currentProgress++;
     }
+
+    // Cleanup temporary queue
+    clear_queue(&tempQueue);
 
     // Reset progress state setelah selesai
     resetProgressBarState();
 
     // Clear clipboard setelah cut operation (hanya jika tidak di-cancel)
     if (!isCopy && !cancelled) {
-        fileManager->temp.front = NULL;
+        clear_queue(&fileManager->clipboard);
+        printf("[LOG] Clipboard cleared after cut operation\n");
     }
 
     if (cancelled) {
@@ -917,10 +956,6 @@ void pasteFile(FileManager* fileManager) {
     }
     else {
         printf("[LOG] Paste berhasil!\n");
-    }
-
-    if (!isCopy) {
-        clear_queue(&fileManager->temp);
     }
 
     refreshFileManager(fileManager);
@@ -1635,34 +1670,45 @@ Tree getCurrentRoot(FileManager fileManager) {
 }
 
 char* getCurrentPath(Tree tree) {
-    char* path = strdup("");
-    if (!path)
-        return NULL;
+    if (!tree) return NULL;
 
-    while (tree != NULL) {
-        char* name = tree->item.name;
-        size_t newLen = strlen(name) + strlen(path) + 2;
-
-        char* newPath = malloc(newLen);
-        if (!newPath) {
-            free(path);
-            return NULL;
-        }
-
-        if (tree->parent == NULL) {
-            snprintf(newPath, newLen, "%s%s", name, path);
-        }
-        else {
-            snprintf(newPath, newLen, "/%s%s", name, path);
-        }
-        free(path);
-        path = newPath;
-        tree = tree->parent;
+    // Calculate total length needed
+    size_t totalLen = 0;
+    Tree temp = tree;
+    while (temp != NULL) {
+        totalLen += strlen(temp->item.name) + 1; // +1 for '/' or null terminator
+        temp = temp->parent;
     }
 
+    char* path = malloc(totalLen + 1);
+    if (!path) return NULL;
+
+    path[0] = '\0';
+
+    // Build path components in reverse
+    char** components = malloc(sizeof(char*) * 100); // Assume max depth 100
+    int count = 0;
+
+    temp = tree;
+    while (temp != NULL && count < 100) {
+        components[count++] = temp->item.name;
+        temp = temp->parent;
+    }
+
+    // Build final path
+    for (int i = count - 1; i >= 0; i--) {
+        if (i == count - 1) {
+            strcpy(path, components[i]);
+        }
+        else {
+            strcat(path, "/");
+            strcat(path, components[i]);
+        }
+    }
+
+    free(components);
     return path;
 }
-
 /*  Prosedur
  *  IS:
  *  FS:
@@ -1673,6 +1719,11 @@ void goTo(FileManager* fileManager, Tree tree) {
 
     fileManager->treeCursor = tree;
 
+    // Free old path before setting new one
+    if (fileManager->currentPath && strcmp(fileManager->currentPath, "root") != 0) {
+        free(fileManager->currentPath);
+    }
+
     char* newPath = getCurrentPath(tree);
     if (newPath) {
         fileManager->currentPath = newPath;
@@ -1682,16 +1733,25 @@ void goTo(FileManager* fileManager, Tree tree) {
 
     refreshFileManager(fileManager);
     fileManager->isSearching = false;
-    strcpy(fileManager->ctx->navbar->textboxSearch, "");
 
-    if (fileManager->isRootTrash) {
-        strcpy(fileManager->ctx->navbar->textboxPath, "root");
-        fileManager->currentPath = "root";
+    // Safe string operations with bounds checking
+    if (fileManager->ctx && fileManager->ctx->navbar) {
+        memset(fileManager->ctx->navbar->textboxSearch, 0, MAX_STRING_LENGTH);
+
+        if (fileManager->isRootTrash) {
+            strncpy(fileManager->ctx->navbar->textboxPath, "root", MAX_STRING_LENGTH - 1);
+            fileManager->ctx->navbar->textboxPath[MAX_STRING_LENGTH - 1] = '\0';
+
+            // Free newPath since we're overriding with "root"
+            if (newPath) {
+                free(newPath);
+            }
+            fileManager->currentPath = strdup("root");
+        }
     }
 
-    printf("[LOG] Navigated to: %s\n", newPath ? newPath : "unknown");
+    printf("[LOG] Navigated to: %s\n", fileManager->currentPath ? fileManager->currentPath : "unknown");
 }
-
 /*  Prosedur
  *  IS:
  *  FS:

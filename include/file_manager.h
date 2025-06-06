@@ -30,8 +30,7 @@ typedef struct FileManager {
     Stack undo;              // stack for undo operations
     Stack redo;              // stack for redo operations
     Queue copied;            // queue for copied items
-    Queue cut;               // queue for cut items
-    Queue temp;              // temporary queue for operations
+    Queue clipboard;         // temporary queue for operations
     LinkedList selectedItem; // linkedlist for selected item
 
     bool needsRefresh;

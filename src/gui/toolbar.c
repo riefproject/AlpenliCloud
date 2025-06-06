@@ -158,7 +158,7 @@ void drawToolbar(Toolbar* toolbar) {
         toolbar->isButtonCopyClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", !(toolbar->ctx->fileManager->temp.front), toolbar->ctx->disableGroundClick);
+        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", !(toolbar->ctx->fileManager->clipboard.front), toolbar->ctx->disableGroundClick);
 
         rightStartx -= 24;
         toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle) { rightStartx, y, 24, 24 }, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
