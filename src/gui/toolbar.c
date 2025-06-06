@@ -9,7 +9,7 @@
 #include "macro.h"
 #include "raygui.h"
 
-void createToolbar(Toolbar *toolbar, Context *ctx) {
+void createToolbar(Toolbar* toolbar, Context* ctx) {
     toolbar->ctx = ctx;
     toolbar->newButtonProperty = (ButtonWithModalProperty){
         .btnRect = {50, 50, 100, 24},
@@ -27,7 +27,7 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .showModal = false,
         .itemCreated = false,
         .inputEditMode = false,
-        .disabled = false};
+        .disabled = false };
     toolbar->renameButtonProperty = (ButtonWithModalProperty){
         .btnRect = {0},
         .dropdownRect = {0},
@@ -44,8 +44,8 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
         .showModal = false,
         .itemCreated = false,
         .inputEditMode = false,
-        .disabled = false};
-    toolbar->currentZeroPosition = (Rectangle){0};
+        .disabled = false };
+    toolbar->currentZeroPosition = (Rectangle){ 0 };
     toolbar->isButtonCopyClicked = false;
     toolbar->isButtonCutClicked = false;
     toolbar->isButtonDeleteClicked = false;
@@ -54,7 +54,7 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->isButtonRestoreClicked = false;
 }
 
-void updateToolbar(Toolbar *toolbar, Context *ctx) {
+void updateToolbar(Toolbar* toolbar, Context* ctx) {
     toolbar->ctx = ctx;
     ctx->toolbar = toolbar;
 
@@ -76,8 +76,8 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->newButtonProperty.modalRect.y = (screenHeight - modalHeight) / 2;
 
     if (toolbar->newButtonProperty.itemCreated) {
-        char *name = toolbar->newButtonProperty.inputBuffer;
-        char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+        char* name = toolbar->newButtonProperty.inputBuffer;
+        char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
         createFile(ctx->fileManager, toolbar->newButtonProperty.selectedType, dirPath, name, true);
         toolbar->newButtonProperty.itemCreated = false;
     }
@@ -100,25 +100,26 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
     if (toolbar->isbuttonRenameClicked) {
         toolbar->renameButtonProperty.showModal = true;
         toolbar->renameButtonProperty.inputEditMode = true;
-        Item *selectedItem = ctx->fileManager->selectedItem.head ? (Item *)ctx->fileManager->selectedItem.head->data : NULL;
+        Item* selectedItem = ctx->fileManager->selectedItem.head ? (Item*)ctx->fileManager->selectedItem.head->data : NULL;
         if (selectedItem) {
             strncpy(toolbar->renameButtonProperty.inputBuffer, selectedItem->name, MAX_STRING_LENGTH - 1);
             toolbar->renameButtonProperty.inputBuffer[MAX_STRING_LENGTH - 1] = '\0';
             toolbar->renameButtonProperty.selectedType = selectedItem->type;
-        } else {
+        }
+        else {
             toolbar->renameButtonProperty.inputBuffer[0] = '\0';
         }
     }
 
     if (toolbar->renameButtonProperty.itemCreated) {
-        char *newName = toolbar->renameButtonProperty.inputBuffer;
-        char *name = toolbar->ctx->fileManager->selectedItem.head ? ((Item *)toolbar->ctx->fileManager->selectedItem.head->data)->name : NULL;
+        char* newName = toolbar->renameButtonProperty.inputBuffer;
+        char* name = toolbar->ctx->fileManager->selectedItem.head ? ((Item*)toolbar->ctx->fileManager->selectedItem.head->data)->name : NULL;
         if (name == NULL || strlen(name) == 0) {
             printf("[ERROR] No item selected for renaming.\n");
             return;
         }
 
-        char *filePath = TextFormat(".dir/%s/%s", ctx->fileManager->currentPath, name);
+        char* filePath = TextFormat(".dir/%s/%s", ctx->fileManager->currentPath, name);
 
         printf("filePath: %s\n", filePath);
 
@@ -136,7 +137,7 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
     }
 }
 
-void drawToolbar(Toolbar *toolbar) {
+void drawToolbar(Toolbar* toolbar) {
     float x = toolbar->currentZeroPosition.x;
     float y = toolbar->currentZeroPosition.y;
     float width = toolbar->currentZeroPosition.width;
@@ -148,23 +149,24 @@ void drawToolbar(Toolbar *toolbar) {
 
     if (!toolbar->ctx->fileManager->isRootTrash) {
         x += toolbar->newButtonProperty.btnRect.width + DEFAULT_PADDING;
-        toolbar->isbuttonRenameClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#22#", "RENAME", (selectedItemCount <= 0 || selectedItemCount > 1), toolbar->ctx->disableGroundClick);
+        toolbar->isbuttonRenameClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#22#", "RENAME", (selectedItemCount <= 0 || selectedItemCount > 1), toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonCutClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#17#", "CUT", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonCutClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#17#", "CUT", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonCopyClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonCopyClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", !(toolbar->ctx->fileManager->temp.front), toolbar->ctx->disableGroundClick);
 
         rightStartx -= 24;
-        toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle) { rightStartx, y, 24, 24 }, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         GuiNewButton(&toolbar->newButtonProperty, toolbar->ctx);
-    } else {
-        toolbar->isButtonRestoreClicked = GuiButtonCustom((Rectangle){x, y, 100, 24}, "#77# Restore", "RESTORE SELECTED ITEM", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+    }
+    else {
+        toolbar->isButtonRestoreClicked = GuiButtonCustom((Rectangle) { x, y, 100, 24 }, "#77# Restore", "RESTORE SELECTED ITEM", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
         int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
@@ -177,21 +179,21 @@ void drawToolbar(Toolbar *toolbar) {
         int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);
 
         // Normal
-        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color) { 230, 0, 0, 255 }));
         GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color){180, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color) { 180, 0, 0, 255 }));
 
         // Focused
-        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color){200, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color) { 200, 0, 0, 255 }));
         GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color){120, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color) { 120, 0, 0, 255 }));
 
         // Pressed
-        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color){150, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color) { 150, 0, 0, 255 }));
         GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
-        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color){120, 0, 0, 255}));
+        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color) { 120, 0, 0, 255 }));
 
-        toolbar->isButtonPermanentDeleteClicked = GuiButtonCustom((Rectangle){rightStartx - 150, y, 150, 24}, "#143# Permanent Delete", NULL, selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonPermanentDeleteClicked = GuiButtonCustom((Rectangle) { rightStartx - 150, y, 150, 24 }, "#143# Permanent Delete", NULL, selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         // Restore
         GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, prevBgColor);
@@ -205,5 +207,5 @@ void drawToolbar(Toolbar *toolbar) {
         GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, prevPressedBorderColor);
     }
 
-    GuiLine((Rectangle){toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10}, NULL);
+    GuiLine((Rectangle) { toolbar->currentZeroPosition.x, toolbar->currentZeroPosition.y + 24, toolbar->currentZeroPosition.width, 10 }, NULL);
 }
