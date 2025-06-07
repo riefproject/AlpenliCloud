@@ -1049,18 +1049,30 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
     // PERBAIKAN: Buat temporary queue untuk iterasi
     Queue tempQueue;
     create_queue(&tempQueue);
-
+    printf("[LOG] Temporary queue created for paste operation\n");
     // Copy semua items ke temporary queue
     Node* temp = fileManager->clipboard.front;
+
     while (temp != NULL) {
-        enqueue(&tempQueue, temp->data);
+        Item* tempItem = alloc(Item);
+        Item* container = (Item*)temp->data;
+        tempItem->name = strdup(container->name);
+        tempItem->path = strdup(container->path);
+        tempItem->type = container->type;
+        tempItem->selected = container->type;
+        tempItem->created_at = container->created_at;
+        tempItem->size = container->size;
+        tempItem->updated_at = container->updated_at;
+        tempItem->deleted_at = 0;
+        printf("[LOG] Enqueueing item: %s to temporary queue\n", tempItem->name);
+        enqueue(&tempQueue,tempItem);
         temp = temp->next;
     }
 
     // Iterasi menggunakan temporary queue
     while (!is_queue_empty(tempQueue) && !cancelled) {
         Item* itemToPaste = (Item*)dequeue(&tempQueue);
-
+        printf("[LOG] Processing item: %s\n", itemToPaste->name);
         // Update progress bar dan cek cancel
         if (showProgress) {
             showPasteProgressBar(currentProgress, totalItems, itemToPaste->name);

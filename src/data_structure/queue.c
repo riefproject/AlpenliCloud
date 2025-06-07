@@ -66,6 +66,6 @@ void clear_queue(Queue* q) {
   while (!is_queue_empty(*q)) {
     temp = dequeue(q);
     printf("[LOG] Dequeued item\n");
-    free(temp);
+    // free(temp);
   }
 }
