@@ -30,6 +30,9 @@ bool isCopy = 0;
 char* _generateUID();
 void _removeFromTrashByUID(FileManager* fileManager, char* uid);
 void _addBackToTreeFromTrash(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
+void _addTreeStructureRecursive(Tree parentNode, char* folderPath);
+void _debugPrintTreeStructure(Tree node, int depth);
+
 /* IS:                        FS:
   Tree root          = ?;     ==> NULL;
   Tree rootTrash     = ?;     ==> NULL;
@@ -362,7 +365,6 @@ void destroyTree(Tree* tree) {
  * Author:
 ================================================================================*/
 void refreshFileManager(FileManager* fileManager) {
-    return;
     // Refresh sidebar dengan cara yang aman
     if (fileManager->ctx && fileManager->ctx->sidebar) {
         _refreshSidebarSafely(fileManager);
@@ -961,7 +963,7 @@ bool _pasteFolderItem(FileManager* fileManager, Item* itemToPaste, char* originP
     }
 
     // Tambahkan ke tree struktur
-    _addItemToCurrentTree(fileManager, itemToPaste, newPath, ITEM_FOLDER);
+    // _addItemToCurrentTree(fileManager, itemToPaste, newPath, ITEM_FOLDER);
     return true;
 }
 
@@ -984,7 +986,7 @@ bool _pasteFileItem(FileManager* fileManager, Item* itemToPaste, char* originPat
     }
 
     // Tambahkan item baru ke tree di lokasi tujuan
-    _addItemToCurrentTree(fileManager, itemToPaste, newPath, itemToPaste->type);
+    // _addItemToCurrentTree(fileManager, itemToPaste, newPath, itemToPaste->type);
     return true;
 }
 
@@ -1031,6 +1033,7 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
         return;
     }
     Operation* pasteOperation;
+    PasteItem* pasteItem;
     if (isOperation) {
         pasteOperation = alloc(Operation);
         *pasteOperation = createOperation(NULL, NULL, ACTION_PASTE, false, NULL);
@@ -1090,6 +1093,14 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
                 break;
             }
         }
+        if (isOperation) {
+            // Tambahkan item ke operasi paste
+            pasteItem = alloc(PasteItem);
+            *pasteItem = createPasteItem(*itemToPaste, NULL);
+
+            printf("[LOG] Adding PasteItem for %s with original path %s\n", pasteItem->item.path, pasteItem->originalPath);
+            enqueue(&(*pasteOperation->itemTemp), pasteItem);
+        }
 
         char* originPath;
         // Proses validasi dan setup untuk item ini
@@ -1098,10 +1109,8 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
             continue;
         }
         if (isOperation) {
-            // Tambahkan item ke operasi paste
-            PasteItem* pasteItem = alloc(PasteItem);
-            *pasteItem = createPasteItem(*itemToPaste, NULL);
             pasteItem->originalPath = strdup(originPath);
+            printf("[LOG] Adding PasteItem for %s with original path %s\n", pasteItem->item.path, pasteItem->originalPath);
             enqueue(&(*pasteOperation->itemTemp), pasteItem);
         }
         // Path untuk file/folder baru di lokasi tujuan  
@@ -1121,17 +1130,19 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
             success = _pasteFileItem(fileManager, itemToPaste, originPath, newPath);
         }
 
+        // Di dalam pasteFile function, setelah success = true
         if (success) {
             _handleCutCleanup(fileManager, itemToPaste);
 
+            // PERBAIKAN: Pastikan destinationFullPath benar
             Tree parentDestinationTree = searchTree(fileManager->root,
                 createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
 
             if (parentDestinationTree != NULL) {
                 // Tambahkan item utama
                 Item newItem = createItem(
-                    _getNameFromPath(newPath),
-                    newPath,
+                    strdup(_getNameFromPath(newPath)),  // PERBAIKAN: strdup untuk safety
+                    strdup(newPath),                    // PERBAIKAN: strdup untuk safety
                     itemToPaste->size,
                     itemToPaste->type,
                     itemToPaste->created_at,
@@ -1139,17 +1150,23 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
                     0);
 
                 Tree newNode = insert_node(parentDestinationTree, newItem);
+                printf("[LOG] Main item added: %s at %s\n", newItem.name, newItem.path);
 
                 // Jika item yang di-paste adalah folder, tambahkan seluruh struktur dalamnya
                 if (itemToPaste->type == ITEM_FOLDER && newNode != NULL) {
+                    printf("[LOG] Starting recursive tree structure for folder: %s\n", newItem.name);
                     _addTreeStructureRecursive(newNode, newPath);
-                    printf("[LOG] Recursive tree structure added for folder: %s\n", newItem.name);
+                    printf("[LOG] Completed recursive tree structure for folder: %s\n", newItem.name);
                 }
 
                 printf("[LOG] Item %s berhasil ditambahkan ke tree\n", newItem.name);
             }
+            else {
+                printf("[LOG] ERROR: Parent destination tree tidak ditemukan: %s\n", destinationFullPath);
+                printf("[LOG] Searching for: name=%s, path=%s\n",
+                    _getNameFromPath(destinationFullPath), destinationFullPath);
+            }
         }
-
         currentProgress++;
     }
 
@@ -1451,6 +1468,7 @@ void undo(FileManager* fileManager) {
     refreshFileManager(fileManager);
     // printTree(fileManager->root, 0);
     // printf("[LOG] Redo Pushed : %s\n", operationToUndo->from);
+
 }
 
 /*  Prosedur
@@ -2478,20 +2496,29 @@ void _addTreeStructureRecursive(Tree parentNode, char* folderPath) {
         return;
     }
 
+    printf("[LOG] Memproses direktori: %s\n", folderPath);
+
     while ((ep = readdir(dp)) != NULL) {
         if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0) {
             continue;
         }
 
-        char* fullPath = TextFormat("%s/%s", folderPath, ep->d_name);
+        // PERBAIKAN: Gunakan manual string construction yang aman
+        size_t pathLen = strlen(folderPath) + strlen(ep->d_name) + 2;
+        char* fullPath = malloc(pathLen);
+        if (!fullPath) {
+            printf("[LOG] Gagal alokasi memory untuk fullPath\n");
+            continue;
+        }
+        snprintf(fullPath, pathLen, "%s/%s", folderPath, ep->d_name);
 
         if (stat(fullPath, &statbuf) == 0) {
             ItemType type = S_ISDIR(statbuf.st_mode) ? ITEM_FOLDER : ITEM_FILE;
 
             // Buat item baru
             Item newItem = createItem(
-                ep->d_name,
-                fullPath,
+                strdup(ep->d_name),        // PERBAIKAN: strdup untuk memory safety
+                strdup(fullPath),          // PERBAIKAN: strdup untuk memory safety
                 statbuf.st_size,
                 type,
                 statbuf.st_ctime,
@@ -2502,15 +2529,39 @@ void _addTreeStructureRecursive(Tree parentNode, char* folderPath) {
             // Tambahkan ke parent node
             Tree newNode = insert_node(parentNode, newItem);
 
-            // Jika folder, rekursif tambahkan isinya
-            if (type == ITEM_FOLDER && newNode != NULL) {
-                _addTreeStructureRecursive(newNode, fullPath);
-            }
+            printf("[LOG] Added to tree: %s (type: %s, path: %s)\n",
+                ep->d_name, type == ITEM_FOLDER ? "FOLDER" : "FILE", fullPath);
 
-            printf("[LOG] Added to tree: %s (type: %s)\n",
-                ep->d_name, type == ITEM_FOLDER ? "FOLDER" : "FILE");
+            // PERBAIKAN: Jika folder, rekursif tambahkan isinya
+            if (type == ITEM_FOLDER && newNode != NULL) {
+                printf("[LOG] Recursively processing folder: %s\n", fullPath);
+                _addTreeStructureRecursive(newNode, fullPath);
+                printf("[LOG] Finished processing folder: %s\n", fullPath);
+            }
         }
+        else {
+            printf("[LOG] Gagal stat file: %s\n", fullPath);
+        }
+
+        free(fullPath);
     }
 
     closedir(dp);
+    printf("[LOG] Selesai memproses direktori: %s\n", folderPath);
+}
+
+// Tambahkan function helper untuk debug tree structure
+void _debugPrintTreeStructure(Tree node, int depth) {
+    if (!node) return;
+
+    for (int i = 0; i < depth; i++) printf("  ");
+    printf("- %s (%s)\n", node->item.name,
+        node->item.type == ITEM_FOLDER ? "FOLDER" : "FILE");
+
+    // Print children
+    Tree child = node->first_son;
+    while (child) {
+        _debugPrintTreeStructure(child, depth + 1);
+        child = child->next_brother;
+    }
 }
