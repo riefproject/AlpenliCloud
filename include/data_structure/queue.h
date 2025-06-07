@@ -27,5 +27,6 @@ infotype dequeue(Queue* queue);
 void destroy_queue(Queue* queue);
 // Function to print the queue
 void print_queue(Queue queue);
+void clear_queue(Queue* q);
 
 #endif // QUEUE_H

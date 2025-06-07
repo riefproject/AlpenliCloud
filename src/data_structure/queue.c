@@ -5,6 +5,7 @@
 // License: MIT License
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "queue.h"
 #include "linked.h"
 
@@ -57,5 +58,14 @@ void print_queue(Queue queue) {
   }
   else {
     print_list(temp_list);
+  }
+}
+
+void clear_queue(Queue* q) {
+  infotype temp;
+  while (!is_queue_empty(*q)) {
+    temp = dequeue(q);
+    printf("[LOG] Dequeued item\n");
+    free(temp);
   }
 }
