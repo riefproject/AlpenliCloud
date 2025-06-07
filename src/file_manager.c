@@ -482,7 +482,10 @@ void recoverFile(FileManager *fileManager) {
         printf("[LOG] Tidak ada file yang dipilih untuk di-recover\n");
         return;
     }
-
+    Operation *recoverOperation = alloc(Operation);
+    *recoverOperation = createOperation(NULL, NULL, ACTION_RECOVER, false, NULL);
+    recoverOperation->itemTemp = alloc(Queue);
+    create_queue(&(*(recoverOperation->itemTemp)));
     Node *temp = fileManager->selectedItem.head;
     while (temp != NULL) {
         Item *itemToRecover = (Item *)temp->data;
@@ -517,6 +520,9 @@ void recoverFile(FileManager *fileManager) {
                 recoverPath = _createDuplicatedFileName(recoverPath, "(recovered)");
             }
         }
+
+        // Simpan operasi untuk undo
+        enqueue(&(*recoverOperation->itemTemp), foundTrashItem);
 
         // Move dari trash ke lokasi recovery
         if (rename(foundTrashItem->trashPath, recoverPath) == 0) {
@@ -1133,6 +1139,7 @@ void undo(FileManager *fileManager) {
         // kembalikan semua item yang sudah di-recover ke trash
         while(!is_queue_empty(*(operationToUndo->itemTemp))) {
             trashItem = (TrashItem *)dequeue(&(*operationToUndo->itemTemp));
+            enqueue(&(*operationToRedo->itemTemp), trashItem);
             foundTree = searchTree(fileManager->root, createItem(trashItem->item.name, trashItem->item.path, 0, trashItem->item.type, 0, 0, 0));
             printf("[LOG] Undo recover item: %s\n", trashItem->item.name);
             // Pindahkan kembali ke trash
@@ -1383,7 +1390,14 @@ void redo(FileManager *fileManager) {
             
     case ACTION_RECOVER:
         // 1. Ambil item yang sebelumnya telah dihapus
-        // 2. Recover item ke tempat asal
+        while (!is_queue_empty(*(operationToRedo->itemTemp))) {
+            TrashItem *trashItem = (TrashItem *)dequeue(&(*operationToRedo->itemTemp));
+            enqueue(&(*operationToUndo->itemTemp), trashItem);
+            printf("[LOG] Redo recover item: %s\n", trashItem->item.name);
+            // 2. Kembalikan item ke tree
+            _addBackToTree(fileManager, trashItem, trashItem->originalPath);
+        }
+
         break;
     }
     push(&(fileManager->undo), operationToUndo);
