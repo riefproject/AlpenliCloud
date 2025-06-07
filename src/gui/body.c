@@ -35,7 +35,7 @@ void updateBody(Context* ctx, Body* body) {
         body->currentZeroPosition.x + 170 + DEFAULT_PADDING,
         body->currentZeroPosition.y + DEFAULT_PADDING * 2 + 24 * 2,
         body->currentZeroPosition.width - 170 - DEFAULT_PADDING,
-        body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 2 };
+        body->currentZeroPosition.height - DEFAULT_PADDING * 2 - 24 * 3 };
 
     if (ctx->fileManager->treeCursor) {
         Tree cursor = ctx->fileManager->treeCursor->first_son;

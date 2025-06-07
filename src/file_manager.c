@@ -87,6 +87,7 @@ void loadTree(Tree tree, char* path) {
     DIR* dp;
     struct dirent* ep;
     struct stat statbuf;
+    long long size = 0;
 
     dp = opendir(path);
     if (dp == NULL) {
@@ -106,6 +107,8 @@ void loadTree(Tree tree, char* path) {
             continue;
         }
 
+        size += statbuf.st_size;
+
         if (S_ISDIR(statbuf.st_mode)) {
             Item data = createItem(ep->d_name, fullPath, statbuf.st_size, ITEM_FOLDER, statbuf.st_ctime, statbuf.st_mtime, 0);
             Tree newTree = insert_node(tree, data);
@@ -121,6 +124,8 @@ void loadTree(Tree tree, char* path) {
 
         free(fullPath);
     }
+
+    tree->item.size = size; 
 
     closedir(dp);
     return;

@@ -95,7 +95,7 @@ void updateSidebar(Sidebar *sidebar, Context *ctx) {
 
     sidebar->currentZeroPosition = *ctx->currentZeroPosition;
     sidebar->currentZeroPosition.y = DEFAULT_PADDING * 3 + 24 * 3;
-    sidebar->currentZeroPosition.height = sidebar->currentZeroPosition.height - DEFAULT_PADDING * 3 - 24 * 2 - 24;
+    sidebar->currentZeroPosition.height = sidebar->currentZeroPosition.height - DEFAULT_PADDING * 3 - 24 * 2 - 24 * 2;
 
     sidebar->panelRec = (Rectangle){
         sidebar->currentZeroPosition.x,

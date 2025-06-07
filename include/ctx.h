@@ -15,6 +15,7 @@ typedef struct Navbar Navbar;
 typedef struct Sidebar Sidebar;
 typedef struct TitleBar TitleBar;
 typedef struct Toolbar Toolbar;
+typedef struct Footer Footer;
 
 /*
 ====================================================================
@@ -29,6 +30,7 @@ typedef struct Context {
     Sidebar *sidebar;
     TitleBar *titleBar;
     Toolbar *toolbar;
+    Footer *footer;
 
     Rectangle *currentZeroPosition;
 

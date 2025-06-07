@@ -8,6 +8,7 @@
 #include "body.h"
 #include "component.h"
 #include "file_manager.h"
+#include "footer.h"
 #include "macro.h"
 #include "navbar.h"
 #include "raygui.h"
@@ -127,6 +128,8 @@ int main() {
         drawSidebar(ctx.sidebar);
 
         drawToolbar(ctx.toolbar);
+
+        drawFooter(ctx.footer);
 
         drawNavbar(ctx.navbar);
 

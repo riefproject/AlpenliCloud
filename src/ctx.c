@@ -1,6 +1,7 @@
 #include "ctx.h"
 #include "file_manager.h"
 #include "gui/body.h"
+#include "gui/footer.h"
 #include "gui/navbar.h"
 #include "gui/sidebar.h"
 #include "gui/titlebar.h"
@@ -39,6 +40,7 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
     ctx->navbar = (Navbar *)malloc(sizeof(Navbar));
     ctx->sidebar = (Sidebar *)malloc(sizeof(Sidebar));
     ctx->body = (Body *)malloc(sizeof(Body));
+    ctx->footer = (Footer *)malloc(sizeof(Footer));
 
     if (ctx->titleBar)
         createTitleBar(ctx->titleBar, ctx);
@@ -50,6 +52,8 @@ void createContext(Context *ctx, FileManager *fileManager, int screenWidth, int 
         createSidebar(ctx->sidebar, ctx);
     if (ctx->body)
         createBody(ctx, ctx->body);
+    if (ctx->footer)
+        createFooter(ctx->footer, ctx);
 }
 
 void updateContext(Context *ctx, FileManager *fileManager) {
@@ -75,4 +79,5 @@ void updateContext(Context *ctx, FileManager *fileManager) {
     updateToolbar(ctx->toolbar, ctx);
     updateSidebar(ctx->sidebar, ctx);
     updateBody(ctx, ctx->body);
+    updateFooter(ctx->footer, ctx);
 }
