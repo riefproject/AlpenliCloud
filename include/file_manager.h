@@ -433,4 +433,9 @@ void _createPasteItemRecord(Item* itemToPaste, char* originPath);
 bool _isItemEqual(Item* item1, Item* item2);
 void _freeSelectedNode(Node* node);
 
+void _refreshTreeSafely(FileManager* fileManager, char* targetPath);
+Tree _findNodeByPath(Tree root, char* targetPath);
+void _refreshSidebarSafely(FileManager* fileManager);
+
+bool _isValidTreeNode(Tree root, Tree target);
 #endif // !FILE_MANAGER_H

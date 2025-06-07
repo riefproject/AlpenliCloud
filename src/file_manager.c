@@ -262,7 +262,7 @@ void printTrash(LinkedList trash) {
 
 /*
  * IS:
- * FS:
+ FS:
  * Author:
 ================================================================================*/
 void destroyTree(Tree* tree) {
@@ -294,43 +294,99 @@ void refreshFileManager(FileManager* fileManager) {
         printf("[LOG] Invalid path in treeCursor\n");
         return;
     }
-    if (fileManager != NULL && fileManager->treeCursor != NULL) {
-        // printf("\n\n");
-        // printf("==========================================================\n");
-        printf("[LOG] Refreshing FileManager...\n");
-        // printf("[LOG] Tree Cursor Path: %s\n", fileManager->treeCursor->item.name);
-        // printf("[LOG] Tree Cursor Full Path: %s\n", fileManager->treeCursor->item.path);
-        // printf("[LOG] Tree Cursor Type: %s\n", fileManager->treeCursor->item.type == ITEM_FOLDER ? "Folder" : "File");
-        // printf("==========================================================\n\n");
 
-        // Hapus semua anak dari direktori saat ini, bukan seluruh node
-        destroyTree(&fileManager->treeCursor->first_son);
-        fileManager->treeCursor->first_son = NULL;
+    printf("[LOG] Refreshing FileManager...\n");
 
-        // Muat ulang isi dari direktori tersebut
-        loadTree(fileManager->treeCursor, fileManager->treeCursor->item.path);
+    // PERBAIKAN: Simpan informasi treeCursor saat ini
+    char* currentPath = strdup(fileManager->treeCursor->item.path);
+    char* currentName = strdup(fileManager->treeCursor->item.name);
 
-        // printf("==========================================================\n");
-        // printTree(fileManager->treeCursor, 0);
-        // printf("==========================================================\n\n");
+    // PERBAIKAN: Refresh dengan cara yang aman
+    _refreshTreeSafely(fileManager, currentPath);
 
-        printf("[LOG] Directory refreshed successfully\n");
+    // PERBAIKAN: Update treeCursor dengan node yang baru
+    fileManager->treeCursor = _findNodeByPath(fileManager->root, currentPath);
 
-        if (fileManager->ctx && fileManager->ctx->sidebar) {
-            printf("[LOG] Refreshing sidebar...\n");
-
-            SidebarState* stateList = NULL;
-            collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
-            destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
-            fileManager->ctx->sidebar->sidebarRoot = NULL;
-            fileManager->ctx->sidebar->sidebarRoot = createSidebarItemWithState(fileManager->root, stateList);
-            destroySidebarState(stateList);
-
-            printf("[LOG] Sidebar refreshed successfully\n");
-        }
+    if (!fileManager->treeCursor) {
+        printf("[LOG] Error: treeCursor tidak ditemukan setelah refresh\n");
+        // Fallback ke root
+        fileManager->treeCursor = fileManager->root;
     }
+
+    printf("[LOG] Directory refreshed successfully\n");
+
+    // Refresh sidebar dengan cara yang aman
+    if (fileManager->ctx && fileManager->ctx->sidebar) {
+        printf("[LOG] Refreshing sidebar...\n");
+        _refreshSidebarSafely(fileManager);
+        printf("[LOG] Sidebar refreshed successfully\n");
+    }
+
+    // Cleanup
+    free(currentPath);
+    free(currentName);
 }
 
+// Helper function untuk refresh tree secara aman
+void _refreshTreeSafely(FileManager* fileManager, char* targetPath) {
+    // Cari node target di tree
+    Tree targetNode = _findNodeByPath(fileManager->root, targetPath);
+
+    if (!targetNode) {
+        printf("[LOG] Target node tidak ditemukan untuk refresh\n");
+        return;
+    }
+
+    // Hapus hanya children dari target node
+    if (targetNode->first_son) {
+        destroyTree(&targetNode->first_son);
+        targetNode->first_son = NULL;
+    }
+
+    // Load ulang children
+    loadTree(targetNode, targetPath);
+}
+
+// Helper function untuk mencari node berdasarkan path
+Tree _findNodeByPath(Tree root, char* targetPath) {
+    if (!root || !targetPath) return NULL;
+
+    // Jika path cocok, return node ini
+    if (root->item.path && strcmp(root->item.path, targetPath) == 0) {
+        return root;
+    }
+
+    // Cari di children
+    Tree current = root->first_son;
+    while (current) {
+        Tree found = _findNodeByPath(current, targetPath);
+        if (found) return found;
+        current = current->next_brother;
+    }
+
+    return NULL;
+}
+
+// Helper function untuk refresh sidebar secara aman
+void _refreshSidebarSafely(FileManager* fileManager) {
+    if (!fileManager->ctx || !fileManager->ctx->sidebar) return;
+
+    // Collect state sebelum destroy
+    SidebarState* stateList = NULL;
+    if (fileManager->ctx->sidebar->sidebarRoot) {
+        collectSidebarState(fileManager->ctx->sidebar->sidebarRoot, &stateList);
+        destroySidebarItem(&fileManager->ctx->sidebar->sidebarRoot);
+        fileManager->ctx->sidebar->sidebarRoot = NULL;
+    }
+
+    // Rebuild dengan state yang tersimpan
+    fileManager->ctx->sidebar->sidebarRoot = createSidebarItemWithState(fileManager->root, stateList);
+
+    // Cleanup state
+    if (stateList) {
+        destroySidebarState(stateList);
+    }
+}
 // == FILE OPERATION
 
 /*
@@ -1717,6 +1773,22 @@ void goTo(FileManager* fileManager, Tree tree) {
     if (!fileManager || !tree)
         return;
 
+    // Validasi tree node masih valid
+    if (!_isValidTreeNode(fileManager->root, tree)) {
+        printf("[LOG] Warning: Tree node tidak valid, mencari ulang...\n");
+        // Cari node berdasarkan path
+        if (tree->item.path) {
+            tree = _findNodeByPath(fileManager->root, tree->item.path);
+            if (!tree) {
+                printf("[LOG] Error: Tidak dapat menemukan node target\n");
+                return;
+            }
+        }
+        else {
+            return;
+        }
+    }
+
     fileManager->treeCursor = tree;
 
     // Free old path before setting new one
@@ -1752,7 +1824,22 @@ void goTo(FileManager* fileManager, Tree tree) {
 
     printf("[LOG] Navigated to: %s\n", fileManager->currentPath ? fileManager->currentPath : "unknown");
 }
-/*  Prosedur
+
+// Helper function untuk validasi tree node
+bool _isValidTreeNode(Tree root, Tree target) {
+    if (!root || !target) return false;
+
+    if (root == target) return true;
+
+    // Cek di children
+    Tree current = root->first_son;
+    while (current) {
+        if (_isValidTreeNode(current, target)) return true;
+        current = current->next_brother;
+    }
+
+    return false;
+}/*  Prosedur
  *  IS:
  *  FS:
 ================================================================================*/
