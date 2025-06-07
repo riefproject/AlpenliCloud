@@ -705,8 +705,8 @@ void cutFile(FileManager *fileManager) {
 }
 
 /*  Prosedur
- *  IS:
- *  FS:
+*  IS:
+*  FS:
 ================================================================================*/
 void pasteFile(FileManager *fileManager, bool isOperation) {
     printf("[DEBUG] nama file: %s\n", ((Item *)fileManager->temp.front->data)->name);
@@ -770,7 +770,10 @@ void pasteFile(FileManager *fileManager, bool isOperation) {
         printf("[LOG] Mencoba paste: %s -> %s\n", originPath, newPath);
         printf("[LOG] Is Copy: %s\n", isCopy ? "true" : "false");
         printf("[LOG] Item type: %d (ITEM_FOLDER=%d, ITEM_FILE=%d)\n", itemToPaste->type, ITEM_FOLDER, ITEM_FILE);
-
+        if(isOperation){
+            pasteOperation->isCopy = isCopy;
+            printf("[LOG] Paste operation type: %s\n", isCopy ? "COPY" : "CUT");
+        }
         // COPY operation
         if (isCopy) {
             Tree foundTree = searchTree(fileManager->root, *itemToPaste);
@@ -888,8 +891,8 @@ void pasteFile(FileManager *fileManager, bool isOperation) {
             PasteItem *pasteItem = alloc(PasteItem);
             itemToPaste->path = strdup(newPath); // Update path ke lokasi baru
             *pasteItem = createPasteItem(*itemToPaste, originPath);
-            enqueue(pasteOperation->itemTemp, pasteItem);
-            printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, originPath);
+            enqueue(&(*pasteOperation->itemTemp), pasteItem);
+            printf("[LOG] PasteItem created for %s with original path %s\n", itemToPaste->name, pasteItem->originalPath);
         }
         temp = temp->next;
         currentProgress++;
@@ -909,7 +912,6 @@ void pasteFile(FileManager *fileManager, bool isOperation) {
         printf("[LOG] Paste berhasil!\n");
     }
     if(isOperation){
-        pasteOperation->isCopy = isCopy;
         push(&fileManager->undo, pasteOperation);
     }
     refreshFileManager(fileManager);
@@ -1138,10 +1140,18 @@ void undo(FileManager *fileManager) {
         }
         break;
     case ACTION_PASTE:
+        operationToRedo->isCopy = operationToUndo->isCopy;
         if(!operationToUndo->isCopy){
             // Jika cut, perlu mengembalikan item ke lokasi asalnya
             while (!is_queue_empty(*(operationToUndo->itemTemp))) {
                 PasteItem *pasteItem = (PasteItem *)dequeue(&(*operationToUndo->itemTemp));
+                if (pasteItem->item.type == ITEM_FOLDER) {
+                    printf("[DEBUG] Redoing paste for folder: %s\n", pasteItem->item.name);
+                    // Proses untuk folder
+                } else if (pasteItem->item.type == ITEM_FILE) {
+                    printf("[DEBUG] Redoing paste for file: %s\n", pasteItem->item.name);
+                    // Proses untuk file
+                }
                 Tree parentOriginTree = searchTree(fileManager->root, createItem(_getNameFromPath(_getDirectoryFromPath(pasteItem->originalPath)),_getDirectoryFromPath(pasteItem->originalPath) , 0, ITEM_FOLDER, 0, 0, 0));
                 if (parentOriginTree == NULL) {
                     printf("[LOG] Parent origin tree tidak ditemukan untuk path: %s\n", pasteItem->originalPath);
@@ -1169,26 +1179,43 @@ void undo(FileManager *fileManager) {
                         pasteItem->item.path = strdup(foundTree->item.path); // Update path item
                         pasteItem->item.name = strdup(foundTree->item.name); // Update name item
                         printf("[LOG] Original path diupdate menjadi: %s\n", pasteItem->originalPath);
-                        enqueue(&(*operationToRedo->itemTemp),pasteItem);
                         free(destPath);
                     }
                 } else {
                     printf("[LOG] Item tidak ditemukan untuk di-undo cut: %s\n", pasteItem->item.name);
                 }
+                enqueue(&(*operationToRedo->itemTemp),pasteItem);
             }
         }else{
              // Jika hanya copy, Hapus item yang sudah di-paste
             while (!is_queue_empty(*(operationToUndo->itemTemp))) {
                 PasteItem *pasteItem = (PasteItem *)dequeue(&(*operationToUndo->itemTemp));
-                enqueue(&(*operationToRedo->itemTemp), pasteItem);
+                if (pasteItem->item.type == ITEM_FOLDER) {
+                    printf("[DEBUG] Redoing paste for folder: %s\n", pasteItem->item.name);
+                    // Proses untuk folder
+                } else if (pasteItem->item.type == ITEM_FILE) {
+                    printf("[DEBUG] Redoing paste for file: %s\n", pasteItem->item.name);
+                    // Proses untuk file
+                }
                 foundTree = searchTree(fileManager->root, createItem(pasteItem->item.name, pasteItem->item.path, 0, pasteItem->item.type, 0, 0, 0));
                 if (foundTree != NULL) {
                     printf("[LOG] Undo paste path: %s\n", pasteItem->item.path);
                     printf("[LOG] Undo paste name: %s\n", pasteItem->item.name);
+                    printf("[LOG] Original path: %s\n", pasteItem->originalPath);
+                    char *destPath = strdup(pasteItem->item.path);
                     _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
+        
+                    // ubah paste item ke original path
+                    pasteItem->item.path = strdup(pasteItem->originalPath); // Update path item ke original path
+                    pasteItem->item.name = strdup(_getNameFromPath(pasteItem->originalPath)); // Update name item ke nama asli
+                    pasteItem->originalPath = strdup(destPath); // Update originalPath untuk redo
+                    printf("[LOG] Item %s berhasil dihapus dari tree\n", pasteItem->item.name);
                 } else {
                     printf("[LOG] Item tidak ditemukan untuk dihapus: %s\n", pasteItem->item.name);
                 }
+                enqueue(&(*operationToRedo->itemTemp), pasteItem);
+                printf("[DEBUG] Enqueuing item for redo: name=%s, path=%s, type=%d\n",
+                pasteItem->item.name, pasteItem->item.path, pasteItem->item.type);
             }
         }
         printf("[LOG] Undo paste operation completed\n");
@@ -1256,6 +1283,8 @@ void redo(FileManager *fileManager) {
         printf("[LOG] Redo rename: %s\n", operationToRedo->from);
         break;
     case ACTION_PASTE:
+        printf("[LOG] isCopy: %s\n", operationToRedo->isCopy ? "true" : "false");
+        operationToUndo->isCopy = operationToRedo->isCopy;
         if(!operationToRedo->isCopy) {
             // Jika cut, perlu memindahkan item ke lokasi baru
             while (!is_queue_empty(*(operationToRedo->itemTemp))) {
@@ -1279,29 +1308,79 @@ void redo(FileManager *fileManager) {
                         pasteItem->item.path = strdup(foundTree->item.path); // Update path item
                         pasteItem->item.name = strdup(foundTree->item.name); // Update name item
                         printf("[LOG] Original path diupdate menjadi: %s\n", pasteItem->originalPath);
-                        enqueue(&(*operationToUndo->itemTemp),pasteItem);
                         free(destPath);
                     }
                 } else {
                     printf("[LOG] Item tidak ditemukan untuk di-redo cut: %s\n", pasteItem->item.path);
                 }
+                enqueue(&(*operationToUndo->itemTemp),pasteItem);
             }
         } else {
-            // Jika hanya copy, hapus item yang sudah di-paste
+            // Jika hanya copy, paste ulang
             while (!is_queue_empty(*(operationToRedo->itemTemp))) {
                 PasteItem *pasteItem = (PasteItem *)dequeue(&(*operationToRedo->itemTemp));
+                printf("[DEBUG] Processing item in redo: name=%s, path=%s, type=%d\n",
+       pasteItem->item.name, pasteItem->item.path, pasteItem->item.type);
+                Tree parentToSearch = searchTree(fileManager->root, createItem(_getNameFromPath(_getDirectoryFromPath(pasteItem->originalPath)), _getDirectoryFromPath(pasteItem->originalPath), 0, ITEM_FOLDER, 0, 0, 0));
+                if (parentToSearch == NULL) {
+                    printf("[LOG] Parent directory tidak ditemukan untuk path: %s\n", pasteItem->originalPath);
+                    continue;
+                }
                 foundTree = searchTree(fileManager->root, createItem(pasteItem->item.name, pasteItem->item.path, 0, pasteItem->item.type, 0, 0, 0));
                 if (foundTree != NULL) {
                     printf("[LOG] Redo paste path: %s\n", pasteItem->item.path);
                     printf("[LOG] Redo paste name: %s\n", pasteItem->item.name);
-                    _deleteSingleItem(foundTree->item.path, foundTree->item.type, foundTree->item.name);
-                } else {
-                    printf("[LOG] Item tidak ditemukan untuk dihapus: %s\n", pasteItem->item.name);
+                    printf("[LOG] Destination path: %s\n", pasteItem->originalPath);
+                    if(pasteItem->item.type == ITEM_FOLDER){
+                        printf("[DEBUG] Redoing paste for folder: %s\n", pasteItem->item.name);
+                        if (DirectoryExists(pasteItem->originalPath)) {
+                            printf("[LOG] Destination folder already exists: %s\n", pasteItem->originalPath);
+                            pasteItem->originalPath = _createDuplicatedFolderName(pasteItem->originalPath, "(1)");
+                        }
+                        if (MakeDirectory(pasteItem->originalPath) != 0) {
+                            printf("[LOG] Gagal membuat folder\n");
+                            continue;
+                        }
+                        printf("[DEBUG] Calling _copyFolderRecursive for folder: %s\n", pasteItem->item.name);
+                        _copyFolderRecursive(pasteItem->item.path, pasteItem->originalPath);
+                        printf("[DEBUG] Finished _copyFolderRecursive for folder: %s\n", pasteItem->item.name);
+                    }else if(pasteItem->item.type == ITEM_FILE){
+                        printf("[DEBUG] Redoing paste for file: %s\n", pasteItem->item.name);
+                        if (FileExists(pasteItem->originalPath)) {
+                            printf("[LOG] Destination file already exists: %s\n", pasteItem->originalPath);
+                            pasteItem->originalPath = _createDuplicatedFileName(pasteItem->originalPath, "(1)");
+                        }
+
+                        _copyFileContent(pasteItem->item.path, pasteItem->originalPath);
+                    }
+                    // Tambahkan item baru ke tree di lokasi tujuan
+                    Item newItem = createItem(
+                        pasteItem->item.name,
+                        pasteItem->item.path,
+                        pasteItem->item.size,
+                        pasteItem->item.type,
+                        pasteItem->item.created_at,
+                        time(NULL),
+                        0);
+                        insert_node(parentToSearch, newItem);
+                        printf("[LOG] Item %s berhasil ditambahkan ke tree\n", pasteItem->item.name);
+                        // Update paste item untuk undo
+                        char* origin = strdup(pasteItem->originalPath);
+                        pasteItem->originalPath = strdup(pasteItem->item.path); // Update originalPath untuk undo
+                        pasteItem->item.path = strdup(origin); // Update path item
+                        pasteItem->item.name = strdup(pasteItem->item.name); // Update name item
+                        printf("[LOG] Item path diupdate menjadi: %s\n", pasteItem->item.path);
+                        enqueue(&(*operationToUndo->itemTemp), pasteItem);
+                        free(origin);
+                    } else {
+                        printf("[LOG] Item tidak ditemukan untuk di-redo copy: %s\n", pasteItem->item.path);
+                    }
                 }
             }
-        }
-        break;
-
+        printf("[LOG] Redo paste operation completed\n");
+        printTree(fileManager->root, 0);
+            break;
+            
     case ACTION_RECOVER:
         // 1. Ambil item yang sebelumnya telah dihapus
         // 2. Recover item ke tempat asal
