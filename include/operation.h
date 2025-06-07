@@ -25,6 +25,7 @@ typedef struct Operation {
     char* to;          // path tujuan operasi
     ActionType type;   // tipe operasi yang dilakukan
     bool isDir;        // flag apakah operasi pada direktori
+    bool isCopy;      // flag apakah operasi adalah copy
     Queue* itemTemp;   // queue temporary untuk menyimpan item
 } Operation;
 
