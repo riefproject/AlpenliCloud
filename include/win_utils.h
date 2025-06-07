@@ -1,14 +1,31 @@
-#pragma once
+#ifndef WIN_UTILS_H
+#define WIN_UTILS_H
 
-/*
-====================================================================
-    OPERASI FILE SISTEM WINDOWS
-====================================================================
-*/
+// Enum untuk common Windows folders
+typedef enum {
+    WIN_FOLDER_DESKTOP,
+    WIN_FOLDER_DOCUMENTS,
+    WIN_FOLDER_DOWNLOADS,
+    WIN_FOLDER_PICTURES,
+    WIN_FOLDER_MUSIC,
+    WIN_FOLDER_VIDEOS
+} WindowsCommonFolder;
 
-// Function remove items recursive
-// Menghapus folder dan semua isinya secara rekursif menggunakan Windows API dengan FindFirstFile dan RemoveDirectory
-// IS: Path folder yang valid dan dapat diakses
-// FS: Semua file dalam folder dihapus dengan DeleteFileA, subfolder dihapus rekursif dengan RemoveItemsRecurse, folder utama dihapus dengan RemoveDirectoryA, return 1 jika berhasil atau 0 jika gagal
-// Created by: Arief
-int RemoveItemsRecurse(const char* path);
+// Function declarations untuk Windows utilities
+int RemoveItemsRecurse(const char* folderPath);
+
+// File dialog functions
+int OpenWindowsFileDialog(char* filePath, int maxPathLength);
+int OpenWindowsFolderDialog(char* folderPath, int maxPathLength);
+
+// Path utility functions
+void GetWindowsUserFriendlyPath(const char* fullPath, char* result, int resultSize);
+int GetWindowsCommonPath(WindowsCommonFolder folder, char* path, int pathSize);
+int ValidateWindowsPath(const char* path);
+int IsWindowsDirectory(const char* path);
+void NormalizeWindowsPath(char* path);
+
+// File system functions
+long long GetWindowsFileSize(const char* filePath);
+
+#endif // WIN_UTILS_H

@@ -29,6 +29,12 @@ typedef struct Toolbar {
     bool isButtonRestoreClicked;
     bool isButtonPermanentDeleteClicked;
 
+    // Import modal properties
+    bool importClicked;
+    bool showImportModal;
+    bool importModalResult;
+    char importPath[512];
+
     Context* ctx;
 } Toolbar;
 
@@ -64,5 +70,12 @@ void updateToolbar(Toolbar* toolbar, Context* ctx);
 // FS: Button New digambar dengan GuiNewButton, button Rename (#22#), Cut (#17#), Copy (#16#), Paste (#18#) digambar di kiri dengan spacing DEFAULT_PADDING, button Delete (#143#) digambar di kanan, GuiLine digambar sebagai pembatas bawah, layout responsif berdasarkan currentZeroPosition width
 // Created by: Farras
 void drawToolbar(Toolbar* toolbar);
+
+// Prosedur draw import modal
+// Menggambar modal dialog untuk mengimpor file/folder dengan input path dan tombol Import/Cancel
+// IS: Context valid, showImportModal true untuk menampilkan modal
+// FS: Modal ditampilkan di tengah layar dengan overlay, input box untuk path import, tombol Import mengeksekusi import jika path valid, tombol Cancel atau ESC menutup modal
+// Created by: GitHub Copilot
+void DrawImportModal(Context* ctx, bool* showImportModal, char* importPath, int pathSize, bool* modalResult);
 
 #endif

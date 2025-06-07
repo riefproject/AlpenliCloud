@@ -1138,7 +1138,7 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
                     itemToPaste->created_at,
                     time(NULL),
                     0);
-                    
+
                 if (isOperation) {
                     pasteItem = alloc(PasteItem);
                     *pasteItem = createPasteItem(newItem, originPath);
@@ -2274,12 +2274,12 @@ void _undoPaste(FileManager* fileManager, Operation* operationToUndo, Operation*
                     // Tambahkan ke tree parent asal
                     Item newItem = createItem(foundTree->item.name, foundTree->item.path, foundTree->item.size, foundTree->item.type, foundTree->item.created_at, time(NULL), 0);
                     Tree newTree = insert_node(parentOriginTree, newItem);
-                    if(newItem.type == ITEM_FOLDER){
+                    if (newItem.type == ITEM_FOLDER) {
                         _addTreeStructureRecursive(newTree, newItem.path);
                         printf("[LOG] Folder %s berhasil dikembalikan ke %s\n", pasteItem->item.name, parentOriginTree->item.path);
                     }
                     printf("[LOG] Item %s berhasil dikembalikan ke %s\n", pasteItem->item.name, foundTree->item.path);
-                    
+
                     pasteItem->originalPath = strdup(destPath); // Update originalPath untuk redo
                     pasteItem->item.path = strdup(foundTree->item.path); // Update path item
                     pasteItem->item.name = strdup(foundTree->item.name); // Update name item
@@ -2393,7 +2393,7 @@ void _redoPaste(FileManager* fileManager, Operation* operationToRedo, Operation*
                     // Tambahkan ke tree parent asal
                     Item newItem = createItem(foundTree->item.name, foundTree->item.path, foundTree->item.size, foundTree->item.type, foundTree->item.created_at, time(NULL), 0);
                     Tree newTree = insert_node(parentToSearch, newItem);
-                    if(newItem.type == ITEM_FOLDER){
+                    if (newItem.type == ITEM_FOLDER) {
                         _addTreeStructureRecursive(newTree, newItem.path);
                         printf("[LOG] Folder %s berhasil dikembalikan ke %s\n", pasteItem->item.name, parentToSearch->item.path);
                     }
@@ -2464,8 +2464,9 @@ void _redoPaste(FileManager* fileManager, Operation* operationToRedo, Operation*
                 Tree newTree = insert_node(parentToSearch, newItem);
                 if (newTree == NULL) {
                     printf("[LOG] Gagal menambahkan item ke tree selama redo: %s\n", newItem.name);
-                } else {
-                    printf("[LOG] Item berhasil ditambahkan item: %s, ke tree dengan parent: %s\n", 
+                }
+                else {
+                    printf("[LOG] Item berhasil ditambahkan item: %s, ke tree dengan parent: %s\n",
                         newItem.path, parentToSearch->item.path);
                 }
                 // Update paste item untuk undo
@@ -2578,4 +2579,194 @@ void _debugPrintTreeStructure(Tree node, int depth) {
         _debugPrintTreeStructure(child, depth + 1);
         child = child->next_brother;
     }
+}
+
+/*  Function check if path is external
+ *  IS: Path diketahui
+ *  FS: Return true jika path di luar workspace, false jika dalam workspace
+================================================================================*/
+bool isExternalPath(char* path) {
+    if (path == NULL) return false;
+
+    // Normalisasi path untuk perbandingan
+    char* normalizedPath = strdup(path);
+
+    // Convert backslash ke forward slash untuk Windows
+    for (int i = 0; normalizedPath[i]; i++) {
+        if (normalizedPath[i] == '\\') {
+            normalizedPath[i] = '/';
+        }
+    }
+
+    // Cek apakah path dimulai dengan workspace directory (.dir)
+    bool isExternal = strncmp(normalizedPath, ".dir", 4) != 0 &&
+        strncmp(normalizedPath, "./.dir", 6) != 0;
+
+    free(normalizedPath);
+    return isExternal;
+}
+
+/*  Function validate import path menggunakan Windows utils
+ *  IS: Path yang akan diimpor diketahui
+ *  FS: Return true jika valid, false jika tidak
+================================================================================*/
+bool validateImportPath(char* path) {
+    if (path == NULL || strlen(path) == 0) {
+        return false;
+    }
+
+    // Cek apakah path eksternal (di luar workspace)
+    if (!isExternalPath(path)) {
+        return false;
+    }
+
+    // Gunakan Windows utils untuk validasi
+    return ValidateWindowsPath(path) == 1;
+}
+
+
+/*  Prosedur import file/folder dengan progress tracking
+ *  IS: sourcePath valid dan di luar workspace
+ *  FS: File/folder diimpor ke direktori saat ini dengan progress feedback
+================================================================================*/
+void importFile(FileManager* fileManager, char* sourcePath, bool isOperation) {
+    sourcePath = _convertToUnixPath(sourcePath);
+    if (!validateImportPath(sourcePath)) {
+        printf("[LOG] Path tidak valid untuk import: %s\n", sourcePath);
+        return;
+    }
+
+    if (fileManager->treeCursor == NULL) {
+        printf("[LOG] Tidak ada direktori tujuan yang aktif\n");
+        return;
+    }
+
+    printf("[LOG] Memulai import dari: %s\n", sourcePath);
+    printf("[LOG] Ke direktori: %s\n", fileManager->treeCursor->item.path);
+
+    // Dapatkan nama file/folder dari path
+    char* fileName = _getNameFromPath(sourcePath);
+    if (fileName == NULL || strlen(fileName) == 0) {
+        printf("[LOG] Tidak dapat mengekstrak nama file dari path\n");
+        return;
+    }
+
+    // Buat path tujuan di direktori saat ini
+    char* destinationPath = TextFormat("%s/%s", fileManager->treeCursor->item.path, fileName);
+
+    // Handle duplikasi nama dengan suffix yang lebih deskriptif
+    if (FileExists(destinationPath) || DirectoryExists(destinationPath)) {
+        char* timestamp = TextFormat("_imported_%ld", time(NULL) % 10000);
+        if (isDirectory(sourcePath)) {
+            destinationPath = _createDuplicatedFolderName(destinationPath, timestamp);
+        }
+        else {
+            destinationPath = _createDuplicatedFileName(destinationPath, timestamp);
+        }
+        printf("[LOG] File exists, using new name: %s\n", _getNameFromPath(destinationPath));
+    }
+
+    // Tentukan tipe item dan size untuk progress
+    ItemType itemType = isDirectory(sourcePath) ? ITEM_FOLDER : ITEM_FILE;
+    bool success = false;
+
+    printf("[LOG] Tipe item: %s\n", itemType == ITEM_FOLDER ? "Folder" : "File");
+
+    // Lakukan operasi copy dengan progress tracking
+    if (itemType == ITEM_FOLDER) {
+        printf("[LOG] Mengimpor folder...\n");
+
+        // Buat direktori tujuan
+        if (MakeDirectory(destinationPath) == 0) {
+            printf("[LOG] Direktori tujuan dibuat: %s\n", destinationPath);
+
+            // Copy semua isi folder secara rekursif dengan progress
+            printf("[LOG] Memulai copy rekursif...\n");
+            _copyFolderRecursive(sourcePath, destinationPath);
+
+            success = true;
+            printf("[LOG] Folder berhasil diimpor: %s\n", fileName);
+        }
+        else {
+            printf("[LOG] Gagal membuat direktori tujuan: %s\n", destinationPath);
+        }
+    }
+    else {
+        printf("[LOG] Mengimpor file...\n");
+
+        // Copy file dengan progress feedback
+        _copyFileContent(sourcePath, destinationPath);
+
+        if (FileExists(destinationPath)) {
+            success = true;
+            printf("[LOG] File berhasil diimpor: %s\n", fileName);
+        }
+        else {
+            printf("[LOG] Gagal mengimpor file: %s\n", fileName);
+        }
+    }
+
+    if (success) {
+        printf("[LOG] Import berhasil, menambahkan ke tree...\n");
+
+        // Tambahkan ke tree structure
+        struct stat statbuf;
+        if (stat(destinationPath, &statbuf) == 0) {
+            Item newItem = createItem(
+                _getNameFromPath(destinationPath),
+                destinationPath,
+                statbuf.st_size,
+                itemType,
+                statbuf.st_ctime,
+                time(NULL),
+                0
+            );
+
+            Tree newNode = insert_node(fileManager->treeCursor, newItem);
+
+            // Jika folder, load strukturnya
+            if (itemType == ITEM_FOLDER && newNode != NULL) {
+                printf("[LOG] Loading tree structure untuk folder...\n");
+                loadTree(newNode, destinationPath);
+            }
+
+            // Simpan operasi untuk undo jika diminta
+            if (isOperation) {
+                Operation* importOperation = alloc(Operation);
+                *importOperation = createOperation(destinationPath, sourcePath, ACTION_CREATE, (itemType == ITEM_FOLDER), NULL);
+                push(&fileManager->undo, importOperation);
+                printf("[LOG] Operasi import disimpan untuk undo\n");
+            }
+
+            // Refresh file manager untuk update UI
+            refreshFileManager(fileManager);
+
+            printf("[LOG] Import selesai berhasil: %s -> %s\n", sourcePath, destinationPath);
+        }
+        else {
+            printf("[LOG] Gagal mendapatkan stat untuk file yang diimpor\n");
+        }
+    }
+    else {
+        printf("[LOG] Import gagal untuk: %s\n", sourcePath);
+    }
+}
+
+char* _convertToUnixPath(char* path) {
+    if (path == NULL) return NULL;
+
+    // Alokasikan memori untuk path baru
+    char* unixPath = malloc(strlen(path) + 1);
+    if (unixPath == NULL) {
+        perror("malloc failed");
+        exit(1);
+    }
+
+    // Ganti backslash dengan forward slash
+    for (int i = 0; path[i] != '\0'; i++) {
+        unixPath[i] = (path[i] == '\\') ? '/' : path[i];
+    }
+    unixPath[strlen(path)] = '\0'; // Tambahkan null terminator
+
+    return unixPath;
 }
