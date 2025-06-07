@@ -94,7 +94,7 @@ void updateToolbar(Toolbar* toolbar, Context* ctx) {
         toolbar->isButtonDeleteClicked = false;
     }
     if (toolbar->isButtonPasteClicked) {
-        pasteFile(ctx->fileManager);
+        pasteFile(ctx->fileManager, true);
         toolbar->isButtonPasteClicked = false;
     }
     if (toolbar->isbuttonRenameClicked) {
