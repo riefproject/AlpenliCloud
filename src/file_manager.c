@@ -362,6 +362,13 @@ void destroyTree(Tree* tree) {
  * Author:
 ================================================================================*/
 void refreshFileManager(FileManager* fileManager) {
+    // Refresh sidebar dengan cara yang aman
+    if (fileManager->ctx && fileManager->ctx->sidebar) {
+        _refreshSidebarSafely(fileManager);
+        printf("[LOG] Refreshing sidebar...\n");
+        printf("[LOG] Sidebar refreshed successfully\n");
+    }
+    return;
     if (!fileManager || !fileManager->treeCursor) {
         printf("[LOG] Invalid fileManager or treeCursor in refresh\n");
         return;
@@ -393,12 +400,7 @@ void refreshFileManager(FileManager* fileManager) {
 
     printf("[LOG] Directory refreshed successfully\n");
 
-    // Refresh sidebar dengan cara yang aman
-    if (fileManager->ctx && fileManager->ctx->sidebar) {
-        printf("[LOG] Refreshing sidebar...\n");
-        _refreshSidebarSafely(fileManager);
-        printf("[LOG] Sidebar refreshed successfully\n");
-    }
+
 
     // Cleanup
     free(currentPath);
@@ -1072,6 +1074,11 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
     // Iterasi menggunakan temporary queue
     while (!is_queue_empty(tempQueue) && !cancelled) {
         Item* itemToPaste = (Item*)dequeue(&tempQueue);
+        if (itemToPaste == NULL) {
+            printf("[LOG] Item to paste is NULL, skipping...\n");
+            continue;
+        }
+
         printf("[LOG] Processing item: %s\n", itemToPaste->name);
         // Update progress bar dan cek cancel
         if (showProgress) {
@@ -1089,7 +1096,13 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
             currentProgress++;
             continue;
         }
-
+        if(isOperation){
+            // Tambahkan item ke operasi paste
+            PasteItem* pasteItem = alloc(PasteItem);
+            *pasteItem = createPasteItem(*itemToPaste, NULL);
+            pasteItem->originalPath = strdup(originPath);
+            enqueue(&(*pasteOperation->itemTemp), pasteItem);
+        }
         // Path untuk file/folder baru di lokasi tujuan  
         char* destinationFullPath = TextFormat("%s%s", _DIR, fileManager->currentPath);
         char* newPath = TextFormat("%s/%s", destinationFullPath, itemToPaste->name);
@@ -1266,7 +1279,7 @@ void clearSelectedFile(FileManager* fileManager) {
     current = fileManager->selectedItem.head;
     while (current != NULL) {
         Node* next = current->next;
-        _freeSelectedNode(current);
+        // _freeSelectedNode(current);
         current = next;
     }
 
