@@ -27,9 +27,10 @@ typedef struct TrashItem {
   char* originalPath;     // path asli sebelum dihapus
   time_t deletedTime;     // waktu dihapus
   char* trashPath;        // path di dalam folder trash fisik
+  char* uid;
 } TrashItem;
 
-typedef struct PasteItem{
+typedef struct PasteItem {
   Item item;
   char* originalPath;     // path asli sebelum dihapus
 }PasteItem;

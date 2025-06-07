@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include "component.h"
 #include "file_manager.h"
@@ -23,10 +24,12 @@
 #define _DIR ".dir/"
 #define ROOT ".dir/root"
 #define TRASH ".dir/trash"
-#define TRASH_DUMP ".dir/trash_dump.txt"
+#define TRASH_DUMP ".dir/.trash"
 
 bool isCopy = 0;
-
+char* _generateUID();
+void _removeFromTrashByUID(FileManager* fileManager, char* uid);
+void _addBackToTreeFromTrash(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
 /* IS:                        FS:
   Tree root          = ?;     ==> NULL;
   Tree rootTrash     = ?;     ==> NULL;
@@ -126,12 +129,14 @@ void loadTree(Tree tree, char* path) {
 /*
  * IS  : File `TRASH_DUMP` mungkin ada atau belum ada.
  * FS  : Data di dalam `TRASH_DUMP` dibaca dan diisi ke dalam antrian `fileManager->trash`.
+ * Format: UID,originalName,originalPath,deletedTime
  * Author: Farras Fadhil Syafiq
+ * Edited by: Arief F-sa Wijaya
  ================================================================================*/
 void loadTrashFromFile(LinkedList* trash) {
     FILE* trashFile = fopen(TRASH_DUMP, "r");
     if (trashFile == NULL) {
-        perror("Gagal membuka file trash");
+        printf("[LOG] File trash tidak ditemukan, membuat baru\n");
         return;
     }
 
@@ -157,49 +162,105 @@ void loadTrashFromFile(LinkedList* trash) {
         if (ch == '\n') {
             line[len] = '\0'; // Akhiri string
 
-            // Proses line
-            char* name = strtok(line, ",");
+            // Parse format: UID,originalName,originalPath,deletedTime
+            char* uid = strtok(line, ",");
+            char* originalName = strtok(NULL, ",");
             char* originalPath = strtok(NULL, ",");
             char* deletedTimeStr = strtok(NULL, ",");
 
-            if (name && originalPath && deletedTimeStr) {
+            if (uid && originalName && originalPath && deletedTimeStr) {
                 TrashItem* trashItem = alloc(TrashItem);
                 if (!trashItem) {
-                    len = 0; // reset untuk line selanjutnya
+                    len = 0;
                     continue;
                 }
 
-                trashItem->item.name = strdup(name);
+                // Set data dengan nama asli untuk display
+                trashItem->uid = strdup(uid);
+                trashItem->item.name = strdup(originalName);  // Nama asli untuk display
                 trashItem->originalPath = strdup(originalPath);
-                trashItem->deletedTime = atol(deletedTimeStr);
-                trashItem->trashPath = strdup(TextFormat("%s/%s", TRASH_DUMP, name));
+                trashItem->deletedTime = (time_t)atoll(deletedTimeStr);
+
+                // Set tipe item berdasarkan ekstensi atau asumsi
+                char* fileExtension = strrchr(originalName, '.');
+                trashItem->item.type = fileExtension ? ITEM_FILE : ITEM_FOLDER;
+
+                // Konstruksi trash path berdasarkan UID
+                char* trashFileName;
+                if (fileExtension && trashItem->item.type == ITEM_FILE) {
+                    size_t nameLen = fileExtension - originalName;
+                    char* nameWithoutExt = malloc(nameLen + 1);
+                    strncpy(nameWithoutExt, originalName, nameLen);
+                    nameWithoutExt[nameLen] = '\0';
+
+                    trashFileName = TextFormat("%s_%s%s", nameWithoutExt, uid, fileExtension);
+                    free(nameWithoutExt);
+                }
+                else {
+                    trashFileName = TextFormat("%s_%s", originalName, uid);
+                }
+
+                trashItem->trashPath = strdup(TextFormat("%s/%s", TRASH, trashFileName));
+
+                // Set item properties untuk display
+                trashItem->item.path = strdup(trashItem->trashPath);
+                trashItem->item.size = 0; // Will be updated when needed
+                trashItem->item.created_at = 0;
+                trashItem->item.deleted_at = trashItem->deletedTime;
+                trashItem->item.selected = false;
 
                 insert_first(trash, trashItem);
+                printf("[LOG] Loaded trash item: %s (UID: %s, Deleted: %ld)\n",
+                    originalName, uid, trashItem->deletedTime);
             }
 
-            len = 0; // Reset untuk line selanjutnya
+            len = 0;
         }
         else {
             line[len++] = ch;
         }
     }
 
-    // Tangani kasus baris terakhir tanpa newline
+    // Handle last line without newline
     if (len > 0) {
         line[len] = '\0';
-        char* name = strtok(line, ",");
+        char* uid = strtok(line, ",");
+        char* originalName = strtok(NULL, ",");
         char* originalPath = strtok(NULL, ",");
         char* deletedTimeStr = strtok(NULL, ",");
 
-        if (name && originalPath && deletedTimeStr) {
+        if (uid && originalName && originalPath && deletedTimeStr) {
             TrashItem* trashItem = alloc(TrashItem);
             if (trashItem) {
-                trashItem->item.name = strdup(name);
+                trashItem->uid = strdup(uid);
+                trashItem->item.name = strdup(originalName);
                 trashItem->originalPath = strdup(originalPath);
-                trashItem->deletedTime = atol(deletedTimeStr);
-                trashItem->trashPath = strdup(TextFormat("%s/%s", TRASH_DUMP, name));
+                trashItem->deletedTime = (time_t)atoll(deletedTimeStr);
+
+                char* fileExtension = strrchr(originalName, '.');
+                trashItem->item.type = fileExtension ? ITEM_FILE : ITEM_FOLDER;
+
+                char* trashFileName;
+                if (fileExtension && trashItem->item.type == ITEM_FILE) {
+                    size_t nameLen = fileExtension - originalName;
+                    char* nameWithoutExt = malloc(nameLen + 1);
+                    strncpy(nameWithoutExt, originalName, nameLen);
+                    nameWithoutExt[nameLen] = '\0';
+
+                    trashFileName = TextFormat("%s_%s%s", nameWithoutExt, uid, fileExtension);
+                    free(nameWithoutExt);
+                }
+                else {
+                    trashFileName = TextFormat("%s_%s", originalName, uid);
+                }
+
+                trashItem->trashPath = strdup(TextFormat("%s/%s", TRASH, trashFileName));
+                trashItem->item.path = strdup(trashItem->trashPath);
+                trashItem->item.deleted_at = trashItem->deletedTime;
 
                 insert_first(trash, trashItem);
+                printf("[LOG] Loaded trash item: %s (UID: %s, Deleted: %ld)\n",
+                    originalName, uid, trashItem->deletedTime);
             }
         }
     }
@@ -211,7 +272,9 @@ void loadTrashFromFile(LinkedList* trash) {
 /*
  * IS  : Antrian `fileManager->trash` sudah terisi.
  * FS  : Menyimpan isi antrian trash ke dalam file `TRASH_DUMP`.
+ * Format: UID,originalName,originalPath,deletedTime
  * Author: Farras Fadhil Syafiq
+ * Edited by: Arief F-sa Wijaya
  ================================================================================*/
 void saveTrashToFile(FileManager* fileManager) {
     FILE* trashFile = fopen(TRASH_DUMP, "w");
@@ -223,22 +286,25 @@ void saveTrashToFile(FileManager* fileManager) {
     Node* current = fileManager->trash.head;
     while (current != NULL) {
         TrashItem* trashItem = (TrashItem*)current->data;
-        if (trashItem && trashItem->item.name && trashItem->originalPath) {
-            fprintf(trashFile, "%s,%s,%ld\n",
-                trashItem->item.name,
+        if (trashItem && trashItem->uid && trashItem->item.name && trashItem->originalPath) {
+            // Format: UID,originalName,originalPath,deletedTime
+            fprintf(trashFile, "%s,%s,%s,%ld\n",
+                trashItem->uid,
+                trashItem->item.name,        // Nama asli untuk display
                 trashItem->originalPath,
-                trashItem->deletedTime);
+                trashItem->deletedTime);     // Waktu dihapus
         }
         current = current->next;
     }
 
     fclose(trashFile);
+    printf("[LOG] Trash data saved with UID as primary key and deleted time\n");
 }
-
 /*
  * IS: LinkedList trash berisi item yang telah dihapus.
- * FS: Mencetak semua item yang ada di LinkedList trash ke konsol.
+ * FS: Mencetak semua item yang ada di LinkedList trash ke konsol dengan format yang lebih informatif.
  * Author: Farras Fadhil Syafiq
+ * Edited by: Arief F-sa Wijaya
 ================================================================================*/
 void printTrash(LinkedList trash) {
     Node* current = trash.head;
@@ -247,19 +313,31 @@ void printTrash(LinkedList trash) {
         return;
     }
 
+    printf("\n=== TRASH CONTENTS ===\n");
+    printf("%-20s %-30s %-50s %-20s %-15s\n",
+        "UID", "Display Name", "Original Path", "Deleted Time", "Type");
+    printf("%-20s %-30s %-50s %-20s %-15s\n",
+        "----", "------------", "-------------", "------------", "----");
+
     while (current != NULL) {
         TrashItem* trashItem = (TrashItem*)current->data;
         if (trashItem != NULL) {
-            printf("[LOG] Trash Item: %s, Original Path: %s, Deleted Time: %ld, Trash Path: %s\n",
-                trashItem->item.name,
-                trashItem->originalPath,
-                trashItem->deletedTime,
-                trashItem->trashPath);
+            // Convert deleted time to readable format
+            struct tm* timeinfo = localtime(&trashItem->deletedTime);
+            char timeStr[20];
+            strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", timeinfo);
+
+            printf("%-20s %-30s %-50s %-20s %-15s\n",
+                trashItem->uid,
+                trashItem->item.name,        // Display nama asli
+                trashItem->originalPath,     // Path asal
+                timeStr,                     // Waktu dihapus
+                (trashItem->item.type == ITEM_FOLDER) ? "Folder" : "File");
         }
         current = current->next;
     }
+    printf("======================\n\n");
 }
-
 /*
  * IS:
  FS:
@@ -546,9 +624,9 @@ void renameFile(FileManager* fileManager, char* filePath, char* newName, bool is
     printf("[LOG] File berhasil diubah namanya menjadi %s\n", newName);
 }
 
-/*  Prosedur
- *  IS:
- *  FS:
+/*  Prosedur untuk recover file berdasarkan UID
+ *  IS: Item dipilih dari trash
+ *  FS: Item dikembalikan ke originalPath atau current directory
 ================================================================================*/
 void recoverFile(FileManager* fileManager) {
     if (fileManager->selectedItem.head == NULL) {
@@ -560,13 +638,15 @@ void recoverFile(FileManager* fileManager) {
     while (temp != NULL) {
         Item* itemToRecover = (Item*)temp->data;
 
-        // Cari di LinkedList trash
+        // Cari di LinkedList trash berdasarkan UID atau nama display
         Node* trashNode = fileManager->trash.head;
         TrashItem* foundTrashItem = NULL;
 
         while (trashNode != NULL) {
             TrashItem* trashItem = (TrashItem*)trashNode->data;
-            if (strcmp(trashItem->item.name, itemToRecover->name) == 0) {
+            // Match berdasarkan nama display dan path untuk identifikasi unik
+            if (strcmp(trashItem->item.name, itemToRecover->name) == 0 &&
+                strcmp(trashItem->item.path, itemToRecover->path) == 0) {
                 foundTrashItem = trashItem;
                 break;
             }
@@ -579,39 +659,66 @@ void recoverFile(FileManager* fileManager) {
             continue;
         }
 
-        // Recover ke original path atau current path
-        char* recoverPath = TextFormat("%s/%s", foundTrashItem->originalPath, foundTrashItem->item.name);
+        // Tentukan path recovery - ke original path
+        char* recoverPath = strdup(foundTrashItem->originalPath);
 
-        // Handle nama duplikat
+        // Handle nama duplikat di lokasi recovery
         if (FileExists(recoverPath) || DirectoryExists(recoverPath)) {
+            char* dirPath = _getDirectoryFromPath(recoverPath);
+            char* originalName = foundTrashItem->item.name;
+
             if (foundTrashItem->item.type == ITEM_FOLDER) {
-                recoverPath = _createDuplicatedFolderName(recoverPath, "(recovered)");
+                recoverPath = TextFormat("%s/%s(recovered)", dirPath, originalName);
+                if (DirectoryExists(recoverPath)) {
+                    recoverPath = _createDuplicatedFolderName(recoverPath, "(1)");
+                }
             }
             else {
-                recoverPath = _createDuplicatedFileName(recoverPath, "(recovered)");
+                char* extension = strrchr(originalName, '.');
+                if (extension) {
+                    size_t nameLen = extension - originalName;
+                    char* nameOnly = malloc(nameLen + 1);
+                    strncpy(nameOnly, originalName, nameLen);
+                    nameOnly[nameLen] = '\0';
+
+                    recoverPath = TextFormat("%s/%s(recovered)%s", dirPath, nameOnly, extension);
+                    free(nameOnly);
+                }
+                else {
+                    recoverPath = TextFormat("%s/%s(recovered)", dirPath, originalName);
+                }
+
+                if (FileExists(recoverPath)) {
+                    recoverPath = _createDuplicatedFileName(recoverPath, "(1)");
+                }
             }
+            free(dirPath);
         }
 
-        // Move dari trash ke lokasi recovery
+        // Move dari trash ke lokasi recovery menggunakan UID path
         if (rename(foundTrashItem->trashPath, recoverPath) == 0) {
-            printf("[LOG] File %s berhasil di-recover\n", foundTrashItem->item.name);
+            printf("[LOG] File '%s' berhasil di-recover ke %s (UID: %s)\n",
+                foundTrashItem->item.name, recoverPath, foundTrashItem->uid);
 
             // Hapus dari LinkedList trash
-            _removeFromTrash(fileManager, foundTrashItem->item.name);
+            _removeFromTrashByUID(fileManager, foundTrashItem->uid);
 
-            // Tambah kembali ke tree
-            _addBackToTree(fileManager, foundTrashItem, recoverPath);
+            // Tambah kembali ke tree dengan path recovery
+            _addBackToTreeFromTrash(fileManager, foundTrashItem, recoverPath);
         }
         else {
-            printf("[LOG] Gagal me-recover file %s\n", foundTrashItem->item.name);
+            printf("[LOG] Gagal me-recover file %s (UID: %s)\n",
+                foundTrashItem->item.name, foundTrashItem->uid);
         }
 
         temp = temp->next;
     }
 
     clearSelectedFile(fileManager);
-}
 
+    // Save perubahan trash
+    saveTrashToFile(fileManager);
+}
 /*  Prosedur
  *  IS:
  *  FS:
@@ -1420,6 +1527,8 @@ void _removeFromTrash(FileManager* fileManager, char* itemName) {
                 prev->next = current->next;
             }
 
+            // Free semua allocated memory termasuk UID
+            free(trashItem->uid);
             free(trashItem->originalPath);
             free(trashItem->trashPath);
             free(trashItem);
@@ -1430,7 +1539,6 @@ void _removeFromTrash(FileManager* fileManager, char* itemName) {
         current = current->next;
     }
 }
-
 /*  Prosedur helper untuk add back to tree
  *  IS:
  *  FS:
@@ -1545,33 +1653,64 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
         MakeDirectory(trashDir);
     }
 
-    // Buat TrashItem dengan metadata
+    // Generate unique ID sebagai primary key
+    char* uid = _generateUID();
+
+    // Buat TrashItem dengan metadata lengkap
     TrashItem* trashItem = (TrashItem*)malloc(sizeof(TrashItem));
+
+    // Simpan nama asli untuk display
     trashItem->item = itemTree->item;
-    trashItem->originalPath = strdup(itemTree->item.path);
-    trashItem->deletedTime = time(NULL);
+    trashItem->item.name = strdup(itemTree->item.name);  // Nama asli untuk display
+
+    trashItem->uid = uid;  // Primary key unik
+    trashItem->originalPath = strdup(itemTree->item.path);  // Path asal
+    trashItem->deletedTime = time(NULL);  // Waktu dihapus (bukan modified time)
 
     char* srcPath = itemTree->item.path;
-    char* trashPath = TextFormat("%s/%s", trashDir, itemTree->item.name);
 
-    // Handle nama duplikat di trash
-    if (FileExists(trashPath) || DirectoryExists(trashPath)) {
-        if (itemTree->item.type == ITEM_FOLDER) {
-            trashPath = _createDuplicatedFolderName(trashPath, "(1)");
-        }
-        else {
-            trashPath = _createDuplicatedFileName(trashPath, "(1)");
-        }
+    // Gunakan UID untuk nama file fisik di trash (primary key)
+    char* fileExtension = strrchr(itemTree->item.name, '.');
+    char* trashFileName;
+
+    if (fileExtension && itemTree->item.type == ITEM_FILE) {
+        // Untuk file dengan ekstensi: namaAsli_UID.ext
+        size_t nameLen = fileExtension - itemTree->item.name;
+        char* nameWithoutExt = malloc(nameLen + 1);
+        strncpy(nameWithoutExt, itemTree->item.name, nameLen);
+        nameWithoutExt[nameLen] = '\0';
+
+        trashFileName = TextFormat("%s_%s%s", nameWithoutExt, uid, fileExtension);
+        free(nameWithoutExt);
+    }
+    else {
+        // Untuk folder atau file tanpa ekstensi: namaAsli_UID
+        trashFileName = TextFormat("%s_%s", itemTree->item.name, uid);
     }
 
+    char* trashPath = TextFormat("%s/%s", trashDir, trashFileName);
     trashItem->trashPath = strdup(trashPath);
+
+    // Update item properties untuk trash display
+    trashItem->item.path = strdup(trashPath);
+    trashItem->item.deleted_at = trashItem->deletedTime;  // Set deleted time
 
     // Move ke trash secara fisik
     if (rename(srcPath, trashPath) != 0) {
-        printf("[LOG] Gagal memindahkan %s ke trash\ntrashPath:%s\nsrchPath:%s\n", itemTree->item.name, trashPath, srcPath);
+        printf("[LOG] Gagal memindahkan %s ke trash\ntrashPath:%s\nsrcPath:%s\n",
+            itemTree->item.name, trashPath, srcPath);
+
+        // Cleanup on failure
+        free(trashItem->uid);
+        free(trashItem->item.name);
+        free(trashItem->originalPath);
+        free(trashItem->trashPath);
+        free(trashItem->item.path);
+        free(trashItem);
+        return;
     }
 
-    // Tambahkan ke LinkedList trash (bukan Tree)
+    // Tambahkan ke LinkedList trash
     Node* newNode = (Node*)malloc(sizeof(Node));
     newNode->data = trashItem;
     newNode->next = fileManager->trash.head;
@@ -1579,6 +1718,12 @@ void _moveToTrash(FileManager* fileManager, Tree itemTree) {
 
     // Hapus dari tree utama
     remove_node(&(fileManager->root), itemTree);
+
+    printf("[LOG] Item '%s' moved to trash with UID: %s (Deleted at: %ld)\n",
+        trashItem->item.name, uid, trashItem->deletedTime);
+
+    // Otomatis save ke file setelah perubahan
+    saveTrashToFile(fileManager);
 }
 
 /* FungsProseduri rekursif untuk copy folder
@@ -1911,4 +2056,108 @@ char* _getDirectoryFromPath(char* path) {
 bool shouldShowProgressBar(int totalItems) {
     // Tampilkan progress bar jika item lebih dari 10
     return totalItems > 10;
+}
+
+/*  Function untuk generate unique ID dengan timestamp microsecond
+ *  IS: -
+ *  FS: return string UID dengan format YYYYMMDD_HHMMSS_microsecond
+================================================================================*/
+char* _generateUID() {
+    struct timeval tv;
+    struct tm* tm_info;
+    char timestamp[64];
+    char* uid;
+    time_t current_time;
+
+    // Get current time dengan microsecond precision
+    gettimeofday(&tv, NULL);
+
+    // Convert tv_sec ke time_t untuk kompatibilitas
+    current_time = (time_t)tv.tv_sec;
+    tm_info = localtime(&current_time);
+
+    // Format: YYYYMMDD_HHMMSS_microsecond
+    snprintf(timestamp, sizeof(timestamp), "%04d%02d%02d_%02d%02d%02d_%06ld",
+        tm_info->tm_year + 1900,
+        tm_info->tm_mon + 1,
+        tm_info->tm_mday,
+        tm_info->tm_hour,
+        tm_info->tm_min,
+        tm_info->tm_sec,
+        tv.tv_usec);
+
+    uid = strdup(timestamp);
+    printf("[LOG] Generated UID: %s\n", uid);
+    return uid;
+}
+
+/*  Prosedur helper untuk remove dari LinkedList trash berdasarkan UID
+ *  IS: UID item yang akan dihapus
+ *  FS: Item dihapus dari trash list
+================================================================================*/
+void _removeFromTrashByUID(FileManager* fileManager, char* uid) {
+    Node* current = fileManager->trash.head;
+    Node* prev = NULL;
+
+    while (current != NULL) {
+        TrashItem* trashItem = (TrashItem*)current->data;
+        if (strcmp(trashItem->uid, uid) == 0) {
+            if (prev == NULL) {
+                fileManager->trash.head = current->next;
+            }
+            else {
+                prev->next = current->next;
+            }
+
+            // Free semua allocated memory
+            free(trashItem->uid);
+            free(trashItem->item.name);
+            free(trashItem->item.path);
+            free(trashItem->originalPath);
+            free(trashItem->trashPath);
+            free(trashItem);
+            free(current);
+
+            printf("[LOG] Trash item dengan UID %s berhasil dihapus\n", uid);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    printf("[LOG] Trash item dengan UID %s tidak ditemukan\n", uid);
+}
+
+/*  Prosedur helper untuk add back to tree dari trash
+ *  IS: TrashItem dan path recovery
+ *  FS: Item ditambahkan kembali ke tree
+================================================================================*/
+void _addBackToTreeFromTrash(FileManager* fileManager, TrashItem* trashItem, char* recoverPath) {
+    // Cari parent directory untuk recovery
+    char* parentDir = _getDirectoryFromPath(recoverPath);
+
+    // Cari parent node di tree
+    Tree parentNode = _findNodeByPath(fileManager->root, parentDir);
+
+    if (parentNode != NULL) {
+        // Buat item baru dengan data recovery
+        Item recoveredItem = createItem(
+            _getNameFromPath(recoverPath),      // Nama dari path recovery
+            recoverPath,                        // Path recovery
+            0,                                  // Size akan diupdate
+            trashItem->item.type,              // Tipe asli
+            time(NULL),                        // Created time baru
+            time(NULL),                        // Modified time baru
+            0                                  // Reset deleted time
+        );
+
+        insert_node(parentNode, recoveredItem);
+        printf("[LOG] Item '%s' berhasil ditambahkan kembali ke tree di %s\n",
+            recoveredItem.name, parentDir);
+    }
+    else {
+        printf("[LOG] Gagal menemukan parent directory di tree: %s\n", parentDir);
+    }
+
+    free(parentDir);
 }

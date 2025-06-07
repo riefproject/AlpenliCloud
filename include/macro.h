@@ -11,4 +11,6 @@
 
 #define MAX_STRING_LENGTH 255
 
+// #define TRASH_DUMP ".dir/trash/trash_dump.txt"
+
 #endif
