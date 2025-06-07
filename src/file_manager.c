@@ -362,6 +362,7 @@ void destroyTree(Tree* tree) {
  * Author:
 ================================================================================*/
 void refreshFileManager(FileManager* fileManager) {
+    return;
     if (!fileManager || !fileManager->treeCursor) {
         printf("[LOG] Invalid fileManager or treeCursor in refresh\n");
         return;
@@ -1065,7 +1066,7 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
         tempItem->updated_at = container->updated_at;
         tempItem->deleted_at = 0;
         printf("[LOG] Enqueueing item: %s to temporary queue\n", tempItem->name);
-        enqueue(&tempQueue,tempItem);
+        enqueue(&tempQueue, tempItem);
         temp = temp->next;
     }
 
@@ -1108,11 +1109,32 @@ void pasteFile(FileManager* fileManager, bool isOperation) {
         }
 
         if (success) {
-            // Cleanup untuk cut operation
             _handleCutCleanup(fileManager, itemToPaste);
 
-            // Buat record untuk operasi ini
-            _createPasteItemRecord(itemToPaste, originPath);
+            Tree parentDestinationTree = searchTree(fileManager->root,
+                createItem(_getNameFromPath(destinationFullPath), destinationFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+
+            if (parentDestinationTree != NULL) {
+                // Tambahkan item utama
+                Item newItem = createItem(
+                    _getNameFromPath(newPath),
+                    newPath,
+                    itemToPaste->size,
+                    itemToPaste->type,
+                    itemToPaste->created_at,
+                    time(NULL),
+                    0);
+
+                Tree newNode = insert_node(parentDestinationTree, newItem);
+
+                // Jika item yang di-paste adalah folder, tambahkan seluruh struktur dalamnya
+                if (itemToPaste->type == ITEM_FOLDER && newNode != NULL) {
+                    _addTreeStructureRecursive(newNode, newPath);
+                    printf("[LOG] Recursive tree structure added for folder: %s\n", newItem.name);
+                }
+
+                printf("[LOG] Item %s berhasil ditambahkan ke tree\n", newItem.name);
+            }
         }
 
         currentProgress++;
@@ -2429,4 +2451,53 @@ void _redoRecover(FileManager* fileManager, Operation* operationToRedo, Operatio
         // 2. Kembalikan item ke tree
         _addBackToTree(fileManager, trashItem, trashItem->originalPath);
     }
+}
+
+// Function helper untuk menambah struktur tree secara rekursif
+void _addTreeStructureRecursive(Tree parentNode, char* folderPath) {
+    DIR* dp;
+    struct dirent* ep;
+    struct stat statbuf;
+
+    dp = opendir(folderPath);
+    if (dp == NULL) {
+        printf("[LOG] Gagal membuka direktori: %s\n", folderPath);
+        return;
+    }
+
+    while ((ep = readdir(dp)) != NULL) {
+        if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0) {
+            continue;
+        }
+
+        char* fullPath = TextFormat("%s/%s", folderPath, ep->d_name);
+
+        if (stat(fullPath, &statbuf) == 0) {
+            ItemType type = S_ISDIR(statbuf.st_mode) ? ITEM_FOLDER : ITEM_FILE;
+
+            // Buat item baru
+            Item newItem = createItem(
+                ep->d_name,
+                fullPath,
+                statbuf.st_size,
+                type,
+                statbuf.st_ctime,
+                statbuf.st_mtime,
+                0
+            );
+
+            // Tambahkan ke parent node
+            Tree newNode = insert_node(parentNode, newItem);
+
+            // Jika folder, rekursif tambahkan isinya
+            if (type == ITEM_FOLDER && newNode != NULL) {
+                _addTreeStructureRecursive(newNode, fullPath);
+            }
+
+            printf("[LOG] Added to tree: %s (type: %s)\n",
+                ep->d_name, type == ITEM_FOLDER ? "FOLDER" : "FILE");
+        }
+    }
+
+    closedir(dp);
 }
