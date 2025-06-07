@@ -96,7 +96,7 @@ void ShortcutKeys(Context* ctx) {
     }
 
     // GO BACK (Backspace atau Alt + Left Arrow)
-    if (!ctx->toolbar->newButtonProperty.showModal &&
+    if (!ctx->disableGroundClick &&
         !ctx->navbar->textboxPatheditMode &&
         !ctx->navbar->textboxSearcheditMode &&
         (IsKeyPressed(KEY_BACKSPACE) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_LEFT)))) {
@@ -124,25 +124,25 @@ void ShortcutKeys(Context* ctx) {
 
     // NEW FOLDER (Ctrl + Shift + N)
     if ((CONTROL_KEY_PRESSED) && (SHIFT_KEY_PRESSED) && IsKeyPressed(KEY_N)) {
-        ctx->toolbar->newButtonProperty.selectedType = ITEM_FOLDER;
-        ctx->toolbar->newButtonProperty.showModal = true;
-        if (!ctx->toolbar->newButtonProperty.showModal) {
-            char* name = ctx->toolbar->newButtonProperty.inputBuffer;
+        ctx->toolbar->selectedType = ITEM_FOLDER;
+        ctx->disableGroundClick = true;
+        if (!ctx->disableGroundClick) {
+            char* name = ctx->toolbar->inputCreateItemBuffer;
             char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
             createFile(ctx->fileManager, ITEM_FOLDER, dirPath, name, true);
         }
     }
 
     // NEW FILE (Ctrl + N)
-    if (!ctx->toolbar->newButtonProperty.showModal &&
+    if (!ctx->disableGroundClick &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_N) && !(SHIFT_KEY_PRESSED)) {
         ctx->navbar->textboxPatheditMode = false;
         ctx->navbar->textboxSearcheditMode = false;
         if (ctx->fileManager != NULL) {
-            ctx->toolbar->newButtonProperty.selectedType = ITEM_FILE;
-            ctx->toolbar->newButtonProperty.showModal = true;
-            if (!ctx->toolbar->newButtonProperty.showModal) {
-                char* name = ctx->toolbar->newButtonProperty.inputBuffer;
+            ctx->toolbar->selectedType = ITEM_FILE;
+            ctx->disableGroundClick = true;
+            if (!ctx->disableGroundClick) {
+                char* name = ctx->toolbar->inputCreateItemBuffer;
                 char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
                 createFile(ctx->fileManager, ITEM_FILE, dirPath, name, true);
             }
@@ -150,10 +150,10 @@ void ShortcutKeys(Context* ctx) {
     }
 
     // CTRL+F / FIND
-    if (!ctx->toolbar->newButtonProperty.showModal &&
+    if (!ctx->disableGroundClick &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_F)) {
         ctx->navbar->textboxPatheditMode = false;
-        ctx->toolbar->newButtonProperty.showModal = false;
+        ctx->disableGroundClick = false;
         if (ctx->navbar->textboxSearcheditMode) {
             ctx->navbar->textboxSearcheditMode = false;
             printf("[LOG] Search mode deactivated\n");
@@ -165,10 +165,10 @@ void ShortcutKeys(Context* ctx) {
     }
 
     // CTRL+L / ADDRESS/PATH
-    if (!ctx->toolbar->newButtonProperty.showModal &&
+    if (!ctx->disableGroundClick &&
         (CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_L)) {
         ctx->navbar->textboxSearcheditMode = false;
-        ctx->toolbar->newButtonProperty.showModal = false;
+        ctx->disableGroundClick = false;
         if (ctx->navbar->textboxPatheditMode) {
             ctx->navbar->textboxPatheditMode = false;
             printf("[LOG] Path edit mode deactivated\n");
@@ -180,7 +180,7 @@ void ShortcutKeys(Context* ctx) {
     }
 
     // ARROW KEYS NAVIGATION (only when not in edit mode)
-    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->toolbar->newButtonProperty.showModal) {
+    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->disableGroundClick) {
         if (IsKeyPressed(KEY_UP)) {
             // Move selection up
             if (ctx->body->focusedIndex > 0) {
@@ -236,7 +236,7 @@ void ShortcutKeys(Context* ctx) {
     }
 
     // ENTER KEY (open file/folder)
-    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->toolbar->newButtonProperty.showModal) {
+    if (!ctx->navbar->textboxPatheditMode && !ctx->navbar->textboxSearcheditMode && !ctx->disableGroundClick) {
         if (IsKeyPressed(KEY_ENTER)) {
             if (ctx->body->focusedIndex >= 0) {
                 Tree cursor = ctx->fileManager->treeCursor->first_son;
