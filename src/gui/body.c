@@ -269,17 +269,10 @@ void drawTableItem(Context *ctx, Body *body, Tree subTree, int index, float star
 
     DrawText(item.type == ITEM_FILE ? "file" : "folder", colX + 8, rowY + 6, 10, textColor);
     colX += colWidths[1];
-    
+
     // update size if folder
     if (item.type == ITEM_FOLDER && ctx->fileManager->isRootTrash == false) {
-        Tree temp = subTree->first_son;
-        long totalSize = 0;
-        while (temp != NULL) {
-            totalSize += temp->item.size;
-            temp = temp->next_brother;
-        }
-
-        item.size = totalSize;
+        getFolderSize(subTree, &item.size);
     }
 
     if (item.size < KB_SIZE) {
@@ -346,4 +339,19 @@ void drawTableHeader(Context *ctx, Body *body, float x, float y, float colWidths
 
     DrawRectangleLines(colX, y, colWidths[3], headerHeight, DARKGRAY);
     DrawText("Modified Time", colX + 8, y + 8, fontSize, DARKGRAY);
+}
+
+void getFolderSize(Tree tree, long *size) {
+    if (tree == NULL)
+        return;
+
+    if (tree->item.type == ITEM_FILE) {
+        *size += tree->item.size;
+    } else if (tree->item.type == ITEM_FOLDER) {
+        Tree child = tree->first_son;
+        while (child != NULL) {
+            getFolderSize(child, size);
+            child = child->next_brother;
+        }
+    }
 }

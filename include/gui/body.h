@@ -77,4 +77,12 @@ void drawTableItem(Context* ctx, Body* body, Tree subTree, int index, float star
 // Created by:  Farras
 void drawTableHeader(Context* ctx, Body* body, float x, float y, float colWidths[]);
 
+/*
+====================================================================
+    HELPER
+====================================================================
+*/
+
+void getFolderSize(Tree tree, long* size);
+
 #endif
