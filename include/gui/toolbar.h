@@ -30,6 +30,7 @@ typedef struct Toolbar {
     bool isButtonRestoreClicked;
     bool isButtonPermanentDeleteClicked;
     bool isButtonImportClicked;
+
     // Import modal properties
     bool importClicked;
     bool showImportModal;
@@ -52,18 +53,6 @@ typedef struct Toolbar {
     bool showRenameModal;
     bool renameModalResult;
     char renameInputBuffer[MAX_STRING_LENGTH];
-
-    bool showImportModal;
-    bool importModalResult;
-
-    // --- State untuk Drag & Drop ---
-    char droppedPaths[MAX_FILEPATH_COUNT][512];
-    int droppedPathCount;
-
-    // --- State untuk Input Manual ---
-    char importPath[512];
-    bool pathEditMode;
-
     Context *ctx;
 } Toolbar;
 

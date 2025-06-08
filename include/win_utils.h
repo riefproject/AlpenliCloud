@@ -12,20 +12,27 @@ typedef enum {
 } WindowsCommonFolder;
 
 // Function declarations untuk Windows utilities
-int RemoveItemsRecurse(const char* folderPath);
+int RemoveItemsRecurse(const char *folderPath);
 
 // File dialog functions
-int OpenWindowsFileDialog(char* filePath, int maxPathLength);
-int OpenWindowsFolderDialog(char* folderPath, int maxPathLength);
+int OpenWindowsFileDialog(char *filePath, int maxPathLength);
+int OpenWindowsFolderDialog(char *folderPath, int maxPathLength);
 
 // Path utility functions
-void GetWindowsUserFriendlyPath(const char* fullPath, char* result, int resultSize);
-int GetWindowsCommonPath(WindowsCommonFolder folder, char* path, int pathSize);
-int ValidateWindowsPath(const char* path);
-int IsWindowsDirectory(const char* path);
-void NormalizeWindowsPath(char* path);
+void GetWindowsUserFriendlyPath(const char *fullPath, char *result, int resultSize);
+int GetWindowsCommonPath(WindowsCommonFolder folder, char *path, int pathSize);
+int ValidateWindowsPath(const char *path);
+int IsWindowsDirectory(const char *path);
+void NormalizeWindowsPath(char *path);
+
+// Function untuk mendapatkan full path Windows
+// Menggunakan GetFullPathNameA untuk mendapatkan path lengkap
+// IS: inputPath adalah path relatif atau absolut ./ atau ../
+//     contoh: "C:\\folder\\file.txt", "./file.txt", "../folder/file.txt"
+// FS: mengembalikan path lengkap atau NULL jika gagal
+char *_getFullWindowsPath(const char *inputPath);
 
 // File system functions
-long long GetWindowsFileSize(const char* filePath);
+long long GetWindowsFileSize(const char *filePath);
 
 #endif // WIN_UTILS_H

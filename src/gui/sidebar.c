@@ -131,7 +131,6 @@ void drawSidebar(Sidebar *sidebar) {
     if (sidebar->ctx->disableGroundClick)
         GuiDisable();
 
-
     GuiScrollPanel(sidebar->panelRec, NULL, sidebar->panelContentRec, &scroll, &sidebar->panelView);
     GuiEnable();
 
@@ -163,33 +162,6 @@ void drawSidebar(Sidebar *sidebar) {
     sidebar->panelContentRec.height = drawPos.y - sidebar->panelRec.y;
 
     if (!sidebar->ctx->fileManager->isRootTrash) {
-        int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
-        int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
-        int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
-
-        int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
-        int prevFocusedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED);
-        int prevFocusedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED);
-        
-        int prevPressedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
-        int prevPressedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED);
-        int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);
-
-        // Normal
-        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
-        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color){180, 0, 0, 255}));
-
-        // Focused
-        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color){200, 0, 0, 255}));
-        GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color){120, 0, 0, 255}));
-
-        // Pressed
-        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color){150, 0, 0, 255}));
-        GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
-        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color){120, 0, 0, 255}));
-
         sidebar->isButtonOpenTrashClicked = GuiButtonCustom(
             (Rectangle){
                 sidebar->panelRec.x,
@@ -197,17 +169,6 @@ void drawSidebar(Sidebar *sidebar) {
                 sidebar->panelRec.width,
                 24},
             "#143# Open Trash", NULL, false, sidebar->ctx->disableGroundClick);
-
-        // Restore
-        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, prevBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, prevTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, prevBorderColor);
-        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, prevFocusedBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, prevFocusedTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, prevFocusedBorderColor);
-        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, prevPressedBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, prevPressedTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, prevPressedBorderColor);
     } else {
         sidebar->isButtonGoBackClicked = GuiButtonCustom(
             (Rectangle){
@@ -246,6 +207,7 @@ void drawSidebarItem(Sidebar *sidebar, SidebarItem *node, FileManager *fileManag
                             node->isExpanded = !node->isExpanded;
                         } else {
                             goTo(sidebar->ctx->fileManager, itemNode);
+                            sidebar->ctx->fileManager->isRootTrash = false;
                         }
                     }
                 }

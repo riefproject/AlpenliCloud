@@ -135,7 +135,7 @@ int main() {
 
         DrawNewItemModal(&ctx);
         DrawRenameItemModal(&ctx);
-        // DrawImportModal(&ctx, ctx.toolbar);
+        DrawImportModal(&ctx);
 
         EndDrawing();
     }

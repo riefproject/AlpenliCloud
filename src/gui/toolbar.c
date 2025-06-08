@@ -67,13 +67,23 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         toolbar->isButtonDeleteClicked = false;
     }
     if (toolbar->isButtonPasteClicked) {
-        // pasteFile(ctx->fileManager);
+        pasteFile(ctx->fileManager, true);
         toolbar->isButtonPasteClicked = false;
     }
 
     if (toolbar->isButtonRestoreClicked) {
         toolbar->isButtonRestoreClicked = false;
-        // recoverFile(ctx->fileManager);
+        recoverFile(ctx->fileManager);
+    }
+
+    if (toolbar->isButtonPermanentDeleteClicked) {
+        toolbar->isButtonPermanentDeleteClicked = false;
+
+        if (ctx->fileManager->isRootTrash) {
+            deletePermanentFile(ctx->fileManager);
+        } else {
+            printf("[ERROR] Permanent delete can only be used in Trash.\n");
+        }
     }
 
     if (toolbar->isButtonCreateItemClicked) {
@@ -127,52 +137,9 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         toolbar->renameModalResult = false;
     }
 
+    // Menambahkan handling untuk import
     if (toolbar->isButtonImportClicked) {
         toolbar->isButtonImportClicked = false;
-
-        // Tampilkan modal untuk input path import
-        toolbar->showImportModal = true;
-        toolbar->importPath[0] = '\0'; // Clear path
-        printf("[LOG] Import modal activated\n");
-    }
-
-    // // Handle import modal result
-    // if (toolbar->importModalResult) {
-    //     toolbar->importModalResult = false;
-
-    //     if (strlen(toolbar->importPath) > 0) {
-    //         importFile(ctx->fileManager, toolbar->importPath, true);
-    //         printf("[LOG] Import file operation executed: %s\n", toolbar->importPath);
-    //     }
-
-    //     // Clear after use
-    //     toolbar->importPath[0] = '\0';
-    // }
-    // if (toolbar->isButtonImportClicked) {
-    //     toolbar->isButtonImportClicked = false;
-
-    //     // Tampilkan modal untuk input path import
-    //     toolbar->showImportModal = true;
-    //     toolbar->importPath[0] = '\0'; // Clear path
-    //     printf("[LOG] Import modal activated\n");
-    // }
-
-    // // Handle import modal result
-    // if (toolbar->importModalResult) {
-    //     toolbar->importModalResult = false;
-
-    //     if (strlen(toolbar->importPath) > 0) {
-    //         importFile(ctx->fileManager, toolbar->importPath, true);
-    //         printf("[LOG] Import file operation executed: %s\n", toolbar->importPath);
-    //     }
-
-    //     // Clear after use
-    //     toolbar->importPath[0] = '\0';
-    // }
-
-    // Menambahkan handling untuk import
-    if (toolbar->importClicked) {
-        toolbar->importClicked = false;
         toolbar->showImportModal = true;
         toolbar->importPath[0] = '\0'; // Clear path
         printf("[LOG] Import modal activated\n");
@@ -183,7 +150,7 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
         toolbar->importModalResult = false;
 
         if (strlen(toolbar->importPath) > 0) {
-            // importFile(ctx->fileManager, toolbar->importPath, true);
+            importFile(ctx->fileManager, toolbar->importPath, true);
             printf("[LOG] Import file operation would execute: %s\n", toolbar->importPath);
         }
 
@@ -218,32 +185,43 @@ void drawToolbar(Toolbar *toolbar) {
         toolbar->isButtonCopyClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#16#", "COPY", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
-
-        x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", !(toolbar->ctx->fileManager->clipboard.front), toolbar->ctx->disableGroundClick);
+        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", !(toolbar->ctx->fileManager->clipboard.front), toolbar->ctx->disableGroundClick);
 
         // Menambahkan import button
         x += 24 + DEFAULT_PADDING;
-        if (GuiButtonCustom((Rectangle) { x, y, 50, 24 }, "#132#", "IMPORT", false, toolbar->ctx->disableGroundClick)) {
-            toolbar->importClicked = true;
-        }
+        toolbar->isButtonImportClicked = GuiButtonCustom((Rectangle){x, y, 50, 24}, "#132#", "IMPORT", false, toolbar->ctx->disableGroundClick);
 
         rightStartx -= 24;
-        toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+
+        // Normal
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt((Color){180, 0, 0, 255}));
+
+        // Focused
+        GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt((Color){200, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+        GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        // Pressed
+        GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt((Color){150, 0, 0, 255}));
+        GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
+        GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt((Color){120, 0, 0, 255}));
+
+        toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle){rightStartx - 50, y, 75, 24}, "#143# Delete", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
+
+        // Restore
+        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED));
     } else {
         toolbar->isButtonRestoreClicked = GuiButtonCustom((Rectangle){x, y, 100, 24}, "#77# Restore", "RESTORE SELECTED ITEM", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
-
-        int prevBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL);
-        int prevTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL);
-        int prevBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
-        int prevFocusedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
-        int prevFocusedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED);
-        int prevFocusedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED);
-        int prevPressedBgColor = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
-        int prevPressedTextColor = GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED);
-        int prevPressedBorderColor = GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED);
-
         // Normal
         GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt((Color){230, 0, 0, 255}));
         GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
@@ -262,15 +240,15 @@ void drawToolbar(Toolbar *toolbar) {
         toolbar->isButtonPermanentDeleteClicked = GuiButtonCustom((Rectangle){rightStartx - 150, y, 150, 24}, "#143# Permanent Delete", NULL, selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         // Restore
-        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, prevBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, prevTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, prevBorderColor);
-        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, prevFocusedBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, prevFocusedTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, prevFocusedBorderColor);
-        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, prevPressedBgColor);
-        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, prevPressedTextColor);
-        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, prevPressedBorderColor);
+        GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL));
+        GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED));
+        GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED));
+        GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED));
+        GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED));
     }
 }
 
@@ -463,344 +441,235 @@ void DrawRenameItemModal(Context *ctx) {
 }
 
 void DrawImportModal(Context *ctx) {
-    // Toolbar *toolbar = ctx->toolbar;
-    // if (!toolbar->showImportModal)
-    //     return;
+    bool *showImportModal = &ctx->toolbar->showImportModal;
+    char *importPath = ctx->toolbar->importPath;
+    int pathSize = sizeof(ctx->toolbar->importPath);
+    bool *modalResult = &ctx->toolbar->importModalResult;
 
-    // const int screenWidth = GetScreenWidth();
-    // const int screenHeight = GetScreenHeight();
-    // const int modalWidth = 600;
-    // const int modalHeight = 360;
+    if (!*showImportModal) {
+        return;
+    }
 
-    // Rectangle modalRect = {
-    //     (screenWidth - modalWidth) / 2.0f,
-    //     (screenHeight - modalHeight) / 2.0f,
-    //     modalWidth,
-    //     modalHeight};
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+    int modalWidth = 600;
+    int modalHeight = 300;
 
-    // // Overlay
-    // DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.4f));
+    Rectangle modalRect = {
+        (screenWidth - modalWidth) / 2.0f,
+        (screenHeight - modalHeight) / 2.0f,
+        modalWidth,
+        modalHeight};
 
-    // // Window
-    // bool shouldClose = GuiWindowBox(modalRect, "#132# Import File/Folder");
-    // if (shouldClose || IsKeyPressed(KEY_ESCAPE)) {
-    //     toolbar->showImportModal = false;
-    //     return;
-    // }
+    // Background overlay
+    DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.4f));
 
-    // // Input Path Section
-    // Rectangle pathRect = {modalRect.x + 20, modalRect.y + 50, modalRect.width - 150, 30};
-    // if (GuiTextBox(pathRect, toolbar->importPath, sizeof(toolbar->importPath), toolbar->pathEditMode)) {
-    //     toolbar->pathEditMode = !toolbar->pathEditMode;
-    // }
+    // Modal window
+    bool shouldClose = GuiWindowBox(modalRect, "#132# Import File/Folder");
 
-    // Rectangle browseFileBtn = {pathRect.x + pathRect.width + 10, pathRect.y, 50, 14};
-    // Rectangle browseFolderBtn = {browseFileBtn.x, browseFileBtn.y + 16, 50, 14};
+    if (shouldClose || IsKeyPressed(KEY_ESCAPE)) {
+        *showImportModal = false;
+        return;
+    }
 
-    // if (GuiButton(browseFileBtn, "#5# File")) {
-    //     char selected[512] = {0};
-    //     if (OpenWindowsFileDialog(selected, sizeof(selected))) {
-    //         strncpy(toolbar->importPath, selected, sizeof(toolbar->importPath) - 1);
-    //     }
-    // }
+    // Title
+    Rectangle titleRect = {
+        modalRect.x + 20,
+        modalRect.y + 40,
+        modalWidth - 40,
+        25};
+    GuiLabel(titleRect, "Import files or folders from outside the workspace");
 
-    // if (GuiButton(browseFolderBtn, "#1# Folder")) {
-    //     char selected[512] = {0};
-    //     if (OpenWindowsFolderDialog(selected, sizeof(selected))) {
-    //         strncpy(toolbar->importPath, selected, sizeof(toolbar->importPath) - 1);
-    //     }
-    // }
+    // Instructions
+    Rectangle instructionRect = {
+        modalRect.x + 20,
+        modalRect.y + 70,
+        modalWidth - 40,
+        20};
+    GuiLabel(instructionRect, "Enter the full path or use Browse button to select:");
 
-    // // Drag & Drop Section
-    // Rectangle dropZone = {modalRect.x + 20, modalRect.y + 100, modalRect.width - 40, 120};
-    // DrawRectangleRec(dropZone, Fade(LIGHTGRAY, 0.5f));
-    // DrawRectangleLinesEx(dropZone, 1, GRAY);
-    // GuiLabel((Rectangle){dropZone.x + 10, dropZone.y + 10, dropZone.width - 20, 20}, "Drag & drop files/folders here:");
+    // Examples
+    Rectangle exampleRect = {
+        modalRect.x + 20,
+        modalRect.y + 95,
+        modalWidth - 40,
+        15};
+    GuiLabel(exampleRect, "Examples: C:/Users/YourName/Documents/file.txt or D:/MyFolder");
 
-    // if (IsFileDropped()) {
-    //     FilePathList dropped = LoadDroppedFiles();
-    //     for (int i = 0; i < dropped.count && toolbar->droppedPathCount < MAX_FILEPATH_COUNT; i++) {
-    //         strncpy(toolbar->droppedPaths[toolbar->droppedPathCount], dropped.paths[i], 511);
-    //         toolbar->droppedPaths[toolbar->droppedPathCount][511] = '\0';
-    //         toolbar->droppedPathCount++;
-    //     }
-    //     UnloadDroppedFiles(dropped);
-    // }
+    // Path input
+    Rectangle pathInputRect = {
+        modalRect.x + 20,
+        modalRect.y + 120,
+        modalWidth - 130,
+        30};
 
-    // // Display dropped files
-    // for (int i = 0; i < toolbar->droppedPathCount; i++) {
-    //     Rectangle entryRect = {dropZone.x + 10, dropZone.y + 40 + i * 20, dropZone.width - 20, 20};
-    //     if (entryRect.y + 20 < dropZone.y + dropZone.height) {
-    //         GuiLabel(entryRect, toolbar->droppedPaths[i]);
-    //     }
-    // }
+    static bool pathEditMode = true;
+    if (GuiTextBox(pathInputRect, importPath, pathSize, pathEditMode)) {
+        pathEditMode = !pathEditMode;
+    }
 
-    // // Import/Cancel Buttons
-    // Rectangle importBtn = {modalRect.x + modalWidth - 180, modalRect.y + modalHeight - 40, 80, 30};
-    // Rectangle cancelBtn = {modalRect.x + modalWidth - 90, modalRect.y + modalHeight - 40, 70, 30};
+    // Browse File button - menggunakan Windows utils
+    Rectangle browseFileRect = {
+        modalRect.x + modalWidth - 100,
+        modalRect.y + 120,
+        80,
+        14};
 
-    // bool hasInput = strlen(toolbar->importPath) > 0;
-    // bool hasDrops = toolbar->droppedPathCount > 0;
+    if (GuiButton(browseFileRect, "#5# File")) {
+        char selectedPath[512] = {0};
+        if (OpenWindowsFileDialog(selectedPath, sizeof(selectedPath))) {
+            strncpy(importPath, selectedPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] File selected: %s\n", selectedPath);
+        }
+    }
 
-    // if (hasInput || hasDrops) {
-    //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GREEN));
-    //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+    // Browse Folder button - menggunakan Windows utils
+    Rectangle browseFolderRect = {
+        modalRect.x + modalWidth - 100,
+        modalRect.y + 136,
+        80,
+        14};
 
-    //     if (GuiButton(importBtn, "#84# Import")) {
-    //         if (hasInput) {
-    //             importFile(ctx->fileManager, toolbar->importPath, true);
-    //             printf("[LOG] Imported: %s\n", toolbar->importPath);
-    //         }
-    //         for (int i = 0; i < toolbar->droppedPathCount; i++) {
-    //             importFile(ctx->fileManager, toolbar->droppedPaths[i], true);
-    //             printf("[LOG] Imported dropped: %s\n", toolbar->droppedPaths[i]);
-    //         }
+    if (GuiButton(browseFolderRect, "#1# Folder")) {
+        char selectedPath[512] = {0};
+        if (OpenWindowsFolderDialog(selectedPath, sizeof(selectedPath))) {
+            strncpy(importPath, selectedPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] Folder selected: %s\n", selectedPath);
+        }
+    }
 
-    //         // Reset state
-    //         toolbar->showImportModal = false;
-    //         toolbar->importPath[0] = '\0';
-    //         toolbar->droppedPathCount = 0;
-    //     }
-    // } else {
-    //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GRAY));
-    //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
-    //     GuiButton(importBtn, "#84# Import");
-    // }
+    // Quick access buttons - menggunakan Windows utils
+    Rectangle quickAccessRect = {
+        modalRect.x + 20,
+        modalRect.y + 160,
+        modalWidth - 40,
+        20};
+    GuiLabel(quickAccessRect, "Quick Access:");
 
-    // // Cancel button
-    // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
-    // GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(DARKGRAY));
-    // if (GuiButton(cancelBtn, "#143# Cancel")) {
-    //     toolbar->showImportModal = false;
-    //     toolbar->importPath[0] = '\0';
-    //     toolbar->droppedPathCount = 0;
-    // }
+    float btnWidth = 80;
+    float btnSpacing = 10;
+    float startX = modalRect.x + 20;
+    float btnY = modalRect.y + 180;
+
+    // Desktop button
+    Rectangle desktopRect = {startX, btnY, btnWidth, 20};
+    if (GuiButton(desktopRect, "Desktop")) {
+        char desktopPath[512];
+        if (GetWindowsCommonPath(WIN_FOLDER_DESKTOP, desktopPath, sizeof(desktopPath))) {
+            strncpy(importPath, desktopPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] Desktop path set: %s\n", importPath);
+        }
+    }
+
+    // Documents button
+    Rectangle documentsRect = {startX + (btnWidth + btnSpacing), btnY, btnWidth, 20};
+    if (GuiButton(documentsRect, "Documents")) {
+        char documentsPath[512];
+        if (GetWindowsCommonPath(WIN_FOLDER_DOCUMENTS, documentsPath, sizeof(documentsPath))) {
+            strncpy(importPath, documentsPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] Documents path set: %s\n", importPath);
+        }
+    }
+
+    // Downloads button
+    Rectangle downloadsRect = {startX + 2 * (btnWidth + btnSpacing), btnY, btnWidth, 20};
+    if (GuiButton(downloadsRect, "Downloads")) {
+        char downloadsPath[512];
+        if (GetWindowsCommonPath(WIN_FOLDER_DOWNLOADS, downloadsPath, sizeof(downloadsPath))) {
+            strncpy(importPath, downloadsPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] Downloads path set: %s\n", importPath);
+        }
+    }
+
+    // Pictures button
+    Rectangle picturesRect = {startX + 3 * (btnWidth + btnSpacing), btnY, btnWidth, 20};
+    if (GuiButton(picturesRect, "Pictures")) {
+        char picturesPath[512];
+        if (GetWindowsCommonPath(WIN_FOLDER_PICTURES, picturesPath, sizeof(picturesPath))) {
+            strncpy(importPath, picturesPath, pathSize - 1);
+            importPath[pathSize - 1] = '\0';
+            printf("[LOG] Pictures path set: %s\n", importPath);
+        }
+    }
+
+    // Validation message - menggunakan Windows utils
+    Rectangle validationRect = {
+        modalRect.x + 20,
+        modalRect.y + 210,
+        modalWidth - 40,
+        20};
+
+    static bool showValidation = false;
+    static char validationMsg[256] = "";
+
+    if (strlen(importPath) > 0) {
+        if (!ValidateWindowsPath(importPath)) {
+            strcpy(validationMsg, "#143# Invalid path or file not found!");
+            showValidation = true;
+        } else {
+            strcpy(validationMsg, "#84# Path is valid and ready to import");
+            showValidation = true;
+        }
+    } else {
+        showValidation = false;
+    }
+
+    if (showValidation) {
+        Color msgColor = strstr(validationMsg, "Invalid") ? RED : GREEN;
+        GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(msgColor));
+        GuiLabel(validationRect, validationMsg);
+        GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(DARKGRAY)); // Reset
+    }
+
+    // Buttons
+    Rectangle importBtnRect = {
+        modalRect.x + modalWidth - 180,
+        modalRect.y + modalHeight - 40,
+        80,
+        30};
+
+    Rectangle cancelBtnRect = {
+        modalRect.x + modalWidth - 90,
+        modalRect.y + modalHeight - 40,
+        70,
+        30};
+
+    // Import button
+    bool canImport = strlen(importPath) > 0 && ValidateWindowsPath(importPath);
+
+    if (canImport) {
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GREEN));
+        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+    } else {
+        GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GRAY));
+        GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
+    }
+
+    if (GuiButton(importBtnRect, "#84# Import") && canImport) {
+        *modalResult = true;
+        *showImportModal = false;
+        printf("[LOG] Import confirmed for: %s\n", importPath);
+    }
+
+    // Reset button style
+    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
+    GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(DARKGRAY));
+
+    // Handle Enter key
+    if (IsKeyPressed(KEY_ENTER) && canImport) {
+        *modalResult = true;
+        *showImportModal = false;
+        printf("[LOG] Import confirmed with Enter: %s\n", importPath);
+    }
+
+    // Cancel button
+    if (GuiButton(cancelBtnRect, "#143# Cancel")) {
+        *showImportModal = false;
+        memset(importPath, 0, pathSize);
+    }
 }
-
-// void DrawImportModal(Context *ctx, bool *showImportModal, char *importPath, int pathSize, bool *modalResult) {
-//     if (!*showImportModal)
-//         return;
-
-//     int screenWidth = GetScreenWidth();
-//     int screenHeight = GetScreenHeight();
-//     int modalWidth = 600;
-//     int modalHeight = 300;
-
-//     Rectangle modalRect = {
-//         (screenWidth - modalWidth) / 2.0f,
-//         (screenHeight - modalHeight) / 2.0f,
-//         modalWidth,
-//         modalHeight};
-
-//     // Background overlay
-//     DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.4f));
-
-//     // Modal window
-//     bool shouldClose = GuiWindowBox(modalRect, "#132# Import File/Folder");
-
-//     if (shouldClose || IsKeyPressed(KEY_ESCAPE)) {
-//         *showImportModal = false;
-//         return;
-//     }
-
-//     // Title
-//     Rectangle titleRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 40,
-//         modalWidth - 40,
-//         25};
-//     GuiLabel(titleRect, "Import files or folders from outside the workspace");
-
-//     // Instructions
-//     Rectangle instructionRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 70,
-//         modalWidth - 40,
-//         20};
-//     GuiLabel(instructionRect, "Enter the full path or use Browse button to select:");
-
-//     // Examples
-//     Rectangle exampleRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 95,
-//         modalWidth - 40,
-//         15};
-//     GuiLabel(exampleRect, "Examples: C:/Users/YourName/Documents/file.txt or D:/MyFolder");
-
-//     // Path input
-//     Rectangle pathInputRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 120,
-//         modalWidth - 130,
-//         30};
-
-//     static bool pathEditMode = true;
-//     if (GuiTextBox(pathInputRect, importPath, pathSize, pathEditMode)) {
-//         pathEditMode = !pathEditMode;
-//     }
-
-//     // Browse File button - menggunakan Windows utils
-//     Rectangle browseFileRect = {
-//         modalRect.x + modalWidth - 100,
-//         modalRect.y + 120,
-//         80,
-//         14};
-
-//     if (GuiButton(browseFileRect, "#5# File")) {
-//         char selectedPath[512] = {0};
-//         if (OpenWindowsFileDialog(selectedPath, sizeof(selectedPath))) {
-//             strncpy(importPath, selectedPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] File selected: %s\n", selectedPath);
-//         }
-//     }
-
-//     // Browse Folder button - menggunakan Windows utils
-//     Rectangle browseFolderRect = {
-//         modalRect.x + modalWidth - 100,
-//         modalRect.y + 136,
-//         80,
-//         14};
-
-//     if (GuiButton(browseFolderRect, "#1# Folder")) {
-//         char selectedPath[512] = {0};
-//         if (OpenWindowsFolderDialog(selectedPath, sizeof(selectedPath))) {
-//             strncpy(importPath, selectedPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] Folder selected: %s\n", selectedPath);
-//         }
-//     }
-
-//     // Quick access buttons - menggunakan Windows utils
-//     Rectangle quickAccessRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 160,
-//         modalWidth - 40,
-//         20};
-//     GuiLabel(quickAccessRect, "Quick Access:");
-
-//     float btnWidth = 80;
-//     float btnSpacing = 10;
-//     float startX = modalRect.x + 20;
-//     float btnY = modalRect.y + 180;
-
-//     // Desktop button
-//     Rectangle desktopRect = {startX, btnY, btnWidth, 20};
-//     if (GuiButton(desktopRect, "Desktop")) {
-//         char desktopPath[512];
-//         if (GetWindowsCommonPath(WIN_FOLDER_DESKTOP, desktopPath, sizeof(desktopPath))) {
-//             strncpy(importPath, desktopPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] Desktop path set: %s\n", importPath);
-//         }
-//     }
-
-//     // Documents button
-//     Rectangle documentsRect = {startX + (btnWidth + btnSpacing), btnY, btnWidth, 20};
-//     if (GuiButton(documentsRect, "Documents")) {
-//         char documentsPath[512];
-//         if (GetWindowsCommonPath(WIN_FOLDER_DOCUMENTS, documentsPath, sizeof(documentsPath))) {
-//             strncpy(importPath, documentsPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] Documents path set: %s\n", importPath);
-//         }
-//     }
-
-//     // Downloads button
-//     Rectangle downloadsRect = {startX + 2 * (btnWidth + btnSpacing), btnY, btnWidth, 20};
-//     if (GuiButton(downloadsRect, "Downloads")) {
-//         char downloadsPath[512];
-//         if (GetWindowsCommonPath(WIN_FOLDER_DOWNLOADS, downloadsPath, sizeof(downloadsPath))) {
-//             strncpy(importPath, downloadsPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] Downloads path set: %s\n", importPath);
-//         }
-//     }
-
-//     // Pictures button
-//     Rectangle picturesRect = {startX + 3 * (btnWidth + btnSpacing), btnY, btnWidth, 20};
-//     if (GuiButton(picturesRect, "Pictures")) {
-//         char picturesPath[512];
-//         if (GetWindowsCommonPath(WIN_FOLDER_PICTURES, picturesPath, sizeof(picturesPath))) {
-//             strncpy(importPath, picturesPath, pathSize - 1);
-//             importPath[pathSize - 1] = '\0';
-//             printf("[LOG] Pictures path set: %s\n", importPath);
-//         }
-//     }
-
-//     // Validation message - menggunakan Windows utils
-//     Rectangle validationRect = {
-//         modalRect.x + 20,
-//         modalRect.y + 210,
-//         modalWidth - 40,
-//         20};
-
-//     static bool showValidation = false;
-//     static char validationMsg[256] = "";
-
-//     if (strlen(importPath) > 0) {
-//         if (!ValidateWindowsPath(importPath)) {
-//             strcpy(validationMsg, "#143# Invalid path or file not found!");
-//             showValidation = true;
-//         } else {
-//             strcpy(validationMsg, "#84# Path is valid and ready to import");
-//             showValidation = true;
-//         }
-//     } else {
-//         showValidation = false;
-//     }
-
-//     if (showValidation) {
-//         Color msgColor = strstr(validationMsg, "Invalid") ? RED : GREEN;
-//         GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(msgColor));
-//         GuiLabel(validationRect, validationMsg);
-//         GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(DARKGRAY)); // Reset
-//     }
-
-//     // Buttons
-//     Rectangle importBtnRect = {
-//         modalRect.x + modalWidth - 180,
-//         modalRect.y + modalHeight - 40,
-//         80,
-//         30};
-
-//     Rectangle cancelBtnRect = {
-//         modalRect.x + modalWidth - 90,
-//         modalRect.y + modalHeight - 40,
-//         70,
-//         30};
-
-//     // Import button
-//     bool canImport = strlen(importPath) > 0 && ValidateWindowsPath(importPath);
-
-//     if (canImport) {
-//         GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GREEN));
-//         GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-//     } else {
-//         GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(GRAY));
-//         GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
-//     }
-
-//     if (GuiButton(importBtnRect, "#84# Import") && canImport) {
-//         *modalResult = true;
-//         *showImportModal = false;
-//         printf("[LOG] Import confirmed for: %s\n", importPath);
-//     }
-
-//     // Reset button style
-//     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(LIGHTGRAY));
-//     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(DARKGRAY));
-
-//     // Handle Enter key
-//     if (IsKeyPressed(KEY_ENTER) && canImport) {
-//         *modalResult = true;
-//         *showImportModal = false;
-//         printf("[LOG] Import confirmed with Enter: %s\n", importPath);
-//     }
-
-//     // Cancel button
-//     if (GuiButton(cancelBtnRect, "#143# Cancel")) {
-//         *showImportModal = false;
-//         memset(importPath, 0, pathSize);
-//     }
-// }

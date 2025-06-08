@@ -119,7 +119,7 @@ void searchingTreeItem(FileManager* fileManager, char* keyword);
 // IS: LinkedList untuk menyimpan hasil pencarian, tree yang akan dicari, dan keyword yang digunakan
 // FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
 // Created by: Farras
-void searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, const char* keyword);
+void searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, char* keyword);
 
 // Prosedur search item di linked list
 // Mencari item di LinkedList berdasarkan keyword dengan membandingkan nama item
@@ -155,6 +155,13 @@ void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* na
 // FS: File/folder dipindahkan ke direktori trash, ditambahkan ke LinkedList trash, dihapus dari tree utama, operasi disimpan untuk undo
 // Created by: Arief
 void deleteFile(FileManager* fileManager, bool isOperation);
+
+// Prosedur delete file/folder secara permanen
+// Menghapus file/folder secara permanen dari filesystem tanpa menyimpan ke trash
+// IS: Ada file/folder di selectedItem yang dipilih untuk dihapus secara permanen
+// FS: File/folder dihapus dari filesystem, dihapus dari tree utama, operasi disimpan untuk undo jika isOperation=true
+// Created by: Farras
+void deletePermanentFile(FileManager *fileManager);
 
 // Prosedur rename file/folder
 // Mengganti nama file atau folder dengan pengecekan duplikasi dan operasi filesystem

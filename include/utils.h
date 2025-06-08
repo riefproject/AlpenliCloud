@@ -29,6 +29,12 @@ void inputString(char** s);
 // Created by: Farras
 void trimTrailingSlash(char* path);
 
+// Prosedur mengubah string ke huruf kecil
+// Mengubah semua karakter dalam string menjadi huruf kecil menggunakan tolower
+// IS: String berisi karakter yang mungkin campuran huruf besar dan kecil
+// FS: Semua karakter dalam string diubah menjadi huruf kecil, string tetap valid
+// Created by: Farras
+void toLowerStr(char *str);
 /*
 ====================================================================
     KEYBOARD SHORTCUTS DAN NAVIGASI

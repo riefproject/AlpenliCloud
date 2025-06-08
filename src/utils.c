@@ -1,21 +1,22 @@
 #include "utils.h"
-#include "file_manager.h"
+#include "body.h"
 #include "ctx.h"
+#include "file_manager.h"
+#include "navbar.h"
 #include "raylib.h"
 #include "toolbar.h"
-#include "navbar.h"
-#include "body.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define CONTROL_KEY_PRESSED IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)
 #define SHIFT_KEY_PRESSED IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)
 #define ALT_KEY_PRESSED IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)
 
-void inputString(char** s) {
-    char* temp = malloc(1);
+void inputString(char **s) {
+    char *temp = malloc(1);
     char c;
     int i = 0;
     while ((c = getchar()) != '\n') {
@@ -33,14 +34,20 @@ void inputString(char** s) {
     *s = temp;
 }
 
-void trimTrailingSlash(char* path) {
+void trimTrailingSlash(char *path) {
     int len = strlen(path);
     while (len > 0 && path[len - 1] == '/') {
         path[--len] = '\0';
     }
 }
 
-void ShortcutKeys(Context* ctx) {
+void toLowerStr(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = (char)tolower((unsigned char)str[i]);
+    }
+}
+
+void ShortcutKeys(Context *ctx) {
 
     // COPY (Ctrl + C)
     if ((CONTROL_KEY_PRESSED) && IsKeyPressed(KEY_C)) {
@@ -82,7 +89,7 @@ void ShortcutKeys(Context* ctx) {
     // RENAME (F2)
     if (IsKeyPressed(KEY_F2)) {
         if (ctx->fileManager != NULL && ctx->fileManager->selectedItem.head != NULL) {
-            Item* selectedItem = (Item*)ctx->fileManager->selectedItem.head->data;
+            Item *selectedItem = (Item *)ctx->fileManager->selectedItem.head->data;
             if (selectedItem != NULL) {
                 printf("[LOG] Rename shortcut activated for: %s\n", selectedItem->name);
                 // renameFile(ctx->fileManager, selectedItem->path, "new_name"); // Implement proper rename UI
@@ -113,8 +120,7 @@ void ShortcutKeys(Context* ctx) {
             if (!ctx->body->selectedAll) {
                 selectAll(ctx->fileManager);
                 ctx->body->selectedAll = true;
-            }
-            else {
+            } else {
                 clearSelectedFile(ctx->fileManager);
                 ctx->body->selectedAll = false;
             }
@@ -127,8 +133,8 @@ void ShortcutKeys(Context* ctx) {
         ctx->toolbar->selectedType = ITEM_FOLDER;
         ctx->disableGroundClick = true;
         if (!ctx->disableGroundClick) {
-            char* name = ctx->toolbar->inputCreateItemBuffer;
-            char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+            char *name = ctx->toolbar->inputCreateItemBuffer;
+            char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
             createFile(ctx->fileManager, ITEM_FOLDER, dirPath, name, true);
         }
     }
@@ -142,8 +148,8 @@ void ShortcutKeys(Context* ctx) {
             ctx->toolbar->selectedType = ITEM_FILE;
             ctx->disableGroundClick = true;
             if (!ctx->disableGroundClick) {
-                char* name = ctx->toolbar->inputCreateItemBuffer;
-                char* dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+                char *name = ctx->toolbar->inputCreateItemBuffer;
+                char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
                 createFile(ctx->fileManager, ITEM_FILE, dirPath, name, true);
             }
         }
@@ -157,8 +163,7 @@ void ShortcutKeys(Context* ctx) {
         if (ctx->navbar->textboxSearcheditMode) {
             ctx->navbar->textboxSearcheditMode = false;
             printf("[LOG] Search mode deactivated\n");
-        }
-        else {
+        } else {
             ctx->navbar->textboxSearcheditMode = true;
             printf("[LOG] Search mode activated\n");
         }
@@ -172,8 +177,7 @@ void ShortcutKeys(Context* ctx) {
         if (ctx->navbar->textboxPatheditMode) {
             ctx->navbar->textboxPatheditMode = false;
             printf("[LOG] Path edit mode deactivated\n");
-        }
-        else {
+        } else {
             ctx->navbar->textboxPatheditMode = true;
             printf("[LOG] Path edit mode activated\n");
         }
@@ -254,8 +258,7 @@ void ShortcutKeys(Context* ctx) {
                         goTo(ctx->fileManager, cursor);
                         ctx->body->focusedIndex = 0;
                         printf("[LOG] Keyboard action - enter folder: %s\n", item.name);
-                    }
-                    else if (item.type == ITEM_FILE) {
+                    } else if (item.type == ITEM_FILE) {
                         windowsOpenWith(item.path);
                         printf("[LOG] Keyboard action - open file: %s\n", item.name);
                     }
