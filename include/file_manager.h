@@ -195,7 +195,7 @@ void cutFile(FileManager* fileManager);
 // IS: Ada file/folder di queue temp dari operasi copy/cut
 // FS: File/folder ditempelkan ke treeCursor dengan copy content atau move, progress bar ditampilkan jika >10 item, queue temp dikosongkan untuk cut
 // Created by: Arief
-void pasteFile(FileManager *fileManager, bool isOperation);
+void pasteFile(FileManager* fileManager, bool isOperation);
 
 
 /*
@@ -433,70 +433,70 @@ char* _getDirectoryFromPath(char* path);
 // IS: Item yang akan di-undo ada di filesystem dan tree. Operasi `op` berisi path item tersebut.
 // FS: Item dihapus dari filesystem dan tree.
 // Created by: Maulana
-void _undoCreate(FileManager *fm, Operation *operationToUndo);
+void _undoCreate(FileManager* fm, Operation* operationToUndo);
 
 // Function undoDelete
 // Membatalkan operasi penghapusan (yang memindahkan ke trash) dengan mengembalikan item ke path aslinya.
 // IS: Item yang akan di-undo ada di dalam trash. `op->itemTemp` berisi daftar TrashItem.
 // FS: Item dikembalikan ke path aslinya di filesystem dan tree. Daftar item dipindahkan ke `opToRedo`.
 // Created by: Maulana
-void _undoDelete(FileManager *fm, Operation *opToUndo, Operation *opToRedo);
+void _undoDelete(FileManager* fm, Operation* opToUndo, Operation* opToRedo);
 
 // Function undoRename
 // Membatalkan operasi penggantian nama dengan mengembalikannya ke nama semula.
 // IS: Item ada dengan nama baru (`op->to`).
 // FS: Item dikembalikan ke nama lamanya (`op->from`).
 // Created by: Maulana
-void _undoRename(FileManager *fm, Operation *op);
+void _undoRename(FileManager* fm, Operation* op);
 
 // Function undoPaste
 // Membatalkan operasi paste. Jika 'cut', kembalikan ke lokasi asal. Jika 'copy', hapus hasil paste.
 // IS: Item hasil paste ada di lokasi tujuan. `op` berisi detail operasi paste.
 // FS: Item dikembalikan ke keadaan sebelum di-paste.
 // Created by: Maulana
-void _undoPaste(FileManager *fm, Operation *op, Operation *opToRedo);
+void _undoPaste(FileManager* fm, Operation* op, Operation* opToRedo);
 
 // Function undoRecover
 // Membatalkan operasi pemulihan dari trash dengan mengembalikan item ke trash.
 // IS: Item yang dipulihkan ada di filesystem. `op->itemTemp` berisi daftar item yang di-recover.
 // FS: Item dikembalikan ke trash, baik secara fisik maupun di dalam struktur data.
 // Created by: Maulana
-void _undoRecover(FileManager *fm, Operation *op, Operation *opToRedo);
+void _undoRecover(FileManager* fm, Operation* op, Operation* opToRedo);
 
 // Function redoCreate
 // Menjalankan kembali operasi pembuatan file/folder yang telah di-undo.
 // IS: Item tidak ada di filesystem. `op` berisi path item yang akan dibuat.
 // FS: Item dibuat kembali di filesystem dan tree.
 // Created by: Maulana
-void _redoCreate(FileManager *fm, Operation *op);
+void _redoCreate(FileManager* fm, Operation* op);
 
 // Function redoDelete
 // Menjalankan kembali operasi penghapusan ke trash.
 // IS: Item ada di filesystem setelah di-undo. `op->itemTemp` berisi daftar item yang akan dihapus.
 // FS: Item dipindahkan kembali ke trash.
 // Created by: Maulana
-void _redoDelete(FileManager *fm, Operation *op, Operation *opToUndo);
+void _redoDelete(FileManager* fm, Operation* op, Operation* opToUndo);
 
 // Function redoRename
 // Menjalankan kembali operasi penggantian nama.
 // IS: Item ada dengan nama lama (`op->from`).
 // FS: Item diganti namanya menjadi nama baru (`op->to`).
 // Created by: Maulana
-void _redoRename(FileManager *fm, Operation *op);
+void _redoRename(FileManager* fm, Operation* op);
 
 // Function redoPaste
 // Menjalankan kembali operasi paste yang telah di-undo.
 // IS: Item berada di keadaan sebelum di-paste.
 // FS: Item di-paste kembali ke lokasi tujuan.
 // Created by: Maulana
-void _redoPaste(FileManager *fm, Operation *op, Operation *opToUndo);
+void _redoPaste(FileManager* fm, Operation* op, Operation* opToUndo);
 
 // Function redoRecover
 // Menjalankan kembali operasi pemulihan dari trash.
 // IS: Item ada di dalam trash.
 // FS: Item dipulihkan dari trash ke lokasi aslinya.
 // Created by: Maulana
-void _redoRecover(FileManager *fm, Operation *op, Operation *opToUndo);
+void _redoRecover(FileManager* fm, Operation* op, Operation* opToUndo);
 
 
 
@@ -517,4 +517,36 @@ void _refreshSidebarSafely(FileManager* fileManager);
 
 bool _isValidTreeNode(Tree root, Tree target);
 
+/*
+====================================================================
+    OPERASI IMPORT/UPLOAD FILE
+====================================================================
+*/
+
+// Prosedur import file/folder dari path eksternal
+// Mengimpor file atau folder dari path di luar workspace ke direktori saat ini
+// IS: Source path valid dan dapat diakses, destination adalah treeCursor saat ini
+// FS: File/folder disalin ke direktori saat ini dengan handling nama duplikat, item ditambahkan ke tree structure, operasi disimpan untuk undo
+// Created by: GitHub Copilot
+void importFile(FileManager* fileManager, char* sourcePath, bool isOperation);
+
+// Function check if path is external
+// Memeriksa apakah path berada di luar workspace (.dir) untuk validasi import
+// IS: Path file atau folder diketahui
+// FS: Return true jika path di luar workspace, false jika dalam workspace
+// Created by: GitHub Copilot
+bool isExternalPath(char* path);
+
+// Function validate import path
+// Memvalidasi path untuk operasi import dengan pengecekan aksesibilitas dan tipe
+// IS: Path yang akan diimpor diketahui
+// FS: Return true jika path valid untuk import, false jika tidak valid atau tidak dapat diakses
+// Created by: GitHub Copilot
+bool validateImportPath(char* path);
+
+
+// Function to convert Windows path to Unix path
+// Mengganti backslash ('\') dengan forward slash ('/') untuk kompatibilitas lintas platform
+// FS: Return string path dengan backslash diganti forward slash, atau NULL jika path NULL
+char* _convertToUnixPath(char* path);
 #endif // !FILE_MANAGER_H

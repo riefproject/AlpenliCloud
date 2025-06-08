@@ -30,6 +30,12 @@ typedef struct Toolbar {
     bool isButtonRestoreClicked;
     bool isButtonPermanentDeleteClicked;
     bool isButtonImportClicked;
+    // Import modal properties
+    bool importClicked;
+    bool showImportModal;
+    bool importModalResult;
+    char importPath[512];
+
     bool isButtonCreateItemClicked;
 
     // untuk create item

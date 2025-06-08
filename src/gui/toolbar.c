@@ -40,6 +40,11 @@ void createToolbar(Toolbar *toolbar, Context *ctx) {
     toolbar->showImportModal = false;
     toolbar->importModalResult = false;
     toolbar->importPath[0] = '\0';
+    // Menambahkan fitur import baru
+    toolbar->importClicked = false;
+    toolbar->showImportModal = false;
+    toolbar->importModalResult = false;
+    memset(toolbar->importPath, 0, sizeof(toolbar->importPath));
 }
 
 void updateToolbar(Toolbar *toolbar, Context *ctx) {
@@ -164,6 +169,27 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
     //     // Clear after use
     //     toolbar->importPath[0] = '\0';
     // }
+
+    // Menambahkan handling untuk import
+    if (toolbar->importClicked) {
+        toolbar->importClicked = false;
+        toolbar->showImportModal = true;
+        toolbar->importPath[0] = '\0'; // Clear path
+        printf("[LOG] Import modal activated\n");
+    }
+
+    // Handle import modal result
+    if (toolbar->importModalResult) {
+        toolbar->importModalResult = false;
+
+        if (strlen(toolbar->importPath) > 0) {
+            // importFile(ctx->fileManager, toolbar->importPath, true);
+            printf("[LOG] Import file operation would execute: %s\n", toolbar->importPath);
+        }
+
+        // Clear after use
+        toolbar->importPath[0] = '\0';
+    }
 }
 
 void drawToolbar(Toolbar *toolbar) {
@@ -195,7 +221,13 @@ void drawToolbar(Toolbar *toolbar) {
         toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle){x, y, 24, 24}, "#18#", "PASTE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
 
         x += 24 + DEFAULT_PADDING;
-        toolbar->isButtonImportClicked = GuiButtonCustom((Rectangle){x, y, 120, 24}, "#4# Import", "IMPORT", false, toolbar->ctx->disableGroundClick);
+        toolbar->isButtonPasteClicked = GuiButtonCustom((Rectangle) { x, y, 24, 24 }, "#18#", "PASTE", !(toolbar->ctx->fileManager->clipboard.front), toolbar->ctx->disableGroundClick);
+
+        // Menambahkan import button
+        x += 24 + DEFAULT_PADDING;
+        if (GuiButtonCustom((Rectangle) { x, y, 50, 24 }, "#132#", "IMPORT", false, toolbar->ctx->disableGroundClick)) {
+            toolbar->importClicked = true;
+        }
 
         rightStartx -= 24;
         toolbar->isButtonDeleteClicked = GuiButtonCustom((Rectangle){rightStartx, y, 24, 24}, "#143#", "DELETE", selectedItemCount <= 0, toolbar->ctx->disableGroundClick);
