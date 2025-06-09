@@ -405,14 +405,10 @@ void DrawRenameItemModal(Context *ctx) {
         modalRect.width - 40,
         30};
 
-    if (GuiTextBoxCustom(inputBox, NULL, "New name...", toolbar->renameInputBuffer,
-                         MAX_STRING_LENGTH, &toolbar->renameModalResult, false, false)) {
-        if (strlen(toolbar->renameInputBuffer) > 0) {
-            toolbar->showRenameModal = false;
-            toolbar->renameModalResult = true;
-            ctx->disableGroundClick = false;
-        }
-    }
+    bool created = false;
+
+    created = GuiTextBoxCustom(inputBox, NULL, "New name...", toolbar->renameInputBuffer,
+                               MAX_STRING_LENGTH, &toolbar->inputCreateItemEditMode, false, false);
 
     Rectangle createBtn = {
         modalRect.x + 20,
@@ -425,8 +421,7 @@ void DrawRenameItemModal(Context *ctx) {
         createBtn.width,
         30};
 
-    if ((GuiButton(createBtn, "Rename") || IsKeyPressed(KEY_ENTER)) &&
-        strlen(toolbar->renameInputBuffer) > 0) {
+    if (GuiButton(createBtn, "Rename") || (created && strlen(toolbar->renameInputBuffer) > 0)) {
         toolbar->showRenameModal = false;
         toolbar->renameModalResult = true;
         ctx->disableGroundClick = false;

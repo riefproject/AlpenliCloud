@@ -20,8 +20,6 @@ typedef struct Item {
   bool selected;
 } Item;
 
-
-
 typedef struct TrashItem {
   Item item;
   char* originalPath;     // path asli sebelum dihapus

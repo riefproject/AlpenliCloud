@@ -171,6 +171,7 @@ void delete_first(LinkedList* list, infotype* temp) {
     curr = NULL;
   }
 }
+
 void delete_last(LinkedList* list, infotype* temp) {
   Node* curr, * prev;
   if (is_list_empty(*list)) {
