@@ -1573,9 +1573,8 @@ void redo(FileManager *fileManager) {
     case ACTION_PASTE:
         _redoPaste(fileManager, operationToRedo, operationToUndo);
         break;
-
-    case ACTION_RECOVER:
-        _redoRecover(fileManager, operationToRedo, operationToUndo);
+    default:
+        printf("[LOG] Unknown operation type: %d\n", operationToRedo->type);
         break;
     }
     push(&(fileManager->undo), operationToUndo);
@@ -2781,7 +2780,7 @@ void importFile(FileManager *fileManager, char *sourcePath, bool isOperation) {
             if (isOperation) {
                 Operation *importOperation = alloc(Operation);
                 *importOperation = createOperation(destinationPath, sourcePath, ACTION_CREATE, (itemType == ITEM_FOLDER), NULL);
-                push(&fileManager->undo, importOperation);
+                // push(&fileManager->undo, importOperation);
                 printf("[LOG] Operasi import disimpan untuk undo\n");
             }
 

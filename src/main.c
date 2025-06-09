@@ -111,10 +111,6 @@ int main() {
         updateContext(&ctx, &fileManager);
 
         ShortcutKeys(&ctx);
-        if (IsKeyPressed(KEY_F2)) {
-            renameFile(&fileManager, ".dir/root/abcd.txt", "newname.txt", true);
-            printf("[LOG] File renamed successfully\n");
-        }
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
