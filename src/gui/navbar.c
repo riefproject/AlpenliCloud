@@ -12,9 +12,9 @@
 #include "gui/component.h"
 #include "gui/navbar.h"
 
-void trimTrailingSlash(char *path);
+void trimTrailingSlash(char* path);
 
-void createNavbar(Navbar *navbar, Context *ctx) {
+void createNavbar(Navbar* navbar, Context* ctx) {
     navbar->ctx = ctx;
 
     navbar->isUndoButtonClicked = false;
@@ -29,10 +29,10 @@ void createNavbar(Navbar *navbar, Context *ctx) {
     navbar->textboxSearcheditMode = false;
     strcpy(navbar->textboxSearch, "");
 
-    navbar->currentZeroPosition = (Rectangle){0};
+    navbar->currentZeroPosition = (Rectangle){ 0 };
 }
 
-void updateNavbar(Navbar *navbar, Context *ctx) {
+void updateNavbar(Navbar* navbar, Context* ctx) {
     navbar->ctx = ctx;
     ctx->navbar = navbar;
 
@@ -52,20 +52,21 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
             return;
         }
 
-        char *path = strdup(trimmedPath);
-        char *subPath = strtok(path, "/");
+        char* path = strdup(trimmedPath);
+        char* subPath = strtok(path, "/");
         if (TextIsEqual(subPath, "trash")) {
             ctx->fileManager->isRootTrash = true;
             ctx->fileManager->currentPath = "trash";
 
             printf("[LOG] Opening Trash...\n");
             return;
-        } else if (TextIsEqual(subPath, "root")) {
+        }
+        else if (TextIsEqual(subPath, "root")) {
             ctx->fileManager->isRootTrash = false;
         }
 
         Item itemToSearch = createItem(
-            _getNameFromPath(trimmedPath),
+            getNameFromPath(trimmedPath),
             TextFormat("%s/%s", ".dir", trimmedPath),
             0, ITEM_FILE, 0, 0, 0);
 
@@ -74,7 +75,8 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
         Tree result = searchTree(root, itemToSearch);
         if (result) {
             goTo(ctx->fileManager, result);
-        } else {
+        }
+        else {
             printf("File tidak ditemukan\n");
         }
     }
@@ -92,7 +94,8 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
 
         if (ctx->fileManager->isRootTrash) {
             searchingLinkedListItem(ctx->fileManager, ctx->fileManager->trash.head, navbar->textboxSearch);
-        } else {
+        }
+        else {
             searchingTreeItem(ctx->fileManager, navbar->textboxSearch);
         }
 
@@ -130,7 +133,7 @@ void updateNavbar(Navbar *navbar, Context *ctx) {
     }
 }
 
-void drawNavbar(Navbar *navbar) {
+void drawNavbar(Navbar* navbar) {
     float x = navbar->currentZeroPosition.x;
     float y = navbar->currentZeroPosition.y;
     float totalWidth = navbar->currentZeroPosition.width;
@@ -150,21 +153,23 @@ void drawNavbar(Navbar *navbar) {
         searchBoxX = pathBoxStartX + pathBoxWidth + spacing;
     }
 
-    navbar->isUndoButtonClicked = GuiButtonCustom((Rectangle){x, y, buttonSize, buttonSize}, "#56#", "UNDO", false, navbar->ctx->disableGroundClick);
-    navbar->isRedoButtonClicked = GuiButtonCustom((Rectangle){x + buttonSize + spacing, y, buttonSize, buttonSize}, "#57#", "REDO", false, navbar->ctx->disableGroundClick);
-    navbar->isGoBackButtonClicked = GuiButtonCustom((Rectangle){x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize}, "#117#", "BACK", false, navbar->ctx->disableGroundClick);
+    navbar->isUndoButtonClicked = GuiButtonCustom((Rectangle) { x, y, buttonSize, buttonSize }, "#56#", "UNDO", false, navbar->ctx->disableGroundClick);
+    navbar->isRedoButtonClicked = GuiButtonCustom((Rectangle) { x + buttonSize + spacing, y, buttonSize, buttonSize }, "#57#", "REDO", false, navbar->ctx->disableGroundClick);
+    navbar->isGoBackButtonClicked = GuiButtonCustom((Rectangle) { x + (buttonSize + spacing) * 2, y, buttonSize, buttonSize }, "#117#", "BACK", false, navbar->ctx->disableGroundClick);
 
     navbar->shouldGoToPath = GuiTextBoxCustom(
-        (Rectangle){
-            pathBoxStartX, y, pathBoxWidth, buttonSize},
+        (Rectangle) {
+        pathBoxStartX, y, pathBoxWidth, buttonSize
+    },
         "#1#", NULL, navbar->textboxPath,
-        MAX_STRING_LENGTH, &navbar->textboxPatheditMode, false, navbar->ctx->disableGroundClick);
+        MAX_STRING_LENGTH, & navbar->textboxPatheditMode, false, navbar->ctx->disableGroundClick);
 
     navbar->shouldSearch = GuiTextBoxCustom(
-        (Rectangle){
-            searchBoxX, y, searchBoxWidth, buttonSize},
+        (Rectangle) {
+        searchBoxX, y, searchBoxWidth, buttonSize
+    },
         "#42#", "Search Item", navbar->textboxSearch,
-        MAX_STRING_LENGTH, &navbar->textboxSearcheditMode, false, navbar->ctx->disableGroundClick);
+        MAX_STRING_LENGTH, & navbar->textboxSearcheditMode, false, navbar->ctx->disableGroundClick);
 
-    GuiLine((Rectangle){x, y + buttonSize, totalWidth, 10}, NULL);
+    GuiLine((Rectangle) { x, y + buttonSize, totalWidth, 10 }, NULL);
 }

@@ -11,549 +11,616 @@
 #define alloc(T) (T *)malloc(sizeof(T))
 
 typedef struct Context Context;
-/*
- * Struktur utama untuk mengelola sistem file dalam aplikasi
- * Berisi tree direktori, trash, undo/redo, dan path aktif
- * Author:
-================================================================================*/
+
+/**
+ * @brief Main structure for managing file system in the application
+ *
+ * Contains directory tree, trash, undo/redo operations, and current path.
+ * This structure serves as the central management system for all file operations
+ * including navigation, CRUD operations, clipboard operations, and search functionality.
+ *
+ * @author Team AlpenliCloud
+ * @version 1.0
+ * @since 2025-06-20
+ */
+
 typedef struct FileManager {
-    // (tree dengan root adalah direktori saat ini)
-    Tree root;        // root directory
-    LinkedList trash; // root trash (deleted files)
-    bool isRootTrash; // status apakah trash adalah root trash
+    Tree root;                ///< Root directory tree
+    LinkedList trash;         ///< Root trash container for deleted files
+    bool isRootTrash;         ///< Flag indicating if trash is the root trash
 
-    LinkedList searchingList; // linkedlist untuk menyimpan hasil pencarian
-    bool isSearching;         // status apakah sedang dalam mode pencarian
+    LinkedList searchingList; ///< Linked list storing search results
+    bool isSearching;         ///< Flag indicating if currently in search mode
 
-    char* currentPath; // current path string
-    Tree treeCursor;   // current tree cursor
+    char* currentPath;        ///< Current path string representation
+    Tree treeCursor;          ///< Current tree cursor position
 
-    Stack undo;              // stack for undo operations
-    Stack redo;              // stack for redo operations
-    Queue copied;            // queue for copied items
-    Queue clipboard;         // temporary queue for operations
-    LinkedList selectedItem; // linkedlist for selected item
+    Stack undo;               ///< Stack for undo operations
+    Stack redo;               ///< Stack for redo operations
+    bool isCopy;
+    Queue copied;             ///< Queue for copied items
+    Queue clipboard;          ///< Temporary queue for operations
+    LinkedList selectedItem;  ///< Linked list for selected items
 
-    bool needsRefresh;
-    Context* ctx; // context untuk akses sidebar dan komponen lainnya
+    bool needsRefresh;        ///< Flag indicating if refresh is needed
+    Context* ctx;             ///< Context for accessing sidebar and other components
 } FileManager;
 
 /*
-====================================================================
-    INISIALISASI DAN SETUP
-====================================================================
+================================================================================
+    INITIALIZATION AND SETUP
+================================================================================
 */
 
-// Prosedur membuat file manager baru
-// Menginisialisasi semua struktur data dalam FileManager dengan nilai kosong
-// IS: FileManager belum terinisialisasi
-// FS: Semua struktur data (tree, stack, queue, list) telah dibuat dan bernilai kosong/NULL
-// Created by: Maulana
+/**
+ * @brief Creates a new file manager instance
+ *
+ * Initializes all data structures within FileManager with empty/NULL values.
+ * This function must be called before any other file manager operations.
+ *
+ * @param[out] fileManager Pointer to FileManager structure to initialize
+ *
+ * @pre fileManager must point to allocated memory
+ * @post All data structures (tree, stack, queue, list) are created and set to empty/NULL
+ *
+ * @author Maulana
+ */
 void createFileManager(FileManager* fileManager);
 
-// Prosedur inisialisasi file manager
-// Memuat root directory dari filesystem dan mengatur treeCursor awal
-// IS: FileManager telah dibuat tetapi belum dimuat dengan data filesystem
-// FS: Root directory dimuat dari ROOT path, treeCursor menunjuk ke root, currentPath diset ke "root"
-// Created by: Farras
+/**
+ * @brief Initializes file manager with filesystem data
+ *
+ * Loads root directory from filesystem and sets initial treeCursor position.
+ * This function populates the file manager with actual filesystem data.
+ *
+ * @param[in,out] fileManager Pointer to created FileManager instance
+ *
+ * @pre FileManager must be created but not yet loaded with filesystem data
+ * @post Root directory loaded from ROOT path, treeCursor points to root, currentPath set to "root"
+ *
+ * @author Farras
+ */
 void initFileManager(FileManager* fileManager);
 
-// Function memuat struktur tree
-// Membaca direktori dan file dari filesystem secara rekursif untuk membangun struktur tree
-// IS: Tree dan path direktori diketahui
-// FS: Tree berisi struktur file dan folder sesuai dengan isi direktori di path secara rekursif
-// Created by: Farras
+/**
+ * @brief Loads tree structure from filesystem
+ *
+ * Recursively reads directories and files from filesystem to build tree structure.
+ * This function performs deep scanning of directory hierarchy.
+ *
+ * @param[in,out] tree Tree structure to populate
+ * @param[in] path Directory path to scan
+ *
+ * @pre tree and path are valid
+ * @post tree contains file and folder structure matching directory contents recursively
+ *
+ * @author Farras
+ */
 void loadTree(Tree tree, char* path);
 
-// Prosedur load trash dari file
-// Membaca file trash_dump.txt untuk memuat item yang telah dihapus ke dalam LinkedList trash
-// IS: File trash_dump.txt ada dan berisi data yang valid
-// FS: LinkedList trash diisi dengan item yang telah dihapus, setiap item berisi nama, path asli, waktu penghapusan, dan path trash
-// Created by: Farras
+/**
+ * @brief Loads trash data from file
+ *
+ * Reads trash_dump.txt file to load deleted items into LinkedList trash.
+ * This function restores trash state from persistent storage.
+ *
+ * @param[out] trash Pointer to LinkedList to populate with trash items
+ *
+ * @pre trash_dump.txt file exists and contains valid data
+ * @post LinkedList trash populated with deleted items, each containing name, original path, deletion time, and trash path
+ *
+ * @author Farras
+ */
 void loadTrashFromFile(LinkedList* trash);
 
-// Prosedur untuk menimpan trash ke file
-// Menyimpan semua item yang ada di LinkedList trash ke file trash_dump.txt
-// IS: LinkedList trash berisi item yang telah dihapus
-// FS: File trash_dump.txt diupdate dengan data dari LinkedList trash, setiap item disimpan dalam format "name,originalPath,deletedTime"
-// Created by: Farras
+/**
+ * @brief Saves trash data to file
+ *
+ * Persists all items in LinkedList trash to trash_dump.txt file.
+ * This function ensures trash state survives application restarts.
+ *
+ * @param[in] fileManager Pointer to FileManager containing trash data
+ *
+ * @pre LinkedList trash contains deleted items
+ * @post trash_dump.txt file updated with trash data, each item saved in "name,originalPath,deletedTime" format
+ *
+ * @author Farras
+ */
 void saveTrashToFile(FileManager* fileManager);
 
-// Prosedur untuk mencetak isi trash
-// Mencetak semua item yang ada di LinkedList trash ke konsol
-// IS: LinkedList trash berisi item yang telah dihapus
-// FS: Mencetak setiap item dengan nama, path asli, waktu penghapusan, dan path trash ke konsol
-// Created by: Farras
+/**
+ * @brief Prints trash contents to console
+ *
+ * Displays all items in LinkedList trash to console for debugging/monitoring.
+ *
+ * @param[in] trash LinkedList containing trash items
+ *
+ * @pre LinkedList trash contains deleted items
+ * @post Each item printed to console with name, original path, deletion time, and trash path
+ *
+ * @author Farras
+ */
 void printTrash(LinkedList trash);
 
-// Prosedur refresh file manager
-// Memuat ulang struktur tree dari direktori saat ini dengan menghapus child dan reload
-// IS: Struktur tree mungkin tidak sinkron dengan filesystem
-// FS: Child nodes dihapus, tree dimuat ulang dari path treeCursor, struktur tree sinkron dengan filesystem
-// Created by: Arief
-// Edited by: Farras
+/**
+ * @brief Refreshes file manager with current filesystem state
+ *
+ * Reloads tree structure from current directory by clearing children and reloading.
+ * This function synchronizes in-memory tree with actual filesystem state.
+ *
+ * @param[in,out] fileManager Pointer to FileManager to refresh
+ *
+ * @pre Tree structure may be out of sync with filesystem
+ * @post Child nodes cleared, tree reloaded from treeCursor path, tree structure synchronized with filesystem
+ *
+ * @author Arief
+ * @editor Farras
+ */
 void refreshFileManager(FileManager* fileManager);
 
 /*
-====================================================================
-    OPERASI FILE DAN FOLDER
-====================================================================
+================================================================================
+    FILE AND FOLDER OPERATIONS
+================================================================================
 */
 
-// Function search file
-// Mencari file berdasarkan path dengan membuat item dummy dan menggunakan searchTree
-// IS: Path file diketahui dan valid
-// FS: Item file ditemukan dan dikembalikan, atau item kosong dengan semua field 0/NULL jika tidak ditemukan
-// Created by: Maulana
+/**
+ * @brief Searches for a file by path
+ *
+ * Finds a file based on path by creating dummy item and using searchTree.
+ * Returns the found item or empty item if not found.
+ *
+ * @param[in] fileManager Pointer to FileManager instance
+ * @param[in] path File path to search for
+ * @return Item structure containing file information, or empty item with all fields 0/NULL if not found
+ *
+ * @pre path is valid and non-NULL
+ * @post File item returned if found, empty item otherwise
+ *
+ * @author Maulana
+ */
 Item searchFile(FileManager* fileManager, char* path);
 
-// Prosedur search all file/folder
-// Mencari semua file/folder yang sesuai dengan keyword di direktori saat ini
-// IS: Keyword untuk pencarian diketahui
-// FS: LinkedList searchingList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
-// Created by: Farras
+/**
+ * @brief Searches for all files/folders matching keyword
+ *
+ * Searches all files/folders matching keyword in current directory and populates searchingList.
+ * This function enables content discovery within the current directory context.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] keyword Search keyword string
+ *
+ * @pre keyword is valid search string
+ * @post LinkedList searchingList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
 void searchingTreeItem(FileManager* fileManager, char* keyword);
 
-// Prosedur search item di tree secara rekursif
-// Mencari semua item yang sesuai dengan keyword di tree secara rekursif
-// IS: LinkedList untuk menyimpan hasil pencarian, tree yang akan dicari, dan keyword yang digunakan
-// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
-// Created by: Farras
+/**
+ * @brief Recursively searches items in tree
+ *
+ * Recursively searches all items matching keyword in tree structure.
+ * This function provides deep search capability across directory hierarchy.
+ *
+ * @param[out] linkedList LinkedList to store search results
+ * @param[in] tree Tree to search in
+ * @param[in] keyword Search keyword string
+ *
+ * @pre linkedList, tree, and keyword are valid
+ * @post LinkedList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
 void searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, char* keyword);
 
-// Prosedur search item di linked list
-// Mencari item di LinkedList berdasarkan keyword dengan membandingkan nama item
-// IS: LinkedList yang berisi item, item yang akan dicari, dan keyword yang digunakan
-// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
-// Created by: Farras
+/**
+ * @brief Searches items in linked list
+ *
+ * Searches items in LinkedList based on keyword by comparing item names.
+ * This function enables search within list-based data structures.
+ *
+ * @param[in,out] FileManager Pointer to FileManager instance
+ * @param[in] node Node to search from
+ * @param[in] keyword Search keyword string
+ *
+ * @pre FileManager, node, and keyword are valid
+ * @post LinkedList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
 void searchingLinkedListItem(FileManager* FileManager, Node* node, char* keyword);
 
-// Prosedur search item di linked list secara rekursif
-// Mencari item di LinkedList secara rekursif berdasarkan keyword
-// IS: LinkedList yang berisi item, node yang akan dicari, dan keyword yang digunakan
-// FS: LinkedList diisi dengan item yang sesuai, setiap item berisi nama, path, ukuran, tipe, dan waktu
-// Created by: Farras
+/**
+ * @brief Recursively searches items in linked list
+ *
+ * Recursively searches items in LinkedList based on keyword.
+ * This function provides comprehensive search within linked list structures.
+ *
+ * @param[in,out] FileManager Pointer to FileManager instance
+ * @param[in] node Node to search from
+ * @param[in] keyword Search keyword string
+ *
+ * @pre FileManager, node, and keyword are valid
+ * @post LinkedList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
 void searchingLinkedListRecursive(FileManager* FileManager, Node* node, char* keyword);
 
-// Prosedur print searching list
-// Mencetak semua item yang ada di LinkedList searchingList ke konsol
-// IS: LinkedList searchingList berisi item yang telah ditemukan
-// FS: Mencetak setiap item dengan nama, path, ukuran, tipe, dan waktu ke konsol
-// Created by: Farras
+/**
+ * @brief Prints search results to console
+ *
+ * Displays all items in LinkedList searchingList to console.
+ * This function provides visual feedback for search operations.
+ *
+ * @param[in] fileManager Pointer to FileManager containing search results
+ *
+ * @pre LinkedList searchingList contains found items
+ * @post Each item printed to console with name, path, size, type, and time
+ *
+ * @author Farras
+ */
 void printSearchingList(FileManager* fileManager);
 
-// Prosedur create file/folder
-// Membuat file atau folder baru di direktori dengan pengecekan duplikasi dan operasi undo
-// IS: Tipe, path direktori, dan nama item baru diketahui
-// FS: File/folder dibuat di filesystem, ditambahkan ke tree, operasi disimpan untuk undo jika isOperation=true
-// Created by: Maulana
+/**
+ * @brief Creates a new file or folder
+ *
+ * Creates new file or folder in directory with duplication checking and undo operation support.
+ * This function handles both file and folder creation with conflict resolution.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] type Type of item to create (file or folder)
+ * @param[in] dirPath Directory path where item will be created
+ * @param[in] name Name of new item
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre type, dirPath, and name are valid
+ * @post File/folder created in filesystem, added to tree, operation saved for undo if isOperation=true
+ *
+ * @author Maulana
+ */
 void createFile(FileManager* fileManager, ItemType type, char* dirPath, char* name, bool isOperation);
 
-// Prosedur delete file/folder ke trash
-// Memindahkan semua file/folder yang dipilih ke direktori trash fisik dan LinkedList trash
-// IS: Ada file/folder di selectedItem yang dipilih untuk dihapus
-// FS: File/folder dipindahkan ke direktori trash, ditambahkan ke LinkedList trash, dihapus dari tree utama, operasi disimpan untuk undo
-// Created by: Arief
+/**
+ * @brief Deletes files/folders to trash
+ *
+ * Moves all selected files/folders to physical trash directory and LinkedList trash.
+ * This function provides safe deletion with recovery capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre selectedItem contains files/folders selected for deletion
+ * @post Files/folders moved to trash directory, added to LinkedList trash, removed from main tree, operation saved for undo
+ *
+ * @author Arief
+ */
 void deleteFile(FileManager* fileManager, bool isOperation);
 
-// Prosedur delete file/folder secara permanen
-// Menghapus file/folder secara permanen dari filesystem tanpa menyimpan ke trash
-// IS: Ada file/folder di selectedItem yang dipilih untuk dihapus secara permanen
-// FS: File/folder dihapus dari filesystem, dihapus dari tree utama, operasi disimpan untuk undo jika isOperation=true
-// Created by: Farras
-void deletePermanentFile(FileManager *fileManager);
+/**
+ * @brief Permanently deletes files/folders
+ *
+ * Permanently deletes files/folders from filesystem without saving to trash.
+ * This function provides irreversible deletion capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre selectedItem contains files/folders selected for permanent deletion
+ * @post Files/folders permanently deleted from filesystem, removed from main tree, operation saved for undo if isOperation=true
+ *
+ * @author Farras
+ */
+void deletePermanentFile(FileManager* fileManager);
 
-// Prosedur rename file/folder
-// Mengganti nama file atau folder dengan pengecekan duplikasi dan operasi filesystem
-// IS: Path file lama dan nama baru diketahui
-// FS: File/folder direname di filesystem, item di tree diupdate dengan nama dan path baru, operasi disimpan untuk undo jika isOperation=true
-// Created by: Maulana
+/**
+ * @brief Renames a file or folder
+ *
+ * Changes name of file or folder with duplication checking and filesystem operations.
+ * This function handles name conflicts and maintains data integrity.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] filePath Path of file to rename
+ * @param[in] newName New name for the file
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre filePath and newName are valid
+ * @post File/folder renamed in filesystem, item in tree updated with new name and path, operation saved for undo if isOperation=true
+ *
+ * @author Maulana
+ */
 void renameFile(FileManager* fileManager, char* filePath, char* newName, bool isOperation);
 
-// Prosedur recover file dari trash
-// Mengembalikan file/folder yang dipilih dari LinkedList trash ke tree utama dan filesystem
-// IS: Ada file/folder di selectedItem yang ada di LinkedList trash
-// FS: File/folder dipindahkan dari trash ke lokasi recovery, dihapus dari LinkedList trash, ditambahkan kembali ke tree
-// Created by: Arief
+/**
+ * @brief Recovers files from trash
+ *
+ * Restores selected files/folders from LinkedList trash to main tree and filesystem.
+ * This function enables recovery of accidentally deleted items.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre selectedItem contains files/folders that exist in LinkedList trash
+ * @post Files/folders moved from trash to recovery location, removed from LinkedList trash, added back to tree
+ *
+ * @author Arief
+ */
 void recoverFile(FileManager* fileManager);
 
 /*
-====================================================================
-    OPERASI COPY, CUT, PASTE
-====================================================================
+================================================================================
+    COPY, CUT, PASTE OPERATIONS
+================================================================================
 */
 
-// Prosedur copy file/folder
-// Menyalin semua file/folder yang dipilih ke queue copied dan mengatur mode copy
-// IS: Ada file/folder yang dipilih di selectedItem
-// FS: File/folder disalin ke queue copied, isCopy diset true, queue temp berisi data copied
-// Created by: Arief
+/**
+ * @brief Copies selected files/folders
+ *
+ * Copies all selected files/folders to copied queue and sets copy mode.
+ * This function enables clipboard-style copy operations.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre selectedItem contains files/folders to copy
+ * @post Files/folders copied to copied queue, isCopy set to true, temp queue contains copied data
+ *
+ * @author Arief
+ */
 void copyFile(FileManager* fileManager);
 
-// Prosedur cut file/folder
-// Memotong semua file/folder yang dipilih ke queue copied dan mengatur mode cut
-// IS: Ada file/folder yang dipilih di selectedItem
-// FS: File/folder disalin ke queue copied, isCopy diset false, queue temp berisi data copied
-// Created by: Arief
+/**
+ * @brief Cuts selected files/folders
+ *
+ * Cuts all selected files/folders to copied queue and sets cut mode.
+ * This function enables clipboard-style cut operations.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre selectedItem contains files/folders to cut
+ * @post Files/folders copied to copied queue, isCopy set to false, temp queue contains copied data
+ *
+ * @author Arief
+ */
 void cutFile(FileManager* fileManager);
 
-// Prosedur paste file/folder
-// Menempelkan file/folder dari queue temp ke direktori saat ini dengan progress bar untuk item banyak
-// IS: Ada file/folder di queue temp dari operasi copy/cut
-// FS: File/folder ditempelkan ke treeCursor dengan copy content atau move, progress bar ditampilkan jika >10 item, queue temp dikosongkan untuk cut
-// Created by: Arief
+/**
+ * @brief Pastes files/folders from clipboard
+ *
+ * Pastes files/folders from temp queue to current directory with progress bar for large operations.
+ * This function completes clipboard operations with visual feedback for bulk operations.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre temp queue contains files/folders from copy/cut operation
+ * @post Files/folders pasted to treeCursor with copy content or move, progress bar shown if >10 items, temp queue cleared for cut
+ *
+ * @author Arief
+ */
 void pasteFile(FileManager* fileManager, bool isOperation);
 
-
 /*
-====================================================================
-    OPERASI SELEKSI FILE
-====================================================================
+================================================================================
+    FILE SELECTION OPERATIONS
+================================================================================
 */
 
-// Prosedur select file/folder
-// Menambahkan item ke LinkedList selectedItem jika belum ada
-// IS: Item belum dipilih atau sudah dipilih
-// FS: Item ditambahkan ke selectedItem jika belum ada, item.selected diset true
-// Created by:
+/**
+ * @brief Selects a file/folder
+ *
+ * Adds item to LinkedList selectedItem if not already present.
+ * This function manages item selection state.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in,out] item Pointer to item to select
+ *
+ * @pre item is valid
+ * @post item added to selectedItem if not already present, item.selected set to true
+ */
 void selectFile(FileManager* fileManager, Item* item);
 
-// Prosedur deselect file/folder
-// Menghapus item dari LinkedList selectedItem dan mengatur selected=false
-// IS: Item mungkin ada di selectedItem
-// FS: Item dihapus dari selectedItem jika ditemukan, item.selected diset false, LinkedList di-reset jika kosong
-// Created by:
+/**
+ * @brief Deselects a file/folder
+ *
+ * Removes item from LinkedList selectedItem and sets selected=false.
+ * This function manages item deselection state.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in,out] item Pointer to item to deselect
+ *
+ * @pre item may exist in selectedItem
+ * @post item removed from selectedItem if found, item.selected set to false, LinkedList reset if empty
+ */
 void deselectFile(FileManager* fileManager, Item* item);
 
-// Prosedur clear selected files
-// Menghapus semua item dari LinkedList selectedItem dengan memanggil deselectFile untuk setiap item
-// IS: Ada item yang dipilih di selectedItem
-// FS: Semua item di-deselect, selectedItem menjadi kosong
-// Created by:
+/**
+ * @brief Clears all selected files
+ *
+ * Removes all items from LinkedList selectedItem by calling deselectFile for each item.
+ * This function provides bulk deselection capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre selectedItem contains selected items
+ * @post All items deselected, selectedItem becomes empty
+ */
 void clearSelectedFile(FileManager* fileManager);
 
-// Prosedur select all files
-// Memilih semua child nodes dari treeCursor saat ini
-// IS: treeCursor menunjuk ke direktori yang valid dengan child nodes
-// FS: Semua child nodes dari treeCursor dipilih dan ditambahkan ke selectedItem
-// Created by:
+/**
+ * @brief Selects all files in current directory
+ *
+ * Selects all child nodes from current treeCursor.
+ * This function provides bulk selection capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre treeCursor points to valid directory with child nodes
+ * @post All child nodes from treeCursor selected and added to selectedItem
+ */
 void selectAll(FileManager* fileManager);
 
 /*
-====================================================================
-    OPERASI UNDO DAN REDO
-====================================================================
+================================================================================
+    UNDO AND REDO OPERATIONS
+================================================================================
 */
 
-// Prosedur undo operasi
-// Membatalkan operasi terakhir dari stack undo sesuai dengan tipe operasi
-// IS: Ada operasi di stack undo
-// FS: Operasi dibatalkan sesuai tipe (CREATE→delete, DELETE→restore, UPDATE→rename back), operasi dipindahkan ke stack redo, filesystem di-refresh
-// Created by: Maulana
+/**
+ * @brief Undoes the last operation
+ *
+ * Reverts last operation from undo stack according to operation type.
+ * This function provides operation rollback capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre undo stack contains operations
+ * @post Operation reverted according to type (CREATE→delete, DELETE→restore, UPDATE→rename back), operation moved to redo stack, filesystem refreshed
+ *
+ * @author Maulana
+ */
 void undo(FileManager* fileManager);
 
-// Prosedur redo operasi
-// Mengulangi operasi yang sebelumnya dibatalkan dari stack redo
-// IS: Ada operasi di stack redo
-// FS: Operasi dijalankan kembali sesuai tipe, operasi dipindahkan kembali ke stack undo
-// Created by: Maulana
+/**
+ * @brief Redoes previously undone operation
+ *
+ * Repeats operation that was previously undone from redo stack.
+ * This function provides operation replay capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre redo stack contains operations
+ * @post Operation executed again according to type, operation moved back to undo stack
+ *
+ * @author Maulana
+ */
 void redo(FileManager* fileManager);
 
 /*
-====================================================================
-    NAVIGASI DIREKTORI
-====================================================================
+================================================================================
+    DIRECTORY NAVIGATION
+================================================================================
 */
 
-// Function get current root
-// Mencari dan mengembalikan root directory dari treeCursor dengan traversal ke parent
-// IS: FileManager dan treeCursor valid
-// FS: Root directory ditemukan dan dikembalikan, atau NULL jika invalid
-// Created by: Farras
+/**
+ * @brief Gets current root directory
+ *
+ * Finds and returns root directory from treeCursor by traversing to parent.
+ * This function provides root directory access.
+ *
+ * @param[in] fileManager FileManager instance
+ * @return Tree pointer to root directory, or NULL if invalid
+ *
+ * @pre FileManager and treeCursor are valid
+ * @post Root directory found and returned, or NULL if invalid
+ *
+ * @author Farras
+ */
 Tree getCurrentRoot(FileManager fileManager);
 
-// Function get current path
-// Membangun string path lengkap dari tree node dengan traversal ke parent
-// IS: Tree node valid
-// FS: String path lengkap dikembalikan dengan format "root/folder1/folder2"
-// Created by: Farras
-char* getCurrentPath(Tree tree);
+/**
+ * @brief Extracts filename from complete file path
+ *
+ * Returns pointer to filename portion of path by finding last slash.
+ * Handles both forward and backward slash separators.
+ *
+ * @param[in] path Complete file path
+ * @return Pointer to filename portion of path
+ *
+ * @pre path is valid string
+ * @post Filename portion returned or entire path if no separator found
+ *
+ * @internal
+ * @since 1.0
+ */
+char* getNameFromPath(char* path);
 
-// Prosedur go back directory
-// Pindah treeCursor ke parent directory jika ada
-// IS: treeCursor tidak berada di root directory
-// FS: treeCursor pindah ke parent directory, currentPath diperbarui, filesystem di-refresh
-// Created by: Farras
+/**
+ * @brief Navigates back to parent directory
+ *
+ * Moves treeCursor to parent directory if available.
+ * This function provides backward navigation capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre treeCursor not at root directory
+ * @post treeCursor moved to parent directory, currentPath updated, filesystem refreshed
+ *
+ * @author Farras
+ */
 void goBack(FileManager* fileManager);
 
-// Prosedur go to directory
-// Pindah treeCursor ke tree target dan update currentPath
-// IS: Tree target valid dan dapat diakses
-// FS: treeCursor pindah ke tree target, currentPath diperbarui dengan path lengkap, filesystem di-refresh
-// Created by: Farras
+/**
+ * @brief Navigates to specific directory
+ *
+ * Moves treeCursor to target tree and updates currentPath.
+ * This function provides direct navigation capability.
+ *
+ * @param[in,out] FileManager Pointer to FileManager instance
+ * @param[in] tree Target tree to navigate to
+ *
+ * @pre tree target is valid and accessible
+ * @post treeCursor moved to tree target, currentPath updated with complete path, filesystem refreshed
+ *
+ * @author Farras
+ */
 void goTo(FileManager* FileManager, Tree tree);
 
-// Prosedur sort children
-// Mengurutkan child nodes berdasarkan tipe menggunakan insertion sort (folder dulu, lalu file)
-// IS: Parent node memiliki child nodes yang belum terurut
-// FS: Child nodes diurutkan berdasarkan ItemType (ITEM_FOLDER < ITEM_FILE)
-// Created by: Farras
+/**
+ * @brief Sorts child nodes by type
+ *
+ * Sorts child nodes by type using insertion sort (folders first, then files).
+ * This function provides organized directory display.
+ *
+ * @param[in,out] parent Pointer to parent node to sort children
+ *
+ * @pre parent node has child nodes that may be unsorted
+ * @post child nodes sorted by ItemType (ITEM_FOLDER < ITEM_FILE)
+ *
+ * @author Farras
+ */
 void sort_children(Tree* parent);
 
 /*
-====================================================================
-    UTILITY DAN HELPER FUNCTIONS
-====================================================================
+================================================================================
+    UTILITY AND HELPER FUNCTIONS
+================================================================================
 */
 
-// Prosedur open with windows
-// Membuka dialog "Open With" Windows untuk file tertentu menggunakan command line
-// IS: Path file valid dan dapat diakses
-// FS: Command "cmd /c start path /OPENAS" dijalankan, dialog "Open With" Windows terbuka
-// Created by: Farras
+/**
+ * @brief Opens file with Windows "Open With" dialog
+ *
+ * Opens Windows "Open With" dialog for specific file using command line.
+ * This function provides system integration for file opening.
+ *
+ * @param[in] path Path to file to open
+ *
+ * @pre path is valid and accessible
+ * @post Command "cmd /c start path /OPENAS" executed, Windows "Open With" dialog opened
+ *
+ * @author Farras
+ */
 void windowsOpenWith(char* path);
 
-// Function check progress bar requirement
-// Menentukan apakah perlu menampilkan progress bar berdasarkan threshold 10 item
-// IS: totalItems diketahui
-// FS: Return true jika totalItems > 10, false jika ≤ 10
-// Created by: Arief
-bool shouldShowProgressBar(int totalItems);
-
 /*
-====================================================================
-    HELPER FUNCTIONS (PRIVATE)
-====================================================================
+================================================================================
+    IMPORT/UPLOAD FILE OPERATIONS
+================================================================================
 */
 
-// Prosedur move to trash
-// Memindahkan file/folder dari tree utama ke direktori trash fisik dan LinkedList trash
-// IS: ItemTree ada di tree utama dan filesystem
-// FS: Item dipindahkan ke direktori ".dir/trash", TrashItem dibuat dan ditambahkan ke LinkedList trash, item dihapus dari tree utama
-// Created by: Arief
-void _moveToTrash(FileManager* fileManager, Tree itemTree);
-
-// Prosedur delete permanently
-// Menghapus file/folder secara permanen dari filesystem tanpa ke trash
-// IS: Item ada di filesystem dengan path dan tipe yang valid
-// FS: Item dihapus permanen dari filesystem (file dengan remove, folder dengan RemoveItemsRecurse)
-// Created by: Arief
-void _deletePermanently(char* fullPath, ItemType type, char* name);
-
-// Prosedur delete single item
-// Wrapper untuk _deletePermanently, digunakan khusus untuk operasi cut
-// IS: Item ada di filesystem dengan path dan tipe yang valid
-// FS: Item dihapus permanen dari filesystem menggunakan _deletePermanently
-// Created by: Arief
-void _deleteSingleItem(char* fullPath, ItemType type, char* name);
-
-// Prosedur copy file content
-// Menyalin isi file dari sumber ke tujuan menggunakan buffer 4096 bytes
-// IS: File sumber dapat dibaca, path tujuan valid untuk ditulis
-// FS: Konten file disalin byte per byte dari source ke destination menggunakan fread/fwrite
-// Created by: Arief
-void _copyFileContent(char* srcPath, char* destPath);
-
-// Prosedur copy folder recursive
-// Menyalin folder dan semua isinya secara rekursif dengan manual string construction
-// IS: Folder sumber ada dan dapat dibaca, path tujuan valid
-// FS: Folder destination dibuat, semua file dan subfolder disalin rekursif dari source ke destination
-// Created by: Arief
-void _copyFolderRecursive(char* srcPath, char* destPath);
-
-// Prosedur remove from trash
-// Mencari dan menghapus TrashItem dari LinkedList trash berdasarkan nama item
-// IS: Item ada di LinkedList trash dengan nama yang sesuai
-// FS: TrashItem dihapus dari LinkedList trash, memory untuk TrashItem dan path di-free
-// Created by: Arief
-void _removeFromTrash(FileManager* fileManager, char* itemName);
-
-// Prosedur add back to tree
-// Menambahkan item yang dipulihkan kembali ke tree structure di lokasi yang ditentukan
-// IS: TrashItem valid, recoverPath valid, parent node dapat ditemukan
-// FS: Item ditambahkan kembali ke tree sebagai child dari parent node dengan path dan nama yang diupdate
-// Created by: Arief
-void _addBackToTree(FileManager* fileManager, TrashItem* trashItem, char* recoverPath);
-
-// Prosedur remove node
-// Menghapus node tertentu dari struktur tree dengan mengatur ulang hubungan parent-child dan sibling
-// IS: Node ada di tree structure dengan parent dan sibling yang valid
-// FS: Node dihapus dari tree, hubungan parent-child dan sibling diperbarui, memory node di-free
-// Created by:
-void remove_node(Tree* root, Tree nodeToRemove);
-
-// Prosedur reconstruct tree structure
-// Membangun kembali struktur tree setelah operasi paste dengan membuat node baru dan load dari filesystem
-// IS: Source tree dan destination path valid
-// FS: Node baru dibuat di treeCursor, struktur tree direkonstruksi dengan _loadTreeFromPath
-// Created by: Arief
-void _reconstructTreeStructure(FileManager* fileManager, Tree sourceTree, char* newBasePath, char* destinationPath);
-
-// Prosedur load tree from path
-// Memuat struktur tree dari direktori yang sudah ada di filesystem secara rekursif
-// IS: Parent node valid, basePath adalah direktori yang ada di filesystem
-// FS: Tree dimuat dengan struktur sesuai filesystem, semua file dan folder ditambahkan sebagai child nodes
-// Created by: Farras
-void _loadTreeFromPath(Tree parentNode, char* basePath);
-
-// Function get name from path
-// Mengekstrak nama file dari path lengkap dengan mencari karakter '/' terakhir
-// IS: Path lengkap dengan separator '/' atau path tanpa separator
-// FS: Nama file dikembalikan tanpa path directory, atau path asli jika tidak ada separator
-// Created by: Maulana
-char* _getNameFromPath(char* path);
-
-// Function create duplicated folder name
-// Membuat nama folder baru dengan suffix untuk menghindari duplikasi secara rekursif
-// IS: Path folder dan suffix diketahui
-// FS: Nama folder unik dikembalikan dengan suffix yang sesuai, rekursif jika masih duplikat
-// Created by: Maulana
-char* _createDuplicatedFolderName(char* dirPath, char* suffix);
-
-// Function create duplicated file name
-// Membuat nama file baru dengan suffix sebelum ekstensi untuk menghindari duplikasi
-// IS: Path file dan suffix diketahui
-// FS: Nama file unik dikembalikan dengan suffix sebelum ekstensi, rekursif jika masih duplikat
-// Created by: Maulana
-char* _createDuplicatedFileName(char* filePath, char* suffix);
-
-// Function check if directory
-// Memeriksa apakah path yang diberikan merupakan direktori menggunakan stat dan S_ISDIR
-// IS: Path diketahui dan dapat diakses
-// FS: Return true jika path adalah direktori, false jika bukan direktori
-// Created by: Maulana
-bool isDirectory(char* path);
-
-// Function get directory from path
-// Mengekstrak path direktori dari path lengkap file dengan mencari '/' terakhir
-// IS: Path lengkap file diketahui
-// FS: Path direktori dikembalikan tanpa nama file, atau string kosong jika tidak ada separator
-// Created by: Maulana
-char* _getDirectoryFromPath(char* path);
-
-// =================================================================================
-//                      DEKLARASI FUNGSI HELPER INTERNAL
-// =================================================================================
-
-// Function undoCreate
-// Membatalkan operasi pembuatan file/folder dengan menghapusnya secara permanen.
-// IS: Item yang akan di-undo ada di filesystem dan tree. Operasi `op` berisi path item tersebut.
-// FS: Item dihapus dari filesystem dan tree.
-// Created by: Maulana
-void _undoCreate(FileManager* fm, Operation* operationToUndo);
-
-// Function undoDelete
-// Membatalkan operasi penghapusan (yang memindahkan ke trash) dengan mengembalikan item ke path aslinya.
-// IS: Item yang akan di-undo ada di dalam trash. `op->itemTemp` berisi daftar TrashItem.
-// FS: Item dikembalikan ke path aslinya di filesystem dan tree. Daftar item dipindahkan ke `opToRedo`.
-// Created by: Maulana
-void _undoDelete(FileManager* fm, Operation* opToUndo, Operation* opToRedo);
-
-// Function undoRename
-// Membatalkan operasi penggantian nama dengan mengembalikannya ke nama semula.
-// IS: Item ada dengan nama baru (`op->to`).
-// FS: Item dikembalikan ke nama lamanya (`op->from`).
-// Created by: Maulana
-void _undoRename(FileManager* fm, Operation* op);
-
-// Function undoPaste
-// Membatalkan operasi paste. Jika 'cut', kembalikan ke lokasi asal. Jika 'copy', hapus hasil paste.
-// IS: Item hasil paste ada di lokasi tujuan. `op` berisi detail operasi paste.
-// FS: Item dikembalikan ke keadaan sebelum di-paste.
-// Created by: Maulana
-void _undoPaste(FileManager* fm, Operation* op, Operation* opToRedo);
-
-// Function undoRecover
-// Membatalkan operasi pemulihan dari trash dengan mengembalikan item ke trash.
-// IS: Item yang dipulihkan ada di filesystem. `op->itemTemp` berisi daftar item yang di-recover.
-// FS: Item dikembalikan ke trash, baik secara fisik maupun di dalam struktur data.
-// Created by: Maulana
-void _undoRecover(FileManager* fm, Operation* op, Operation* opToRedo);
-
-// Function redoCreate
-// Menjalankan kembali operasi pembuatan file/folder yang telah di-undo.
-// IS: Item tidak ada di filesystem. `op` berisi path item yang akan dibuat.
-// FS: Item dibuat kembali di filesystem dan tree.
-// Created by: Maulana
-void _redoCreate(FileManager* fm, Operation* op);
-
-// Function redoDelete
-// Menjalankan kembali operasi penghapusan ke trash.
-// IS: Item ada di filesystem setelah di-undo. `op->itemTemp` berisi daftar item yang akan dihapus.
-// FS: Item dipindahkan kembali ke trash.
-// Created by: Maulana
-void _redoDelete(FileManager* fm, Operation* op, Operation* opToUndo);
-
-// Function redoRename
-// Menjalankan kembali operasi penggantian nama.
-// IS: Item ada dengan nama lama (`op->from`).
-// FS: Item diganti namanya menjadi nama baru (`op->to`).
-// Created by: Maulana
-void _redoRename(FileManager* fm, Operation* op);
-
-// Function redoPaste
-// Menjalankan kembali operasi paste yang telah di-undo.
-// IS: Item berada di keadaan sebelum di-paste.
-// FS: Item di-paste kembali ke lokasi tujuan.
-// Created by: Maulana
-void _redoPaste(FileManager* fm, Operation* op, Operation* opToUndo);
-
-// Function redoRecover
-// Menjalankan kembali operasi pemulihan dari trash.
-// IS: Item ada di dalam trash.
-// FS: Item dipulihkan dari trash ke lokasi aslinya.
-// Created by: Maulana
-void _redoRecover(FileManager* fm, Operation* op, Operation* opToUndo);
-
-
-
-int _calculateTotalPasteItems(FileManager* fileManager);
-bool _processSinglePasteItem(FileManager* fileManager, Item* itemToPaste, char** originPath);
-bool _pasteFolderItem(FileManager* fileManager, Item* itemToPaste, char* originPath, char* newPath);
-bool _pasteFileItem(FileManager* fileManager, Item* itemToPaste, char* originPath, char* newPath);
-void _addItemToCurrentTree(FileManager* fileManager, Item* itemToPaste, char* newPath, ItemType type);
-void _handleCutCleanup(FileManager* fileManager, Item* itemToPaste);
-void _createPasteItemRecord(Item* itemToPaste, char* originPath);
-
-bool _isItemEqual(Item* item1, Item* item2);
-void _freeSelectedNode(Node* node);
-
-void _refreshTreeSafely(FileManager* fileManager, char* targetPath);
-Tree _findNodeByPath(Tree root, char* targetPath);
-void _refreshSidebarSafely(FileManager* fileManager);
-
-bool _isValidTreeNode(Tree root, Tree target);
-
-/*
-====================================================================
-    OPERASI IMPORT/UPLOAD FILE
-====================================================================
-*/
-
-// Prosedur import file/folder dari path eksternal
-// Mengimpor file atau folder dari path di luar workspace ke direktori saat ini
-// IS: Source path valid dan dapat diakses, destination adalah treeCursor saat ini
-// FS: File/folder disalin ke direktori saat ini dengan handling nama duplikat, item ditambahkan ke tree structure, operasi disimpan untuk undo
-// Created by: GitHub Copilot
+/**
+ * @brief Imports file/folder from external path
+ *
+ * Imports file or folder from path outside workspace to current directory.
+ * This function enables external content integration.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] sourcePath Source path to import from
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre sourcePath is valid and accessible, destination is current treeCursor
+ * @post File/folder copied to current directory with duplicate name handling, item added to tree structure, operation saved for undo
+ *
+ * @author GitHub Copilot
+ */
 void importFile(FileManager* fileManager, char* sourcePath, bool isOperation);
 
-// Function check if path is external
-// Memeriksa apakah path berada di luar workspace (.dir) untuk validasi import
-// IS: Path file atau folder diketahui
-// FS: Return true jika path di luar workspace, false jika dalam workspace
-// Created by: GitHub Copilot
-bool isExternalPath(char* path);
-
-// Function validate import path
-// Memvalidasi path untuk operasi import dengan pengecekan aksesibilitas dan tipe
-// IS: Path yang akan diimpor diketahui
-// FS: Return true jika path valid untuk import, false jika tidak valid atau tidak dapat diakses
-// Created by: GitHub Copilot
-bool validateImportPath(char* path);
-
-
-// Function to convert Windows path to Unix path
-// Mengganti backslash ('\') dengan forward slash ('/') untuk kompatibilitas lintas platform
-// FS: Return string path dengan backslash diganti forward slash, atau NULL jika path NULL
-char* _convertToUnixPath(char* path);
 #endif // !FILE_MANAGER_H
