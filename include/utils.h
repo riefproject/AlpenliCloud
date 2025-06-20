@@ -1,51 +1,106 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-/*
-====================================================================
-    FORWARD DECLARATIONS
-====================================================================
-*/
+/**
+ * @file utils.h
+ * @brief Utility functions for string processing, input handling, and keyboard shortcuts
+ * @author AlpenliCloud Development Team
+ * @date 2025
+ */
+
+ /*
+ ====================================================================
+     FORWARD DECLARATIONS
+ ====================================================================
+ */
 
 typedef struct Context Context;
 
 /*
 ====================================================================
-    UTILITAS INPUT DAN STRING
+    INPUT AND STRING UTILITIES
 ====================================================================
 */
 
-// Prosedur input string dinamis
-// Membaca input string dari user secara dinamis dengan realokasi memori hingga enter ditekan
-// IS: Pointer string belum terinisialisasi atau kosong
-// FS: String dialokasikan secara dinamis, diisi dengan input user karakter per karakter menggunakan realloc, diakhiri null terminator
-// Created by: Farras
+/**
+ * @brief Dynamically reads a string input from user
+ *
+ * Reads input string from user character by character with dynamic memory allocation
+ * using realloc until enter is pressed. The string is automatically resized as needed.
+ *
+ * @param[out] s Pointer to string pointer that will be allocated and filled
+ *
+ * @pre String pointer is uninitialized or empty
+ * @post String is dynamically allocated, filled with user input character by character,
+ *       and null-terminated
+ *
+ * @note Memory is allocated using realloc, caller is responsible for freeing the memory
+ * @warning Input parameter must be a valid pointer to char pointer
+ *
+ * @author Farras
+ */
 void inputString(char** s);
 
-// Prosedur trim trailing slash
-// Menghapus karakter '/' di akhir path string secara iteratif
-// IS: String path mungkin memiliki satu atau lebih karakter '/' di akhir
-// FS: Semua karakter '/' di akhir string dihapus, panjang string disesuaikan dengan null terminator
-// Created by: Farras
+/**
+ * @brief Removes trailing slash characters from path string
+ *
+ * Iteratively removes all trailing '/' characters from the end of a path string
+ * and adjusts the string length accordingly.
+ *
+ * @param[in,out] path Path string to be trimmed
+ *
+ * @pre Path string may contain one or more trailing '/' characters
+ * @post All trailing '/' characters are removed, string length adjusted with null terminator
+ *
+ * @note Modifies the original string in-place
+ * @warning Path parameter must be a valid null-terminated string
+ *
+ * @author Farras
+ */
 void trimTrailingSlash(char* path);
 
-// Prosedur mengubah string ke huruf kecil
-// Mengubah semua karakter dalam string menjadi huruf kecil menggunakan tolower
-// IS: String berisi karakter yang mungkin campuran huruf besar dan kecil
-// FS: Semua karakter dalam string diubah menjadi huruf kecil, string tetap valid
-// Created by: Farras
-void toLowerStr(char *str);
+/**
+ * @brief Converts string to lowercase
+ *
+ * Converts all characters in the string to lowercase using the tolower function.
+ * The conversion is performed in-place on the original string.
+ *
+ * @param[in,out] str String to be converted to lowercase
+ *
+ * @pre String contains characters that may be mixed case
+ * @post All characters in string are converted to lowercase, string remains valid
+ *
+ * @note Modifies the original string in-place
+ * @warning String parameter must be a valid null-terminated string
+ *
+ * @author Farras
+ */
+void toLowerStr(char* str);
+
 /*
 ====================================================================
-    KEYBOARD SHORTCUTS DAN NAVIGASI
+    KEYBOARD SHORTCUTS AND NAVIGATION
 ====================================================================
 */
 
-// Prosedur shortcut keys handler
-// Menangani semua keyboard shortcuts untuk operasi file manager dan navigasi UI menggunakan raylib
-// IS: Context berisi state aplikasi dan komponen UI yang valid
-// FS: Shortcut keyboard diproses (Ctrl+C/V/X untuk copy/paste/cut, F5 untuk refresh, arrow keys untuk navigasi, dll), state UI dan file manager diperbarui sesuai shortcut
-// Created by: Arief
+/**
+ * @brief Handles keyboard shortcuts for file manager operations
+ *
+ * Processes all keyboard shortcuts for file manager operations and UI navigation
+ * using raylib input handling. Supports common operations like copy, paste, cut,
+ * refresh, and arrow key navigation.
+ *
+ * @param[in,out] ctx Context containing application state and UI components
+ *
+ * @pre Context contains valid application state and UI components
+ * @post Keyboard shortcuts are processed (Ctrl+C/V/X for copy/paste/cut, F5 for refresh,
+ *       arrow keys for navigation, etc.), UI state and file manager updated accordingly
+ *
+ * @note Requires raylib for input handling
+ * @warning Context parameter must be a valid pointer to initialized Context structure
+ *
+ * @author Arief
+ */
 void ShortcutKeys(Context* ctx);
 
 #endif

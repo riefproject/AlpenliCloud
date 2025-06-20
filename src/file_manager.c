@@ -1606,6 +1606,30 @@ static void _copyFolderRecursive(char* srcPath, char* destPath) {
     closedir(dp);
 }
 
+/**
+ * @brief Recursively loads filesystem directory structure into tree
+ *
+ * Scans specified directory path and populates tree node with all files
+ * and subdirectories. Creates complete tree structure mirroring filesystem
+ * hierarchy with proper metadata including size, timestamps, and type.
+ *
+ * @param[in,out] tree Tree node to populate with directory contents
+ * @param[in] path Filesystem directory path to scan and load
+ *
+ * @pre tree is valid allocated tree node, path exists and is accessible
+ * @post tree populated with complete directory structure, sizes calculated
+ *
+ * @note Recursively processes subdirectories to build complete hierarchy
+ * @note Calculates cumulative size for parent directories
+ * @note Skips "." and ".." directory entries automatically
+ * @warning path must be valid directory path with read permissions
+ *
+ * @see _addTreeStructureRecursive() for similar functionality
+ * @see createItem() for item creation details
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _loadTree(Tree tree, char* path) {
     DIR* dp;
     struct dirent* ep;
@@ -1654,6 +1678,31 @@ static void _loadTree(Tree tree, char* path) {
     return;
 }
 
+/**
+ * @brief Loads persistent trash data from storage file
+ *
+ * Reads trash dump file and reconstructs trash linked list with all
+ * deleted items including metadata. Parses CSV format with UID, original
+ * name, original path, and deletion timestamp. Handles memory allocation
+ * and proper trash item structure initialization.
+ *
+ * @param[in,out] trash Pointer to trash linked list to populate
+ *
+ * @pre trash linked list is properly initialized
+ * @post trash list populated with all persistent trash items
+ *
+ * @note Creates new file if trash dump doesn't exist
+ * @note Parses CSV format: UID,originalName,originalPath,deletedTime
+ * @note Dynamically allocates memory for line reading
+ * @note Reconstructs trash paths based on UID naming convention
+ * @warning Memory allocation may fail for large trash files
+ *
+ * @see saveTrashToFile() for corresponding save operation
+ * @see _generateUID() for UID format details
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _loadTrashFromFile(LinkedList* trash) {
     FILE* trashFile = fopen(TRASH_DUMP, "r");
     if (trashFile == NULL) {
@@ -1790,6 +1839,28 @@ static void _loadTrashFromFile(LinkedList* trash) {
     fclose(trashFile);
 }
 
+/**
+ * @brief Recursively destroys tree structure and frees memory
+ *
+ * Performs complete cleanup of tree structure by recursively freeing
+ * all nodes, allocated strings, and setting tree pointer to NULL.
+ * Ensures no memory leaks in tree destruction process.
+ *
+ * @param[in,out] tree Pointer to tree root to destroy
+ *
+ * @pre tree pointer is valid (may point to NULL tree)
+ * @post All tree memory freed, tree pointer set to NULL
+ *
+ * @note Recursively processes all children and siblings
+ * @note Frees item name and path strings before freeing nodes
+ * @note Safe to call with NULL tree pointer
+ * @warning Tree becomes unusable after this operation
+ *
+ * @see createFileManager() for tree initialization
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _destroyTree(Tree* tree) {
     if (*tree == NULL)
         return;
@@ -3341,6 +3412,32 @@ static bool _isValidTreeNode(Tree root, Tree target) {
 ================================================================================
 */
 
+/**
+ * @brief Recursively searches tree for items matching keyword
+ *
+ * Performs case-insensitive recursive search through tree structure
+ * looking for items whose names contain the specified keyword. Adds
+ * matching items to results linked list for later processing.
+ *
+ * @param[in,out] linkedList Results list to store matching items
+ * @param[in] tree Tree node to search from (root for full search)
+ * @param[in] keyword Search term to match against item names
+ *
+ * @pre linkedList is initialized, tree may be NULL, keyword is valid string
+ * @post All matching items added to linkedList
+ *
+ * @note Performs case-insensitive substring matching
+ * @note Searches both current node and all descendants recursively
+ * @note Processes both children (first_son) and siblings (next_brother)
+ * @note Creates lowercase copies for comparison without modifying originals
+ * @warning keyword must be valid null-terminated string
+ *
+ * @see searchingTreeItem() for public interface
+ * @see toLowerStr() for case conversion utility
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, char* keyword) {
     if (tree == NULL)
         return;
@@ -3366,6 +3463,32 @@ static void _searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, char*
     _searchingTreeItemRecursive(linkedList, tree->next_brother, keyword);
 }
 
+/**
+ * @brief Recursively searches linked list nodes for keyword matches
+ *
+ * Traverses linked list containing tree node pointers and performs
+ * case-insensitive search for items matching keyword. Used for searching
+ * within specific result sets or filtered lists.
+ *
+ * @param[in,out] fm FileManager instance for result storage
+ * @param[in] node Current linked list node to process
+ * @param[in] keyword Search term to match against item names
+ *
+ * @pre fm is valid, node may be NULL, keyword is valid string
+ * @post Matching items added to fm->searchingList
+ *
+ * @note Performs case-insensitive substring matching
+ * @note Recursively processes remaining list nodes
+ * @note Each node->data contains Tree pointer to search
+ * @note Creates lowercase copies for safe comparison
+ * @warning keyword must be valid null-terminated string
+ *
+ * @see searchingLinkedListItem() for public interface
+ * @see toLowerStr() for case conversion utility
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _searchingLinkedListRecursive(FileManager* fm, Node* node, char* keyword) {
     if (node == NULL)
         return;
@@ -3389,6 +3512,30 @@ static void _searchingLinkedListRecursive(FileManager* fm, Node* node, char* key
     _searchingLinkedListRecursive(fm, node->next, keyword);
 }
 
+/**
+ * @brief Copies selected items to clipboard for copy/cut operations
+ *
+ * Transfers all currently selected items to clipboard queue, clearing
+ * any previous clipboard contents. Prepares items for subsequent paste
+ * operations in copy or cut mode.
+ *
+ * @param[in,out] fm FileManager instance containing selections and clipboard
+ *
+ * @pre fm is valid with initialized clipboard and selectedItem list
+ * @post Selected items copied to clipboard, previous clipboard cleared
+ *
+ * @note Clears both clipboard and copied queues before operation
+ * @note Copies item pointers, not item data (shallow copy)
+ * @note Logs each item added to clipboard for debugging
+ * @note Handles empty selection gracefully with error message
+ * @warning Requires valid selections in fm->selectedItem list
+ *
+ * @see copyFile() and cutFile() for public interfaces
+ * @see pasteFile() for clipboard consumption
+ *
+ * @internal
+ * @since 1.0
+ */
 static void _copyToClipboard(FileManager* fm) {
     // Clear clipboard yang lama
     if (!is_queue_empty(fm->clipboard)) {

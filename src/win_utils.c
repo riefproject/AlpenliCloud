@@ -1,5 +1,4 @@
 #include <windows.h>
-#include "win_utils.h"
 #include <commdlg.h>
 #include <shellapi.h>
 #include <shlobj.h>
@@ -7,40 +6,16 @@
 #include <stdio.h>
 #include <string.h>
 
-// Function untuk mendapatkan full path Windows
-// Menggunakan GetFullPathNameA untuk mendapatkan path lengkap
-// IS: inputPath adalah path relatif atau absolut ./ atau ../
-//     contoh: "C:\\folder\\file.txt", "./file.txt", "../folder/file.txt"
-// FS: mengembalikan path lengkap atau NULL jika gagal
-char *_getFullWindowsPath(const char *inputPath) {
-    DWORD bufferSize = MAX_PATH;
-    char *fullPath = NULL;
+#include "win_utils.h"
 
-    while (1) {
-        fullPath = (char *)malloc(bufferSize);
-        if (!fullPath)
-            return NULL;
+/*
+================================================================================
+    PUBLIC WINDOWS FILE OPERATIONS
+================================================================================
+*/
 
-        DWORD len = GetFullPathNameA(inputPath, bufferSize, fullPath, NULL);
-        if (len == 0) {
-            // Error: gagal mendapatkan path
-            free(fullPath);
-            return NULL;
-        }
 
-        if (len < bufferSize) {
-            // Berhasil
-            return fullPath;
-        }
-
-        // Buffer terlalu kecil, alokasikan ulang dengan ukuran yang cukup
-        free(fullPath);
-        bufferSize = len + 1;
-    }
-}
-
-// Fungsi ini sudah cukup aman, hanya return 1 jika berhasil, 0 jika gagal
-int RemoveItemsRecurse(const char *folderPath) {
+int RemoveItemsRecurse(const char* folderPath) {
     WIN32_FIND_DATAA findData;
     char searchPath[MAX_PATH];
     char itemPath[MAX_PATH];
@@ -69,7 +44,8 @@ int RemoveItemsRecurse(const char *folderPath) {
                 // Jika gagal hapus isi folder, tetap coba lanjut
                 printf("[LOG] Gagal hapus subfolder %s\n", itemPath);
             }
-        } else {
+        }
+        else {
             if (!DeleteFileA(itemPath)) {
                 printf("[LOG] Gagal hapus file: %s (Error: %lu)\n", itemPath, GetLastError());
             }
@@ -86,10 +62,17 @@ int RemoveItemsRecurse(const char *folderPath) {
     return 1;
 }
 
-// Function untuk membuka file dialog Windows (hanya file)
-int OpenWindowsFileDialog(char *filePath, int maxPathLength) {
+
+/*
+================================================================================
+    PUBLIC WINDOWS DIALOG FUNCTIONS
+================================================================================
+*/
+
+
+int OpenWindowsFileDialog(char* filePath, int maxPathLength) {
     OPENFILENAMEA ofn;
-    char szFile[260] = {0};
+    char szFile[260] = { 0 };
 
     // Initialize OPENFILENAME
     ZeroMemory(&ofn, sizeof(ofn));
@@ -111,20 +94,21 @@ int OpenWindowsFileDialog(char *filePath, int maxPathLength) {
         filePath[maxPathLength - 1] = '\0';
         printf("[LOG] File dialog - Selected: %s\n", filePath);
         return 1; // Success
-    } else {
+    }
+    else {
         DWORD error = CommDlgExtendedError();
         if (error != 0) {
             printf("[LOG] File dialog error: %lu\n", error);
-        } else {
+        }
+        else {
             printf("[LOG] File dialog cancelled by user\n");
         }
         return 0; // Cancel or error
     }
 }
 
-// Function untuk membuka folder dialog Windows
-int OpenWindowsFolderDialog(char *folderPath, int maxPathLength) {
-    BROWSEINFOA bi = {0};
+int OpenWindowsFolderDialog(char* folderPath, int maxPathLength) {
+    BROWSEINFOA bi = { 0 };
     bi.hwndOwner = NULL; // Changed for compatibility
     bi.lpszTitle = "Select Folder to Import";
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON;
@@ -138,7 +122,7 @@ int OpenWindowsFolderDialog(char *folderPath, int maxPathLength) {
         // Get the path from the pidl
         if (SHGetPathFromIDListA(pidl, folderPath)) {
             // Free memory used by pidl
-            IMalloc *imalloc = 0;
+            IMalloc* imalloc = 0;
             if (SUCCEEDED(SHGetMalloc(&imalloc))) {
                 imalloc->lpVtbl->Free(imalloc, pidl);
                 imalloc->lpVtbl->Release(imalloc);
@@ -154,7 +138,7 @@ int OpenWindowsFolderDialog(char *folderPath, int maxPathLength) {
         }
 
         // Free memory used by pidl
-        IMalloc *imalloc = 0;
+        IMalloc* imalloc = 0;
         if (SUCCEEDED(SHGetMalloc(&imalloc))) {
             imalloc->lpVtbl->Free(imalloc, pidl);
             imalloc->lpVtbl->Release(imalloc);
@@ -170,22 +154,16 @@ int OpenWindowsFolderDialog(char *folderPath, int maxPathLength) {
     return 0; // Cancel or error
 }
 
-// Function untuk mendapatkan path user-friendly
-void GetWindowsUserFriendlyPath(const char *fullPath, char *result, int resultSize) {
-    char *userProfile = getenv("USERPROFILE");
-    if (userProfile && strstr(fullPath, userProfile) == fullPath) {
-        // Replace user profile path dengan tilde
-        int userProfileLen = strlen(userProfile);
-        snprintf(result, resultSize, "~%s", fullPath + userProfileLen);
-    } else {
-        strncpy(result, fullPath, resultSize - 1);
-        result[resultSize - 1] = '\0';
-    }
-}
 
-// Function untuk mendapatkan common folder paths
-int GetWindowsCommonPath(WindowsCommonFolder folder, char *path, int pathSize) {
-    char *userProfile = getenv("USERPROFILE");
+/*
+================================================================================
+    PUBLIC WINDOWS PATH FUNCTIONS
+================================================================================
+*/
+
+
+int GetWindowsCommonPath(WindowsCommonFolder folder, char* path, int pathSize) {
+    char* userProfile = getenv("USERPROFILE");
     if (!userProfile) {
         printf("[LOG] USERPROFILE environment variable not found\n");
         return 0;
@@ -219,8 +197,66 @@ int GetWindowsCommonPath(WindowsCommonFolder folder, char *path, int pathSize) {
     return 1;
 }
 
+/*
+================================================================================
+    PUBLIC HELPER FUNCTIONS - PATH UTILITIES
+================================================================================
+*/
+
+/**
+ * @brief Converts input path to full Windows absolute path
+ *
+ * Resolves relative paths, UNC paths, and path shortcuts to their full
+ * absolute representation using Windows API. Dynamically allocates memory
+ * to accommodate paths of any length up to system limits.
+ *
+ * @param[in] inputPath Input path to be converted (relative or absolute)
+ *
+ * @return char* Pointer to dynamically allocated full path string
+ * @retval Non-NULL Success - returns pointer to full path string
+ * @retval NULL Failure - invalid input path or memory allocation failed
+ *
+ * @pre inputPath must be a valid null-terminated string
+ * @post If successful, returns dynamically allocated string with full path
+ *
+ * @note Uses GetFullPathNameA() Windows API for path resolution
+ * @note Caller is responsible for freeing the returned memory using free()
+ * @note Automatically handles buffer resizing for long paths
+ *
+ * @warning Returned pointer must be freed by caller to prevent memory leaks
+ * @warning Returns NULL on failure - always check return value before use
+ *
+ * @internal This is a private helper function - not exposed in header file
+ */
+char* _getFullWindowsPath(const char* inputPath) {
+    DWORD bufferSize = MAX_PATH;
+    char* fullPath = NULL;
+
+    while (1) {
+        fullPath = (char*)malloc(bufferSize);
+        if (!fullPath)
+            return NULL;
+
+        DWORD len = GetFullPathNameA(inputPath, bufferSize, fullPath, NULL);
+        if (len == 0) {
+            // Error: gagal mendapatkan path
+            free(fullPath);
+            return NULL;
+        }
+
+        if (len < bufferSize) {
+            // Berhasil
+            return fullPath;
+        }
+
+        // Buffer terlalu kecil, alokasikan ulang dengan ukuran yang cukup
+        free(fullPath);
+        bufferSize = len + 1;
+    }
+}
+
 // Function untuk validasi path Windows
-int ValidateWindowsPath(const char *path) {
+int ValidateWindowsPath(const char* path) {
     if (!path || strlen(path) == 0) {
         return 0;
     }
@@ -252,55 +288,3 @@ int ValidateWindowsPath(const char *path) {
     return 1; // Valid and accessible
 }
 
-// Function untuk check apakah path adalah directory
-int IsWindowsDirectory(const char *path) {
-    DWORD dwAttrib = GetFileAttributesA(path);
-    int isDir = (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-                 (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-
-    printf("[LOG] Directory check for %s: %s\n", path, isDir ? "YES" : "NO");
-    return isDir;
-}
-
-// Function untuk convert path separators
-void NormalizeWindowsPath(char *path) {
-    if (!path)
-        return;
-
-    // Convert forward slashes to backslashes for Windows
-    for (int i = 0; path[i]; i++) {
-        if (path[i] == '/') {
-            path[i] = '\\';
-        }
-    }
-
-    printf("[LOG] Path normalized: %s\n", path);
-}
-
-// Function untuk mendapatkan file size
-long long GetWindowsFileSize(const char *filePath) {
-    HANDLE hFile = CreateFileA(
-        filePath,
-        GENERIC_READ,
-        FILE_SHARE_READ,
-        NULL,
-        OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL);
-
-    if (hFile == INVALID_HANDLE_VALUE) {
-        printf("[LOG] Failed to get file size for: %s (Error: %lu)\n", filePath, GetLastError());
-        return -1;
-    }
-
-    LARGE_INTEGER fileSize;
-    if (!GetFileSizeEx(hFile, &fileSize)) {
-        printf("[LOG] GetFileSizeEx failed for: %s (Error: %lu)\n", filePath, GetLastError());
-        CloseHandle(hFile);
-        return -1;
-    }
-
-    CloseHandle(hFile);
-    printf("[LOG] File size for %s: %lld bytes\n", filePath, fileSize.QuadPart);
-    return fileSize.QuadPart;
-}

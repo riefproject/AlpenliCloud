@@ -1,11 +1,12 @@
 #ifndef FILE_MANAGER_H
 #define FILE_MANAGER_H
 
+#include <stdbool.h>
+
 #include "item.h"
 #include "nbtree.h"
 #include "queue.h"
 #include "stack.h"
-#include <stdbool.h>
 #include "operation.h"
 
 #define alloc(T) (T *)malloc(sizeof(T))
@@ -48,7 +49,7 @@ typedef struct FileManager {
 
 /*
 ================================================================================
-    INITIALIZATION AND SETUP
+    CORE SYSTEM FUNCTIONS
 ================================================================================
 */
 
@@ -83,35 +84,20 @@ void createFileManager(FileManager* fileManager);
 void initFileManager(FileManager* fileManager);
 
 /**
- * @brief Loads tree structure from filesystem
+ * @brief Refreshes file manager with current filesystem state
  *
- * Recursively reads directories and files from filesystem to build tree structure.
- * This function performs deep scanning of directory hierarchy.
+ * Reloads tree structure from current directory by clearing children and reloading.
+ * This function synchronizes in-memory tree with actual filesystem state.
  *
- * @param[in,out] tree Tree structure to populate
- * @param[in] path Directory path to scan
+ * @param[in,out] fileManager Pointer to FileManager to refresh
  *
- * @pre tree and path are valid
- * @post tree contains file and folder structure matching directory contents recursively
+ * @pre Tree structure may be out of sync with filesystem
+ * @post Child nodes cleared, tree reloaded from treeCursor path, tree structure synchronized with filesystem
  *
- * @author Farras
+ * @author Arief
+ * @editor Farras
  */
-void loadTree(Tree tree, char* path);
-
-/**
- * @brief Loads trash data from file
- *
- * Reads trash_dump.txt file to load deleted items into LinkedList trash.
- * This function restores trash state from persistent storage.
- *
- * @param[out] trash Pointer to LinkedList to populate with trash items
- *
- * @pre trash_dump.txt file exists and contains valid data
- * @post LinkedList trash populated with deleted items, each containing name, original path, deletion time, and trash path
- *
- * @author Farras
- */
-void loadTrashFromFile(LinkedList* trash);
+void refreshFileManager(FileManager* fileManager);
 
 /**
  * @brief Saves trash data to file
@@ -142,126 +128,11 @@ void saveTrashToFile(FileManager* fileManager);
  */
 void printTrash(LinkedList trash);
 
-/**
- * @brief Refreshes file manager with current filesystem state
- *
- * Reloads tree structure from current directory by clearing children and reloading.
- * This function synchronizes in-memory tree with actual filesystem state.
- *
- * @param[in,out] fileManager Pointer to FileManager to refresh
- *
- * @pre Tree structure may be out of sync with filesystem
- * @post Child nodes cleared, tree reloaded from treeCursor path, tree structure synchronized with filesystem
- *
- * @author Arief
- * @editor Farras
- */
-void refreshFileManager(FileManager* fileManager);
-
 /*
 ================================================================================
     FILE AND FOLDER OPERATIONS
 ================================================================================
 */
-
-/**
- * @brief Searches for a file by path
- *
- * Finds a file based on path by creating dummy item and using searchTree.
- * Returns the found item or empty item if not found.
- *
- * @param[in] fileManager Pointer to FileManager instance
- * @param[in] path File path to search for
- * @return Item structure containing file information, or empty item with all fields 0/NULL if not found
- *
- * @pre path is valid and non-NULL
- * @post File item returned if found, empty item otherwise
- *
- * @author Maulana
- */
-Item searchFile(FileManager* fileManager, char* path);
-
-/**
- * @brief Searches for all files/folders matching keyword
- *
- * Searches all files/folders matching keyword in current directory and populates searchingList.
- * This function enables content discovery within the current directory context.
- *
- * @param[in,out] fileManager Pointer to FileManager instance
- * @param[in] keyword Search keyword string
- *
- * @pre keyword is valid search string
- * @post LinkedList searchingList populated with matching items, each containing name, path, size, type, and time
- *
- * @author Farras
- */
-void searchingTreeItem(FileManager* fileManager, char* keyword);
-
-/**
- * @brief Recursively searches items in tree
- *
- * Recursively searches all items matching keyword in tree structure.
- * This function provides deep search capability across directory hierarchy.
- *
- * @param[out] linkedList LinkedList to store search results
- * @param[in] tree Tree to search in
- * @param[in] keyword Search keyword string
- *
- * @pre linkedList, tree, and keyword are valid
- * @post LinkedList populated with matching items, each containing name, path, size, type, and time
- *
- * @author Farras
- */
-void searchingTreeItemRecursive(LinkedList* linkedList, Tree tree, char* keyword);
-
-/**
- * @brief Searches items in linked list
- *
- * Searches items in LinkedList based on keyword by comparing item names.
- * This function enables search within list-based data structures.
- *
- * @param[in,out] FileManager Pointer to FileManager instance
- * @param[in] node Node to search from
- * @param[in] keyword Search keyword string
- *
- * @pre FileManager, node, and keyword are valid
- * @post LinkedList populated with matching items, each containing name, path, size, type, and time
- *
- * @author Farras
- */
-void searchingLinkedListItem(FileManager* FileManager, Node* node, char* keyword);
-
-/**
- * @brief Recursively searches items in linked list
- *
- * Recursively searches items in LinkedList based on keyword.
- * This function provides comprehensive search within linked list structures.
- *
- * @param[in,out] FileManager Pointer to FileManager instance
- * @param[in] node Node to search from
- * @param[in] keyword Search keyword string
- *
- * @pre FileManager, node, and keyword are valid
- * @post LinkedList populated with matching items, each containing name, path, size, type, and time
- *
- * @author Farras
- */
-void searchingLinkedListRecursive(FileManager* FileManager, Node* node, char* keyword);
-
-/**
- * @brief Prints search results to console
- *
- * Displays all items in LinkedList searchingList to console.
- * This function provides visual feedback for search operations.
- *
- * @param[in] fileManager Pointer to FileManager containing search results
- *
- * @pre LinkedList searchingList contains found items
- * @post Each item printed to console with name, path, size, type, and time
- *
- * @author Farras
- */
-void printSearchingList(FileManager* fileManager);
 
 /**
  * @brief Creates a new file or folder
@@ -346,9 +217,43 @@ void renameFile(FileManager* fileManager, char* filePath, char* newName, bool is
  */
 void recoverFile(FileManager* fileManager);
 
+/**
+ * @brief Searches for a file by path
+ *
+ * Finds a file based on path by creating dummy item and using searchTree.
+ * Returns the found item or empty item if not found.
+ *
+ * @param[in] fileManager Pointer to FileManager instance
+ * @param[in] path File path to search for
+ * @return Item structure containing file information, or empty item with all fields 0/NULL if not found
+ *
+ * @pre path is valid and non-NULL
+ * @post File item returned if found, empty item otherwise
+ *
+ * @author Maulana
+ */
+Item searchFile(FileManager* fileManager, char* path);
+
+/**
+ * @brief Imports file/folder from external path
+ *
+ * Imports file or folder from path outside workspace to current directory.
+ * This function enables external content integration.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] sourcePath Source path to import from
+ * @param[in] isOperation Flag indicating if operation should be saved for undo
+ *
+ * @pre sourcePath is valid and accessible, destination is current treeCursor
+ * @post File/folder copied to current directory with duplicate name handling, item added to tree structure, operation saved for undo
+ *
+ * @author GitHub Copilot
+ */
+void importFile(FileManager* fileManager, char* sourcePath, bool isOperation);
+
 /*
 ================================================================================
-    COPY, CUT, PASTE OPERATIONS
+    CLIPBOARD OPERATIONS
 ================================================================================
 */
 
@@ -400,7 +305,7 @@ void pasteFile(FileManager* fileManager, bool isOperation);
 
 /*
 ================================================================================
-    FILE SELECTION OPERATIONS
+    SELECTION MANAGEMENT
 ================================================================================
 */
 
@@ -460,6 +365,107 @@ void selectAll(FileManager* fileManager);
 
 /*
 ================================================================================
+    NAVIGATION AND SEARCH
+================================================================================
+*/
+
+/**
+ * @brief Searches for all files/folders matching keyword
+ *
+ * Searches all files/folders matching keyword in current directory and populates searchingList.
+ * This function enables content discovery within the current directory context.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ * @param[in] keyword Search keyword string
+ *
+ * @pre keyword is valid search string
+ * @post LinkedList searchingList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
+void searchingTreeItem(FileManager* fileManager, char* keyword);
+
+/**
+ * @brief Searches items in linked list
+ *
+ * Searches items in LinkedList based on keyword by comparing item names.
+ * This function enables search within list-based data structures.
+ *
+ * @param[in,out] FileManager Pointer to FileManager instance
+ * @param[in] node Node to search from
+ * @param[in] keyword Search keyword string
+ *
+ * @pre FileManager, node, and keyword are valid
+ * @post LinkedList populated with matching items, each containing name, path, size, type, and time
+ *
+ * @author Farras
+ */
+void searchingLinkedListItem(FileManager* FileManager, Node* node, char* keyword);
+
+/**
+ * @brief Prints search results to console
+ *
+ * Displays all items in LinkedList searchingList to console.
+ * This function provides visual feedback for search operations.
+ *
+ * @param[in] fileManager Pointer to FileManager containing search results
+ *
+ * @pre LinkedList searchingList contains found items
+ * @post Each item printed to console with name, path, size, type, and time
+ *
+ * @author Farras
+ */
+void printSearchingList(FileManager* fileManager);
+
+/**
+ * @brief Navigates back to parent directory
+ *
+ * Moves treeCursor to parent directory if available.
+ * This function provides backward navigation capability.
+ *
+ * @param[in,out] fileManager Pointer to FileManager instance
+ *
+ * @pre treeCursor not at root directory
+ * @post treeCursor moved to parent directory, currentPath updated, filesystem refreshed
+ *
+ * @author Farras
+ */
+void goBack(FileManager* fileManager);
+
+/**
+ * @brief Navigates to specific directory
+ *
+ * Moves treeCursor to target tree and updates currentPath.
+ * This function provides direct navigation capability.
+ *
+ * @param[in,out] FileManager Pointer to FileManager instance
+ * @param[in] tree Target tree to navigate to
+ *
+ * @pre tree target is valid and accessible
+ * @post treeCursor moved to tree target, currentPath updated with complete path, filesystem refreshed
+ *
+ * @author Farras
+ */
+void goTo(FileManager* FileManager, Tree tree);
+
+/**
+ * @brief Gets current root directory
+ *
+ * Finds and returns root directory from treeCursor by traversing to parent.
+ * This function provides root directory access.
+ *
+ * @param[in] fileManager FileManager instance
+ * @return Tree pointer to root directory, or NULL if invalid
+ *
+ * @pre FileManager and treeCursor are valid
+ * @post Root directory found and returned, or NULL if invalid
+ *
+ * @author Farras
+ */
+Tree getCurrentRoot(FileManager fileManager);
+
+/*
+================================================================================
     UNDO AND REDO OPERATIONS
 ================================================================================
 */
@@ -496,25 +502,9 @@ void redo(FileManager* fileManager);
 
 /*
 ================================================================================
-    DIRECTORY NAVIGATION
+    UTILITIES
 ================================================================================
 */
-
-/**
- * @brief Gets current root directory
- *
- * Finds and returns root directory from treeCursor by traversing to parent.
- * This function provides root directory access.
- *
- * @param[in] fileManager FileManager instance
- * @return Tree pointer to root directory, or NULL if invalid
- *
- * @pre FileManager and treeCursor are valid
- * @post Root directory found and returned, or NULL if invalid
- *
- * @author Farras
- */
-Tree getCurrentRoot(FileManager fileManager);
 
 /**
  * @brief Extracts filename from complete file path
@@ -534,37 +524,6 @@ Tree getCurrentRoot(FileManager fileManager);
 char* getNameFromPath(char* path);
 
 /**
- * @brief Navigates back to parent directory
- *
- * Moves treeCursor to parent directory if available.
- * This function provides backward navigation capability.
- *
- * @param[in,out] fileManager Pointer to FileManager instance
- *
- * @pre treeCursor not at root directory
- * @post treeCursor moved to parent directory, currentPath updated, filesystem refreshed
- *
- * @author Farras
- */
-void goBack(FileManager* fileManager);
-
-/**
- * @brief Navigates to specific directory
- *
- * Moves treeCursor to target tree and updates currentPath.
- * This function provides direct navigation capability.
- *
- * @param[in,out] FileManager Pointer to FileManager instance
- * @param[in] tree Target tree to navigate to
- *
- * @pre tree target is valid and accessible
- * @post treeCursor moved to tree target, currentPath updated with complete path, filesystem refreshed
- *
- * @author Farras
- */
-void goTo(FileManager* FileManager, Tree tree);
-
-/**
  * @brief Sorts child nodes by type
  *
  * Sorts child nodes by type using insertion sort (folders first, then files).
@@ -578,12 +537,6 @@ void goTo(FileManager* FileManager, Tree tree);
  * @author Farras
  */
 void sort_children(Tree* parent);
-
-/*
-================================================================================
-    UTILITY AND HELPER FUNCTIONS
-================================================================================
-*/
 
 /**
  * @brief Opens file with Windows "Open With" dialog
@@ -599,28 +552,5 @@ void sort_children(Tree* parent);
  * @author Farras
  */
 void windowsOpenWith(char* path);
-
-/*
-================================================================================
-    IMPORT/UPLOAD FILE OPERATIONS
-================================================================================
-*/
-
-/**
- * @brief Imports file/folder from external path
- *
- * Imports file or folder from path outside workspace to current directory.
- * This function enables external content integration.
- *
- * @param[in,out] fileManager Pointer to FileManager instance
- * @param[in] sourcePath Source path to import from
- * @param[in] isOperation Flag indicating if operation should be saved for undo
- *
- * @pre sourcePath is valid and accessible, destination is current treeCursor
- * @post File/folder copied to current directory with duplicate name handling, item added to tree structure, operation saved for undo
- *
- * @author GitHub Copilot
- */
-void importFile(FileManager* fileManager, char* sourcePath, bool isOperation);
 
 #endif // !FILE_MANAGER_H
