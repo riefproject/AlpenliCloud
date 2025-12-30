@@ -59,9 +59,9 @@ Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan A
 2. **File Manager Operations**:
     - Create file/folder dengan modal dialog
     - Rename file/folder (F2 shortcut)
-    - Delete file/folder ke trash dengan confirm dialog
+    - Delete file/folder ke trash
     - Copy (Ctrl+C), Cut (Ctrl+X), Paste (Ctrl+V)
-    - Drag & drop support
+    - Buka file dengan aplikasi default
 3. **Navigation System**:
     - Sidebar dengan tree structure yang dapat di-expand/collapse
     - Navbar dengan path navigation dan search functionality
@@ -100,7 +100,7 @@ Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan A
 -   **raylib**: Graphics library untuk rendering dan input handling
 -   **raygui**: Immediate mode GUI library untuk UI components
 -   **C Language**: Core programming language
--   **Windows API**: Untuk file system operations dan native integrations
+-   **Platform APIs**: Untuk operasi file dan dialog sesuai sistem (Windows/macOS/Linux)
 
 ## Cara Menjalankan
 

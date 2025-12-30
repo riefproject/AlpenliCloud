@@ -36,9 +36,9 @@ This project was built for the **Data Structures & Algorithms** final project, f
 2. **File Manager Operations**:
     - Create file/folder with modal dialog
     - Rename file/folder (F2 shortcut)
-    - Delete file/folder to trash with confirmation dialog
+    - Delete file/folder to trash
     - Copy (Ctrl+C), Cut (Ctrl+X), Paste (Ctrl+V)
-    - Drag & drop support
+    - Open files with the default app
 3. **Navigation System**:
     - Sidebar tree structure with expand/collapse
     - Navbar with path navigation and search
