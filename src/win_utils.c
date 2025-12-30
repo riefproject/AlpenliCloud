@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 #include <stdio.h>
@@ -17,6 +18,46 @@
 #include <string.h>
 
 #include "win_utils.h"
+
+#ifndef _WIN32
+static int _commandExists(const char* cmd) {
+    char checkCmd[256];
+    int status;
+
+    snprintf(checkCmd, sizeof(checkCmd), "command -v %s >/dev/null 2>&1", cmd);
+    status = system(checkCmd);
+    if (status == -1) {
+        return 0;
+    }
+
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int _runDialogCommand(const char* command, char* output, int maxOutputLen) {
+    FILE* pipe = popen(command, "r");
+    if (!pipe) {
+        return 0;
+    }
+
+    if (!fgets(output, maxOutputLen, pipe)) {
+        pclose(pipe);
+        return 0;
+    }
+
+    pclose(pipe);
+
+    size_t len = strlen(output);
+    while (len > 0 && (output[len - 1] == '\n' || output[len - 1] == '\r')) {
+        output[--len] = '\0';
+    }
+
+    return len > 0;
+}
+#endif
 
 /*
 ================================================================================
@@ -193,6 +234,31 @@ int OpenWindowsFileDialog(char* filePath, int maxPathLength) {
 
     printf("[LOG] File dialog - Selected: %s\n", filePath);
     return 1;
+#elif defined(__linux__)
+    if (filePath == NULL || maxPathLength <= 0) {
+        return 0;
+    }
+
+    if (_commandExists("zenity")) {
+        if (_runDialogCommand("zenity --file-selection --title=\"Select File to Import\"", filePath, maxPathLength)) {
+            printf("[LOG] File dialog - Selected: %s\n", filePath);
+            return 1;
+        }
+        printf("[LOG] File dialog cancelled by user\n");
+        return 0;
+    }
+
+    if (_commandExists("kdialog")) {
+        if (_runDialogCommand("kdialog --getopenfilename", filePath, maxPathLength)) {
+            printf("[LOG] File dialog - Selected: %s\n", filePath);
+            return 1;
+        }
+        printf("[LOG] File dialog cancelled by user\n");
+        return 0;
+    }
+
+    printf("[LOG] File dialog tidak tersedia. Install zenity atau kdialog.\n");
+    return 0;
 #else
     (void)filePath;
     (void)maxPathLength;
@@ -277,6 +343,31 @@ int OpenWindowsFolderDialog(char* folderPath, int maxPathLength) {
 
     printf("[LOG] Folder dialog - Selected: %s\n", folderPath);
     return 1;
+#elif defined(__linux__)
+    if (folderPath == NULL || maxPathLength <= 0) {
+        return 0;
+    }
+
+    if (_commandExists("zenity")) {
+        if (_runDialogCommand("zenity --file-selection --directory --title=\"Select Folder to Import\"", folderPath, maxPathLength)) {
+            printf("[LOG] Folder dialog - Selected: %s\n", folderPath);
+            return 1;
+        }
+        printf("[LOG] Folder dialog cancelled by user\n");
+        return 0;
+    }
+
+    if (_commandExists("kdialog")) {
+        if (_runDialogCommand("kdialog --getexistingdirectory", folderPath, maxPathLength)) {
+            printf("[LOG] Folder dialog - Selected: %s\n", folderPath);
+            return 1;
+        }
+        printf("[LOG] Folder dialog cancelled by user\n");
+        return 0;
+    }
+
+    printf("[LOG] Folder dialog tidak tersedia. Install zenity atau kdialog.\n");
+    return 0;
 #else
     (void)folderPath;
     (void)maxPathLength;

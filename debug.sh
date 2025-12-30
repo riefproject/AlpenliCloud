@@ -21,6 +21,7 @@ RESOURCE_RC=""
 RESOURCE_RES=""
 PLATFORM_WINFLAGS=""
 PLATFORM_LDFLAGS=""
+RAYLIB_CFLAGS="-Ilib/raylib/include"
 
 if [ "$PLATFORM" == "windows" ]; then
     EXE_NAME="AlpenliCloud.exe"
@@ -31,7 +32,16 @@ if [ "$PLATFORM" == "windows" ]; then
 elif [ "$PLATFORM" == "darwin" ]; then
     PLATFORM_LDFLAGS="-Llib/raylib/lib -lraylib -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo -lm -Wl,-rpath,@executable_path/../lib/raylib/lib"
 else
-    PLATFORM_LDFLAGS="-Llib/raylib/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -Wl,-rpath,$PWD/lib/raylib/lib"
+    if [ -f "lib/raylib/lib/libraylib.so" ]; then
+        PLATFORM_LDFLAGS="-Llib/raylib/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -Wl,-rpath,$PWD/lib/raylib/lib"
+    elif command -v pkg-config >/dev/null 2>&1 && pkg-config --exists raylib; then
+        PLATFORM_LDFLAGS="$(pkg-config --libs raylib)"
+        RAYLIB_CFLAGS="$(pkg-config --cflags raylib)"
+    else
+        echo "Raylib tidak ditemukan."
+        echo "Tambahkan lib/raylib/lib/libraylib.so atau install raylib di sistem (contoh: sudo apt install libraylib-dev)."
+        exit 1
+    fi
 fi
 
 EXE_PATH="$BIN_DIR/$EXE_NAME"
@@ -45,7 +55,7 @@ CFLAGS="$WNO
         -Iinclude 
         -Iinclude/gui
         -Iinclude/data_structure
-        -Ilib/raylib/include
+        $RAYLIB_CFLAGS
         -g"
 ALLFLAGS="$PLATFORM_WINFLAGS $PLATFORM_LDFLAGS"
 OBJECT_FILES=()
