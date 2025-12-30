@@ -7,10 +7,34 @@ SRC_DIRS=("src"
 
 BUILD_DIR="build/output"
 BIN_DIR="bin"
-EXE_NAME="AlpenliCloud.exe"
+
+UNAME_S="$(uname -s)"
+PLATFORM="linux"
+if [ "$OS" == "Windows_NT" ]; then
+    PLATFORM="windows"
+elif [ "$UNAME_S" == "Darwin" ]; then
+    PLATFORM="darwin"
+fi
+
+EXE_NAME="AlpenliCloud"
+RESOURCE_RC=""
+RESOURCE_RES=""
+PLATFORM_WINFLAGS=""
+PLATFORM_LDFLAGS=""
+
+if [ "$PLATFORM" == "windows" ]; then
+    EXE_NAME="AlpenliCloud.exe"
+    RESOURCE_RC="assets/resource.rc"
+    RESOURCE_RES="assets/resource.res"
+    PLATFORM_WINFLAGS="-lcomdlg32 -lshell32 -lole32 -lshlwapi -lkernel32"
+    PLATFORM_LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+elif [ "$PLATFORM" == "darwin" ]; then
+    PLATFORM_LDFLAGS="-Llib/raylib/lib -lraylib -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo -lm -Wl,-rpath,@executable_path/../lib/raylib/lib"
+else
+    PLATFORM_LDFLAGS="-Llib/raylib/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -Wl,-rpath,$PWD/lib/raylib/lib"
+fi
+
 EXE_PATH="$BIN_DIR/$EXE_NAME"
-RESOURCE_RC="assets/resource.rc"
-RESOURCE_RES="assets/resource.res"
 
 # bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
 WNO="-Wno-discarded-qualifiers
@@ -23,14 +47,12 @@ CFLAGS="$WNO
         -Iinclude/data_structure
         -Ilib/raylib/include
         -g"
-WINFLAGS="-lcomdlg32
-         -lshell32
-         -lole32
-         -lshlwapi
-         -lkernel32"
-LDFLAGS="lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
-ALLFLAGS="$WINFLAGS $LDFLAGS"
+ALLFLAGS="$PLATFORM_WINFLAGS $PLATFORM_LDFLAGS"
 OBJECT_FILES=()
+CC="gcc"
+if [ "$PLATFORM" == "darwin" ]; then
+    CC="clang"
+fi
 
 # Biar CLI nya cakep
 RED='\e[31m'
@@ -59,7 +81,7 @@ compile_if_needed() {
 
     if [ ! -f "$out_file" ] || [ "$src_file" -nt "$out_file" ]; then
         echo "🔨 Compiling $src_file..."
-        clang $CFLAGS -c "$src_file" -o "$out_file"
+        $CC $CFLAGS -c "$src_file" -o "$out_file"
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Compilation failed: $src_file ${RESET}"
             exit 1
@@ -83,6 +105,10 @@ compile_sources() {
 }
 
 compile_resource_if_needed() {
+    if [ -z "$RESOURCE_RC" ] || [ -z "$RESOURCE_RES" ]; then
+        return 0
+    fi
+
     if [ ! -f "$RESOURCE_RES" ] || [ "$RESOURCE_RC" -nt "$RESOURCE_RES" ]; then
         echo "🎨 Compiling resource file..."
         windres "$RESOURCE_RC" -O coff -o "$RESOURCE_RES"
@@ -99,7 +125,9 @@ link_if_needed() {
     compile_resource_if_needed
 
     local need_link=false
-    if [ ! -f "$EXE_PATH" ] || [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
+    if [ ! -f "$EXE_PATH" ]; then
+        need_link=true
+    elif [ -n "$RESOURCE_RES" ] && [ -f "$RESOURCE_RES" ] && [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
         need_link=true
     else
         for obj in "${OBJECT_FILES[@]}"; do
@@ -112,7 +140,11 @@ link_if_needed() {
 
     if $need_link; then
         echo "🔧 Linking..."
-        clang -g "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $ALLFLAGS
+        LINK_INPUTS=("${OBJECT_FILES[@]}")
+        if [ -n "$RESOURCE_RES" ] && [ -f "$RESOURCE_RES" ]; then
+            LINK_INPUTS+=("$RESOURCE_RES")
+        fi
+        $CC -g "${LINK_INPUTS[@]}" -o "$EXE_PATH" $ALLFLAGS
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1

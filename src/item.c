@@ -5,9 +5,11 @@
 #include "linked.h"
 
 Item createItem(char* name, char* path, long size, ItemType type, time_t created_at, time_t updated_at, time_t deleted_at) {
+  const char* safeName = name ? name : "";
+  const char* safePath = path ? path : "";
   return (Item) {
-    .name = strdup(name),
-      .path = strdup(path),
+    .name = strdup(safeName),
+      .path = strdup(safePath),
       .size = size,
       .type = type,
       .selected = false,
@@ -51,7 +53,7 @@ TrashItem searchTrashItem(LinkedList trash, char* originalPath) {
 PasteItem createPasteItem(Item item, char* originalPath) {
   return (PasteItem) {
     .item = item,
-    .originalPath = strdup(originalPath),
+    .originalPath = strdup(originalPath ? originalPath : ""),
   };
 }
 // TrashItem createTrashItem(Item item, char* origin) {
@@ -60,4 +62,3 @@ PasteItem createPasteItem(Item item, char* originalPath) {
 //       .origin = strdup(origin)
 //   };
 // }
-

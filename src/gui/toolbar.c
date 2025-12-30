@@ -93,7 +93,9 @@ void updateToolbar(Toolbar *toolbar, Context *ctx) {
 
     if (toolbar->createItemModalResult) {
         char *name = toolbar->inputCreateItemBuffer;
-        char *dirPath = TextFormat(".dir/%s", ctx->fileManager->currentPath);
+        char *dirPath = ctx->fileManager->treeCursor
+            ? ctx->fileManager->treeCursor->item.path
+            : TextFormat(".dir/%s", ctx->fileManager->currentPath);
         createFile(ctx->fileManager, toolbar->selectedType, dirPath, name, true);
 
         toolbar->createItemModalResult = false;
@@ -295,7 +297,7 @@ void DrawNewButtonDropdown(Context *ctx, Rectangle btnRect) {
         toolbar->selectedType = ITEM_FOLDER;
         toolbar->showCreateModal = true;
         toolbar->dropdownActive = false;
-        ctx->disableGroundClick = false;
+        ctx->disableGroundClick = true;
         strcpy(toolbar->inputCreateItemBuffer, "");
         toolbar->inputCreateItemEditMode = true;
     }

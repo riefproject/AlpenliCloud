@@ -2,16 +2,30 @@
 SRC_DIRS = src src/gui src/data_structure
 BUILD_DIR = build/output
 BIN_DIR = bin
-EXE_NAME = AlpenliCloud.exe
-EXE_PATH = $(BIN_DIR)/$(EXE_NAME)
 
-# Resource files
-RESOURCE_RC = assets/resource.rc
-RESOURCE_RES = assets/resource.res
+# Platform detection
+UNAME_S := $(shell uname -s)
+
+# Defaults (non-Windows)
+EXE_NAME = AlpenliCloud
+RESOURCE_RC =
+RESOURCE_RES =
 
 # Compiler flags
 CFLAGS = -Iinclude -Iinclude/gui -Iinclude/data_structure -Ilib/raylib/include
-LDFLAGS = lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+
+ifeq ($(OS),Windows_NT)
+	EXE_NAME = AlpenliCloud.exe
+	RESOURCE_RC = assets/resource.rc
+	RESOURCE_RES = assets/resource.res
+	LDFLAGS = lib/raylib/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+else ifeq ($(UNAME_S),Darwin)
+	LDFLAGS = -Llib/raylib/lib -lraylib -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo -lm -Wl,-rpath,@executable_path/../lib/raylib/lib
+else
+	LDFLAGS = -Llib/raylib/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -Wl,-rpath,$(CURDIR)/lib/raylib/lib
+endif
+
+EXE_PATH = $(BIN_DIR)/$(EXE_NAME)
 
 # Find all .c files in source directories
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -27,10 +41,12 @@ $(BUILD_DIR)/%.o: %.c
 	@echo "🔨 Compiling $<..."
 	@gcc $(CFLAGS) -c $< -o $@
 
-# Resource compilation
+# Resource compilation (Windows only)
+ifneq ($(RESOURCE_RES),)
 $(RESOURCE_RES): $(RESOURCE_RC)
 	@echo "🎨 Compiling resource file..."
 	@windres $< -O coff -o $@
+endif
 
 # Linking
 $(EXE_PATH): $(OBJS) $(RESOURCE_RES)

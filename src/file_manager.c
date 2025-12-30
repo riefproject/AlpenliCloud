@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <dirent.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
@@ -245,7 +246,13 @@ void createFile(FileManager* fm, ItemType type, char* dirPath, char* name, bool 
     }
 
     currentFullPath = strdup(dirPath);
-    currentNode = searchTree(fm->root, createItem(getNameFromPath(currentFullPath), currentFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+    if (fm->treeCursor && fm->treeCursor->item.path &&
+        strcmp(fm->treeCursor->item.path, currentFullPath) == 0) {
+        currentNode = fm->treeCursor;
+    } else {
+        currentNode = searchTree(fm->root,
+            createItem(getNameFromPath(currentFullPath), currentFullPath, 0, ITEM_FOLDER, 0, 0, 0));
+    }
     // printf("[LOG] \ncurrent path: %s\n", currentFullPath);
     // printf("[LOG] current name: %s\n", getNameFromPath(currentFullPath));
     if (currentNode != NULL) {
@@ -1164,9 +1171,9 @@ void redo(FileManager* fm) {
     operationToRedo = (Operation*)pop(&(fm->redo));
     operationToUndo = alloc(Operation);
     *operationToUndo = (Operation){
-        .from = strdup(operationToRedo->from),
+        .from = operationToRedo->from ? strdup(operationToRedo->from) : NULL,
         .isDir = operationToRedo->isDir,
-        .to = strdup(operationToRedo->to),
+        .to = operationToRedo->to ? strdup(operationToRedo->to) : NULL,
         .type = operationToRedo->type,
         .itemTemp = NULL };
     operationToUndo->itemTemp = alloc(Queue);
@@ -1199,22 +1206,49 @@ void redo(FileManager* fm) {
 */
 
 void windowsOpenWith(char* path) {
+    if (path == NULL) {
+        return;
+    }
+
     printf("[LOG] %s\n", path);
 
-    char* command = "cmd /c start \"\"";
+#ifdef _WIN32
+    const char* command = "cmd /c start \"\"";
     int length = strlen(command) + strlen(path) + 5;
-
     char* executeableCommand = malloc(length);
-
-    printf("[LOG] %d\n", length);
+    if (!executeableCommand) {
+        return;
+    }
 
     snprintf(executeableCommand, length, "%s \"%s\" /OPENAS", command, path);
-
     printf("[LOG] %s\n", executeableCommand);
-
     system(executeableCommand);
-
     free(executeableCommand);
+#elif defined(__APPLE__)
+    const char* command = "open";
+    int length = strlen(command) + strlen(path) + 4;
+    char* executeableCommand = malloc(length);
+    if (!executeableCommand) {
+        return;
+    }
+
+    snprintf(executeableCommand, length, "%s \"%s\"", command, path);
+    printf("[LOG] %s\n", executeableCommand);
+    system(executeableCommand);
+    free(executeableCommand);
+#else
+    const char* command = "xdg-open";
+    int length = strlen(command) + strlen(path) + 4;
+    char* executeableCommand = malloc(length);
+    if (!executeableCommand) {
+        return;
+    }
+
+    snprintf(executeableCommand, length, "%s \"%s\"", command, path);
+    printf("[LOG] %s\n", executeableCommand);
+    system(executeableCommand);
+    free(executeableCommand);
+#endif
 }
 
 void sort_children(Tree* parent) {
@@ -1246,6 +1280,9 @@ void sort_children(Tree* parent) {
 }
 
 char* getNameFromPath(char* path) {
+    if (path == NULL) {
+        return "";
+    }
     char* name = strrchr(path, '/'); // dapatkan string yang dimulai dari karakter slash (/) terakhir
     if (name != NULL) {
         return name + 1; // skip karakter slash (/) terakhir

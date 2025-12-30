@@ -60,6 +60,15 @@ void updateContext(Context *ctx, FileManager *fileManager) {
     if (!ctx || !ctx->currentZeroPosition || !ctx->titleBar)
         return;
 
+    if (ctx->toolbar &&
+        (ctx->toolbar->showCreateModal || ctx->toolbar->showRenameModal || ctx->toolbar->showImportModal)) {
+        ctx->disableGroundClick = true;
+        if (ctx->navbar) {
+            ctx->navbar->textboxPatheditMode = false;
+            ctx->navbar->textboxSearcheditMode = false;
+        }
+    }
+
     int screenWidth = GetScreenWidth();
     int screenHeight = GetScreenHeight();
 
