@@ -1,30 +1,7 @@
 <!-- ============================================
      AlpenliCloud - File Manager GUI
-     Struktur Data & Algoritma - Tugas Akhir
+     Data Structures & Algorithms - Final Project
      ============================================ -->
-
-<!-- TEAM DAN TANGGUNG JAWAB -->
-<!--
-  Team 1 - Arif
-    - Memperbaiki kesalahan dari tim 2 dan 3
-    - Implementasi:
-      void pasteFile(FileManager *fileManager);
-      void copyFile(FileManager *fileManager);
-      void cutFile(FileManager *fileManager);
-
-  Team 2 - Farras
-    - Implementasi:
-      void createFile(FileManager *fileManager);
-      void recoverFile(FileManager *fileManager);
-      void deleteFile(FileManager *fileManager);
-
-  Team 3 - Maul
-    - Implementasi:
-      void updateFile(FileManager *fileManager);
-      void searchFile(FileManager *fileManager);
-      void redo(FileManager *fileManager);
-      void undo(FileManager *fileManager);
--->
 
 <table border="0" cellspacing="0" cellpadding="0">
     <tr>
@@ -37,110 +14,124 @@
     </tr>
 </table>
 
-## Deskripsi Program
+![platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-2b6cb0)
+![language](https://img.shields.io/badge/language-C-00599C)
+![graphics](https://img.shields.io/badge/graphics-raylib%20%7C%20raygui-1f8a70)
 
-AlpenliCloud adalah aplikasi **File Manager** berbasis **Graphical User Interface (GUI)** yang dirancang menyerupai Windows Explorer. Aplikasi ini mengimplementasikan struktur data berbasis **Abstract Data Type (ADT)** seperti **non-binary tree**, **stack**, dan **queue** untuk merepresentasikan struktur dan perilaku sistem file secara digital, dengan antarmuka yang intuitif menggunakan raylib dan raygui.
+Indonesian version: see [README-id.md](README-id.md).
 
-### Tujuan
+## Overview
 
-Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan Algoritma**, dengan fokus pada penerapan konsep struktur data dalam konteks manajemen file. AlpenliCloud menyediakan fitur pengelolaan file dan folder seperti membuat, memperbarui, menghapus, memulihkan, menyalin, memindahkan, serta menampilkan file dengan antarmuka grafis yang user-friendly. Fitur **undo** dan **redo** juga didukung melalui struktur data **stack**.
+AlpenliCloud is a **File Manager** application with a **Graphical User Interface (GUI)** inspired by Windows Explorer. It implements **Abstract Data Types (ADT)** such as **non-binary tree**, **stack**, and **queue** to represent file system structure and behavior, with a modern interface built using raylib and raygui.
 
-### Fitur Utama
+AlpenliCloud is now **cross-platform**: Windows, macOS, and Linux (with platform-specific raylib and dialog dependencies).
 
-1. **Antarmuka GUI Modern**: Interface menyerupai Windows Explorer dengan title bar, toolbar, navbar, sidebar, dan body area
+### Goal
+
+This project was built for the **Data Structures & Algorithms** final project, focusing on applying data structures to file management. AlpenliCloud supports create, update, delete, recover, copy, move, and display operations through a friendly GUI. **Undo** and **redo** are supported via **stack**.
+
+### Key Features
+
+1. **Modern GUI**: Explorer-like layout with title bar, toolbar, navbar, sidebar, and body area
 2. **File Manager Operations**:
-    - Create file/folder dengan modal dialog
+    - Create file/folder with modal dialog
     - Rename file/folder (F2 shortcut)
-    - Delete file/folder ke trash dengan confirm dialog
+    - Delete file/folder to trash with confirmation dialog
     - Copy (Ctrl+C), Cut (Ctrl+X), Paste (Ctrl+V)
     - Drag & drop support
 3. **Navigation System**:
-    - Sidebar dengan tree structure yang dapat di-expand/collapse
-    - Navbar dengan path navigation dan search functionality
+    - Sidebar tree structure with expand/collapse
+    - Navbar with path navigation and search
     - Back navigation (Backspace/Alt+Left)
 4. **Advanced Features**:
-    - Progress bar untuk operasi file dalam jumlah banyak (>10 items)
-    - Undo/Redo system dengan visual feedback
-    - Multi-selection dengan Ctrl+Click dan Select All (Ctrl+A)
-    - Keyboard shortcuts lengkap
+    - Progress bar for bulk operations (>10 items)
+    - Undo/Redo system with visual feedback
+    - Multi-selection with Ctrl+Click and Select All (Ctrl+A)
+    - Full keyboard shortcuts
 5. **Trash Management**:
-    - Soft delete ke trash directory
-    - Recover files dari trash
+    - Soft delete to trash directory
+    - Recover files from trash
     - Duplicate name handling
 6. **Window Management**:
-    - Resizable window dengan drag borders
+    - Resizable window with drag borders
     - Maximize/minimize buttons
     - Custom title bar
 
-### Komponen GUI
+### GUI Components
 
--   **TitleBar**: Window controls (minimize, maximize, close) dan window dragging
--   **Navbar**: Path navigation, search box, dan navigation buttons (back, undo, redo)
+-   **TitleBar**: Window controls (minimize, maximize, close) and window dragging
+-   **Navbar**: Path navigation, search box, and navigation buttons (back, undo, redo)
 -   **Toolbar**: File operations (New, Copy, Cut, Paste, Delete, Rename)
--   **Sidebar**: Tree view untuk navigasi folder hierarchy
--   **Body**: Main content area dengan file/folder listing dalam format tabel
+-   **Sidebar**: Tree view for folder hierarchy navigation
+-   **Body**: Main content area with file/folder listing in table format
 
-## Struktur Data yang Digunakan
+## Data Structures Used
 
--   **Non-Binary Tree**: Untuk merepresentasikan struktur direktori dan file system hierarchy
--   **Stack**: Untuk mendukung fitur undo dan redo operations
--   **Queue**: Untuk mengelola copied/cut items dan paste operations
--   **LinkedList**: Untuk mengelola selected items dan trash items
+-   **Non-Binary Tree**: Represents directory and file system hierarchy
+-   **Stack**: Powers undo and redo operations
+-   **Queue**: Manages copied/cut items and paste operations
+-   **LinkedList**: Manages selected items and trash items
 
-## Teknologi yang Digunakan
+## Tech Stack
 
--   **raylib**: Graphics library untuk rendering dan input handling
--   **raygui**: Immediate mode GUI library untuk UI components
+-   **raylib**: Graphics library for rendering and input handling
+-   **raygui**: Immediate mode GUI library for UI components
 -   **C Language**: Core programming language
--   **Windows API**: Untuk file system operations dan native integrations
+-   **Platform APIs**: System-specific utilities for file operations and dialogs
 
-## Cara Menjalankan
+## How to Run
 
-1. Pastikan sistem mendukung kompilasi C dengan raylib
-2. Clone repository ini:
+1. Ensure your system can compile C with raylib
+2. Clone this repository:
     ```bash
     git clone https://github.com/riefproject/AlpenliCloud.git
     ```
-3. Compile dan run:
-    - Menggunakan build script:
+3. Build and run:
+    - Using build script:
         ```bash
         ./build.sh
-        # Parameter tersedia: clean, build, rebuild
-        # contoh: ./build.sh rebuild
+        # Available parameters: clean, build, rebuild
+        # Example: ./build.sh rebuild
         ```
-    - Menggunakan debug script (dengan debug symbols):
+    - Using debug script (with debug symbols):
         ```bash
         ./debug.sh
         ```
-    - Menggunakan Makefile:
+    - Using Makefile:
         ```bash
         make # optional parameter <clean | rebuild>
         ```
 
-## Cara Penggunaan
+### Linux Notes
 
-### Navigasi Dasar
+- Build uses `lib/raylib/lib/libraylib.so` if available.
+- If not, build will try `pkg-config --cflags --libs raylib` and show a message to install raylib (`libraylib-dev`).
+- File/folder dialogs use `zenity` or `kdialog`. Install one if missing.
 
--   **Double-click folder**: Masuk ke direktori
--   **Double-click file**: Buka dengan aplikasi default
--   **Sidebar navigation**: Klik folder di sidebar untuk navigasi cepat
--   **Path bar**: Ketik path manual untuk navigasi langsung
+## Usage
+
+### Basic Navigation
+
+-   **Double-click folder**: Enter directory
+-   **Double-click file**: Open with default app
+-   **Sidebar navigation**: Click folder in sidebar for quick navigation
+-   **Path bar**: Type path manually to jump
 
 ### File Operations
 
--   **New File/Folder**: Klik tombol "New" di toolbar atau Ctrl+N
--   **Copy**: Select file → Ctrl+C atau tombol Copy
--   **Cut**: Select file → Ctrl+X atau tombol Cut
--   **Paste**: Ctrl+V atau tombol Paste
--   **Delete**: Select file → Delete key atau tombol Delete
--   **Rename**: Select file → F2 atau tombol Rename
+-   **New File/Folder**: Click "New" in toolbar or Ctrl+N
+-   **Copy**: Select item → Ctrl+C or Copy button
+-   **Cut**: Select item → Ctrl+X or Cut button
+-   **Paste**: Ctrl+V or Paste button
+-   **Delete**: Select item → Delete key or Delete button
+-   **Rename**: Select item → F2 or Rename button
 
 ### Selection
 
--   **Single select**: Click pada file/folder
--   **Multi-select**: Ctrl+Click untuk toggle selection
--   **Select all**: Ctrl+A atau checkbox di header tabel
--   **Deselect all**: Click area kosong atau Ctrl+A lagi
+-   **Single select**: Click file/folder
+-   **Multi-select**: Ctrl+Click to toggle selection
+-   **Select all**: Ctrl+A or header checkbox
+-   **Deselect all**: Click empty area or Ctrl+A again
 
 ### Keyboard Shortcuts
 
@@ -155,15 +146,15 @@ Aplikasi ini dibuat untuk memenuhi Tugas Akhir mata kuliah **Struktur Data dan A
 -   **Backspace/Alt+Left**: Go back
 -   **Ctrl+A**: Select/deselect all
 
-## Struktur Project
+## Project Structure
 
 ```
 AlpenliCloud/
 ├── src/
-│   ├── main.c                 # Entry point aplikasi
+│   ├── main.c                 # Application entry point
 │   ├── file_manager.c         # Core file management logic
-│   ├── utils.c               # Utility functions dan shortcuts
-│   ├── win_utils.c           # Windows-specific operations
+│   ├── utils.c               # Utility functions and shortcuts
+│   ├── win_utils.c           # Platform-specific utilities
 │   ├── gui/
 │   │   ├── ctx.c             # GUI context management
 │   │   ├── titlebar.c        # Window title bar component
@@ -175,19 +166,19 @@ AlpenliCloud/
 │   └── data_structure/       # ADT implementations
 ├── include/                  # Header files
 ├── lib/raylib/              # raylib library
-├── assets/                  # Icons dan resources
+├── assets/                  # Icons and resources
 ├── build/                   # Build output
 └── bin/                     # Executable output
 ```
 
-## Kontribusi
+## Contributing
 
-Kontribusi sangat terbuka untuk pengembangan lebih lanjut. Silakan fork repository ini dan buat pull request untuk perbaikan atau penambahan fitur.
+Contributions are welcome. Please fork the repo and submit a pull request for improvements or new features.
 
-## Lisensi
+## License
 
-Proyek ini menggunakan lisensi [MIT](LICENSE).
+This project uses the [MIT](LICENSE) license.
 
-## Kontak
+## Contact
 
-Untuk pertanyaan atau diskusi lebih lanjut, silakan hubungi melalui [GitHub Issues](https://github.com/riefproject/AlpenliCloud/issues).
+For questions or discussion, please use [GitHub Issues](https://github.com/riefproject/AlpenliCloud/issues).
